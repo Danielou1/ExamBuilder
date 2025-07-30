@@ -70,13 +70,13 @@ public class WordExporter {
         XWPFRun studentInfoRun = studentInfo.createRun();
         studentInfoRun.setText("\nAbschnitt: Von dem/der Studierenden auszufüllen");
         studentInfoRun.addBreak();
-        studentInfoRun.setText("Name: _______________________________");
+        studentInfoRun.setText("Name: ______________________________________________");
         studentInfoRun.addBreak();
-        studentInfoRun.setText("Vorname: ____________________________");
+        studentInfoRun.setText("Vorname: ______________________________________");
         studentInfoRun.addBreak();
-        studentInfoRun.setText("Matrikelnummer: ___________");
+        studentInfoRun.setText("Matrikelnummer: ________________");
         studentInfoRun.addBreak();
-        studentInfoRun.setText("Unterschrift: ________________");
+        studentInfoRun.setText("Unterschrift: ___________________");
 
         // Notentabelle
         XWPFParagraph gradingInfo = document.createParagraph();
@@ -139,7 +139,9 @@ public class WordExporter {
 
         // Add answer lines
         for (int i = 0; i < question.getAnswerLines(); i++) {
-            questionTextRun.addBreak();
+            XWPFParagraph answerLine = document.createParagraph();
+            XWPFRun answerLineRun = answerLine.createRun();
+            answerLineRun.setText("__________________________________________________________________________________");
         }
 
         // Sub-questions
