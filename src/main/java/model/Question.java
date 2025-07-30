@@ -13,19 +13,29 @@ public class Question {
     private String type;
     private List<Question> subQuestions;
 
+    private int answerLines;
+
     public Question() {
         this.subQuestions = new ArrayList<>();
     }
 
-    public Question(String title, String text, int points, String type) {
+    public Question(String title, String text, int points, String type, int answerLines) {
         this.title = title;
         this.text = text;
         this.points = points;
         this.type = type;
+        this.answerLines = answerLines;
         this.subQuestions = new ArrayList<>();
     }
 
     // Getter und Setter
+    public int getAnswerLines() {
+        return answerLines;
+    }
+
+    public void setAnswerLines(int answerLines) {
+        this.answerLines = answerLines;
+    }
     public String getTitle() {
         return title;
     }

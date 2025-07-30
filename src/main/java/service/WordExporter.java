@@ -118,7 +118,7 @@ public class WordExporter {
                 XWPFParagraph continueMessage = document.createParagraph();
                 continueMessage.setAlignment(ParagraphAlignment.CENTER);
                 XWPFRun continueRun = continueMessage.createRun();
-                continueRun.setText("L'examen continue sur la page suivante...");
+                continueRun.setText("Fortsetzung der Aufgabe auf der nächsten Seite...");
                 continueMessage.setPageBreak(true);
             }
         }
@@ -128,14 +128,19 @@ public class WordExporter {
         // Fragentitel
         XWPFParagraph questionTitle = document.createParagraph();
         XWPFRun questionTitleRun = questionTitle.createRun();
-        questionTitleRun.setText("Aufgabe " + questionNumber + ": " + question.getTitle() + " (" + question.getPoints() + " Punkte)");
+        String titleText = question.getTitle() != null && !question.getTitle().isEmpty() ? question.getTitle() + " " : "";
+        questionTitleRun.setText("Aufgabe " + questionNumber + ": " + titleText + "(" + question.getPoints() + " Punkte)");
         questionTitleRun.setBold(true);
 
         // Fragentext
         XWPFParagraph questionText = document.createParagraph();
         XWPFRun questionTextRun = questionText.createRun();
         questionTextRun.setText(question.getText());
-        questionTextRun.addBreak();
+
+        // Add answer lines
+        for (int i = 0; i < question.getAnswerLines(); i++) {
+            questionTextRun.addBreak();
+        }
 
         // Sub-questions
         if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {

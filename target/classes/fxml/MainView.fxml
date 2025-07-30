@@ -49,6 +49,7 @@
             <TextField fx:id="questionTextField" promptText="Aufgabentext" />
             <TextField fx:id="questionPointsField" promptText="Punkte" />
             <TextField fx:id="questionTypeField" promptText="Typ (z.B. Offen, MC)" />
+            <TextField fx:id="answerLinesField" promptText="Lignes de réponse" />
             <Button onAction="#addQuestion" text="Frage hinzufügen" />
             <Button onAction="#addSubQuestion" text="Sub-Frage hinzufügen" />
             <Button onAction="#updateQuestion" text="Frage aktualisieren" />

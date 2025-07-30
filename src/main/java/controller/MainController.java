@@ -43,6 +43,8 @@ public class MainController {
     private TextField questionPointsField;
     @FXML
     private TextField questionTypeField;
+    @FXML
+    private TextField answerLinesField;
 
     @FXML
     private Label totalPointsLabel;
@@ -55,7 +57,7 @@ public class MainController {
         typeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getType()));
         pointsColumn.setCellValueFactory(param -> new SimpleStringProperty(Integer.toString(param.getValue().getValue().getPoints())));
 
-        TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, ""));
+        TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, "", 0));
         questionsTable.setRoot(root);
         questionsTable.setShowRoot(false);
 
@@ -73,10 +75,11 @@ public class MainController {
         questionTextField.setText(question.getText());
         questionPointsField.setText(String.valueOf(question.getPoints()));
         questionTypeField.setText(question.getType());
+        answerLinesField.setText(String.valueOf(question.getAnswerLines()));
     }
 
     private void refreshTreeTableView() {
-        TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, ""));
+        TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, "", 0));
         for (Question q : exam.getQuestions()) {
             TreeItem<Question> questionItem = new TreeItem<>(q);
             populateSubQuestions(questionItem, q);
@@ -107,7 +110,7 @@ public class MainController {
 
     @FXML
     private void addSubQuestion() {
-        if (isQuestionInputInvalid()) return;
+        if (isSubQuestionInputInvalid()) return;
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
             Question parentQuestion = selectedItem.getValue();
@@ -130,6 +133,7 @@ public class MainController {
             questionToUpdate.setText(questionTextField.getText());
             questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
             questionToUpdate.setType(questionTypeField.getText());
+            questionToUpdate.setAnswerLines(Integer.parseInt(answerLinesField.getText()));
             refreshTreeTableView();
             clearQuestionFields();
         } else {
@@ -154,14 +158,30 @@ public class MainController {
     }
 
     private boolean isQuestionInputInvalid() {
-        if (questionTitleField.getText().isEmpty() || questionPointsField.getText().isEmpty()) {
-            System.out.println("Title and Points are required fields.");
+        if (questionTitleField.getText().isEmpty() || questionPointsField.getText().isEmpty() || answerLinesField.getText().isEmpty()) {
+            System.out.println("Title, Points and Answer Lines are required fields for a main question.");
             return true;
         }
         try {
             Integer.parseInt(questionPointsField.getText());
+            Integer.parseInt(answerLinesField.getText());
         } catch (NumberFormatException e) {
-            System.out.println("Points must be a valid number.");
+            System.out.println("Points and Answer Lines must be valid numbers.");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isSubQuestionInputInvalid() {
+        if (questionPointsField.getText().isEmpty() || answerLinesField.getText().isEmpty()) {
+            System.out.println("Points and Answer Lines are required for a sub-question.");
+            return true;
+        }
+        try {
+            Integer.parseInt(questionPointsField.getText());
+            Integer.parseInt(answerLinesField.getText());
+        } catch (NumberFormatException e) {
+            System.out.println("Points and Answer Lines must be valid numbers.");
             return true;
         }
         return false;
@@ -172,7 +192,8 @@ public class MainController {
         String text = questionTextField.getText();
         int points = Integer.parseInt(questionPointsField.getText());
         String type = questionTypeField.getText();
-        return new Question(title, text, points, type);
+        int answerLines = Integer.parseInt(answerLinesField.getText());
+        return new Question(title, text, points, type, answerLines);
     }
 
     @FXML
@@ -253,5 +274,6 @@ public class MainController {
         questionTextField.clear();
         questionPointsField.clear();
         questionTypeField.clear();
+        answerLinesField.clear();
     }
 }
