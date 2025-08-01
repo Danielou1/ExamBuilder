@@ -1,10 +1,12 @@
 package utils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,10 +19,23 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class Rephraser {
 
-    // IMPORTANT: For production, store your API key securely (e.g., environment variables).
-    // For this demonstration, it's hardcoded.
-    private static final String API_KEY = "AIzaSyAq11MUNNf4eAhNh9buDvnsPLFl3_mSEfI";
+    private static final String API_KEY = loadApiKey();
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
+
+    private static String loadApiKey() {
+        Properties prop = new Properties();
+        try (InputStream input = Rephraser.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                System.out.println("Sorry, unable to find config.properties");
+                return null;
+            }
+            prop.load(input);
+            return prop.getProperty("api.key");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
 
     public static String rephrase(String originalText) {
         if (originalText == null || originalText.trim().isEmpty()) {
