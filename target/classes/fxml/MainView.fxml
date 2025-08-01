@@ -64,6 +64,7 @@
             <Label fx:id="totalPointsLabel" text="Gesamtpunkte: 0" />
             <Button onAction="#exportToWord" text="Exportieren als .docx" />
             <Button onAction="#saveExamToJson" text="Speichern als JSON" />
+            <Button onAction="#exportVariedVersion" text="Exportieren als Variierte Version" />
             <Button onAction="#importExamFromJson" text="Importieren von JSON" />
         </HBox>
     </bottom>

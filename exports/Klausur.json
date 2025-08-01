@@ -1,0 +1,44 @@
+{
+  "title" : "Klausur",
+  "author" : "",
+  "module" : "Projektmanagement",
+  "teacher" : "Danielou Mounsande ",
+  "semester" : "SommerSemester2025",
+  "questions" : [ {
+    "title" : "Projektdefinition und Projektrisiken",
+    "text" : "",
+    "points" : 15,
+    "type" : "Offen",
+    "subQuestions" : [ {
+      "title" : "Geben Sie an, welche Eigenschaften ein Projekt unter Anderem hat.",
+      "text" : "",
+      "points" : 3,
+      "type" : "Offen",
+      "subQuestions" : [ ],
+      "answerLines" : 3
+    }, {
+      "title" : "Geben Sie ein Beispiel (fiktiv) für ein konkretes Projekt, dass die zuvor genannten Eigenschaftenhat.",
+      "text" : "",
+      "points" : 3,
+      "type" : "Offen",
+      "subQuestions" : [ ],
+      "answerLines" : 4
+    }, {
+      "title" : "Nennen Sie fünf Projektrisiken.",
+      "text" : "",
+      "points" : 5,
+      "type" : "Offen",
+      "subQuestions" : [ ],
+      "answerLines" : 5
+    }, {
+      "title" : "Was beschreibt die Prinzipal-Agenten-Theorie?",
+      "text" : "",
+      "points" : 4,
+      "type" : "Offen",
+      "subQuestions" : [ ],
+      "answerLines" : 4
+    } ],
+    "answerLines" : 0
+  } ],
+  "totalPoints" : 30
+}

@@ -14,6 +14,9 @@ import service.WordExporter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import utils.Rephraser;
 
 public class MainController {
 
@@ -232,6 +235,40 @@ public class MainController {
     }
 
     @FXML
+    private void exportVariedVersion() {
+        updateExamMetadata();
+        Exam rephrasedExam = rephraseExam(exam);
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Varied Exam");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Word Documents", "*.docx"),
+                new FileChooser.ExtensionFilter("JSON Files", "*.json")
+        );
+        fileChooser.setInitialFileName(rephrasedExam.getTitle() + "_varied");
+        Stage stage = (Stage) examTitleField.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+
+        if (file != null) {
+            String fileName = file.getName();
+            if (fileName.endsWith(".docx")) {
+                WordExporter.export(rephrasedExam, moduleField.getText(), teacherField.getText(), semesterField.getText(), file.getAbsolutePath());
+            } else if (fileName.endsWith(".json")) {
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                    mapper.writeValue(file, rephrasedExam);
+                    System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Unsupported file type selected.");
+            }
+        }
+    }
+
+    @FXML
     private void importExamFromJson() {
         try {
             FileChooser fileChooser = new FileChooser();
@@ -275,5 +312,39 @@ public class MainController {
         questionPointsField.clear();
         questionTypeField.clear();
         answerLinesField.clear();
+    }
+
+    private Exam rephraseExam(Exam originalExam) {
+        Exam rephrasedExam = new Exam(
+                originalExam.getTitle(),
+                originalExam.getAuthor(),
+                originalExam.getModule(),
+                originalExam.getTeacher(),
+                originalExam.getSemester()
+        );
+
+        for (Question originalQuestion : originalExam.getQuestions()) {
+            rephrasedExam.addQuestion(rephraseQuestionRecursive(originalQuestion));
+        }
+        return rephrasedExam;
+    }
+
+    private Question rephraseQuestionRecursive(Question originalQuestion) {
+        String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
+        String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
+        Question rephrasedQuestion = new Question(
+                rephrasedTitle,
+                rephrasedText,
+                originalQuestion.getPoints(),
+                originalQuestion.getType(),
+                originalQuestion.getAnswerLines()
+        );
+
+        if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
+            for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
+                rephrasedQuestion.addSubQuestion(rephraseQuestionRecursive(originalSubQuestion));
+            }
+        }
+        return rephrasedQuestion;
     }
 }
