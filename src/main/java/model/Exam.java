@@ -27,6 +27,16 @@ public class Exam {
         this.questions = new ArrayList<>();
     }
 
+    // Copy constructor
+    public Exam(Exam other) {
+        this.title = other.title;
+        this.author = other.author;
+        this.module = other.module;
+        this.teacher = other.teacher;
+        this.semester = other.semester;
+        this.questions = new ArrayList<>(other.questions);
+    }
+
     // Getter und Setter
     public String getTitle() {
         return title;

@@ -15,6 +15,7 @@ import service.WordExporter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import utils.Rephraser;
 
@@ -237,27 +238,42 @@ public class MainController {
     @FXML
     private void exportVariedVersion() {
         updateExamMetadata();
-        Exam rephrasedExam = rephraseExam(exam);
 
+        // 1. Create a copy of the exam to avoid modifying the original.
+        Exam variedExam = new Exam(exam);
+
+        // 2. Create a new list of rephrased questions.
+        List<Question> rephrasedQuestions = new ArrayList<>();
+        for (Question originalQuestion : variedExam.getQuestions()) {
+            rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
+        }
+
+        // 3. Shuffle the new list of rephrased questions.
+        Collections.shuffle(rephrasedQuestions);
+
+        // 4. Set the rephrased and shuffled list on our new exam.
+        variedExam.setQuestions(rephrasedQuestions);
+
+        // 5. Proceed with exporting the varied exam.
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Varied Exam");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Word Documents", "*.docx"),
                 new FileChooser.ExtensionFilter("JSON Files", "*.json")
         );
-        fileChooser.setInitialFileName(rephrasedExam.getTitle() + "_varied");
+        fileChooser.setInitialFileName(variedExam.getTitle() + "_varied");
         Stage stage = (Stage) examTitleField.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
             String fileName = file.getName();
             if (fileName.endsWith(".docx")) {
-                WordExporter.export(rephrasedExam, moduleField.getText(), teacherField.getText(), semesterField.getText(), file.getAbsolutePath());
+                WordExporter.export(variedExam, moduleField.getText(), teacherField.getText(), semesterField.getText(), file.getAbsolutePath());
             } else if (fileName.endsWith(".json")) {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                    mapper.writeValue(file, rephrasedExam);
+                    mapper.writeValue(file, variedExam);
                     System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -314,20 +330,9 @@ public class MainController {
         answerLinesField.clear();
     }
 
-    private Exam rephraseExam(Exam originalExam) {
-        Exam rephrasedExam = new Exam(
-                originalExam.getTitle(),
-                originalExam.getAuthor(),
-                originalExam.getModule(),
-                originalExam.getTeacher(),
-                originalExam.getSemester()
-        );
+    
 
-        for (Question originalQuestion : originalExam.getQuestions()) {
-            rephrasedExam.addQuestion(rephraseQuestionRecursive(originalQuestion));
-        }
-        return rephrasedExam;
-    }
+    
 
     private Question rephraseQuestionRecursive(Question originalQuestion) {
         String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
@@ -341,9 +346,12 @@ public class MainController {
         );
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
+            List<Question> rephrasedSubQuestions = new ArrayList<>();
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                rephrasedQuestion.addSubQuestion(rephraseQuestionRecursive(originalSubQuestion));
+                rephrasedSubQuestions.add(rephraseQuestionRecursive(originalSubQuestion));
             }
+            Collections.shuffle(rephrasedSubQuestions);
+            rephrasedQuestion.setSubQuestions(rephrasedSubQuestions);
         }
         return rephrasedQuestion;
     }
