@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.Exam;
@@ -40,15 +41,26 @@ public class MainController {
     private TreeTableColumn<Question, String> pointsColumn;
 
     @FXML
+    private VBox editPane;
+    @FXML
     private TextArea questionTitleField;
     @FXML
     private TextArea questionTextField;
     @FXML
     private TextField questionPointsField;
     @FXML
-    private TextField questionTypeField;
+    private ComboBox<String> questionTypeField;
     @FXML
-    private TextField answerLinesField;
+    private Spinner<Integer> answerLinesField;
+
+    @FXML
+    private MenuItem addQuestionMenuItem;
+    @FXML
+    private MenuItem addSubQuestionMenuItem;
+    @FXML
+    private MenuItem updateQuestionMenuItem;
+    @FXML
+    private MenuItem deleteQuestionMenuItem;
 
     @FXML
     private Label totalPointsLabel;
@@ -67,19 +79,46 @@ public class MainController {
 
         exam = new Exam("", "", "", "", "");
 
+        questionTypeField.getItems().addAll("Offene Frage", "QCM");
+
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 populateQuestionDetails(newValue.getValue());
+                setEditMode(true);
+            } else {
+                clearQuestionFields();
+                setEditMode(false);
             }
         });
+
+        setEditMode(false);
+    }
+
+    private void setEditMode(boolean isEditing) {
+        editPane.setDisable(!isEditing);
+        addQuestionMenuItem.setDisable(isEditing);
+        addSubQuestionMenuItem.setDisable(!isEditing);
+        updateQuestionMenuItem.setDisable(!isEditing);
+        deleteQuestionMenuItem.setDisable(!isEditing);
+    }
+
+    @FXML
+    private void newQuestion() {
+        questionsTable.getSelectionModel().clearSelection();
+        clearQuestionFields();
+        editPane.setDisable(false);
+        addQuestionMenuItem.setDisable(false);
+        addSubQuestionMenuItem.setDisable(true);
+        updateQuestionMenuItem.setDisable(true);
+        deleteQuestionMenuItem.setDisable(true);
     }
 
     private void populateQuestionDetails(Question question) {
         questionTitleField.setText(question.getTitle());
         questionTextField.setText(question.getText());
         questionPointsField.setText(String.valueOf(question.getPoints()));
-        questionTypeField.setText(question.getType());
-        answerLinesField.setText(String.valueOf(question.getAnswerLines()));
+        questionTypeField.setValue(question.getType());
+        answerLinesField.getValueFactory().setValue(question.getAnswerLines());
     }
 
     private void refreshTreeTableView() {
@@ -110,6 +149,7 @@ public class MainController {
         exam.addQuestion(newQuestion);
         refreshTreeTableView();
         clearQuestionFields();
+        setEditMode(false);
     }
 
     @FXML
@@ -122,6 +162,7 @@ public class MainController {
             parentQuestion.addSubQuestion(subQuestion);
             refreshTreeTableView();
             clearQuestionFields();
+            setEditMode(false);
         } else {
             System.out.println("Please select a parent question first.");
         }
@@ -136,10 +177,11 @@ public class MainController {
             questionToUpdate.setTitle(questionTitleField.getText());
             questionToUpdate.setText(questionTextField.getText());
             questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
-            questionToUpdate.setType(questionTypeField.getText());
-            questionToUpdate.setAnswerLines(Integer.parseInt(answerLinesField.getText()));
+            questionToUpdate.setType(questionTypeField.getValue());
+            questionToUpdate.setAnswerLines(answerLinesField.getValue());
             refreshTreeTableView();
             clearQuestionFields();
+            setEditMode(false);
         } else {
             System.out.println("Please select a question to update.");
         }
@@ -156,36 +198,35 @@ public class MainController {
                 exam.getQuestions().remove(selectedItem.getValue());
             }
             refreshTreeTableView();
+            setEditMode(false);
         } else {
             System.out.println("Please select a question to delete.");
         }
     }
 
     private boolean isQuestionInputInvalid() {
-        if (questionTitleField.getText().isEmpty() || questionPointsField.getText().isEmpty() || answerLinesField.getText().isEmpty()) {
-            System.out.println("Title, Points and Answer Lines are required fields for a main question.");
+        if (questionTitleField.getText().isEmpty() || questionPointsField.getText().isEmpty()) {
+            System.out.println("Title and Points are required fields for a main question.");
             return true;
         }
         try {
             Integer.parseInt(questionPointsField.getText());
-            Integer.parseInt(answerLinesField.getText());
         } catch (NumberFormatException e) {
-            System.out.println("Points and Answer Lines must be valid numbers.");
+            System.out.println("Points must be a valid number.");
             return true;
         }
         return false;
     }
 
     private boolean isSubQuestionInputInvalid() {
-        if (questionPointsField.getText().isEmpty() || answerLinesField.getText().isEmpty()) {
-            System.out.println("Points and Answer Lines are required for a sub-question.");
+        if (questionPointsField.getText().isEmpty()) {
+            System.out.println("Points is required for a sub-question.");
             return true;
         }
         try {
             Integer.parseInt(questionPointsField.getText());
-            Integer.parseInt(answerLinesField.getText());
         } catch (NumberFormatException e) {
-            System.out.println("Points and Answer Lines must be valid numbers.");
+            System.out.println("Points must be a valid number.");
             return true;
         }
         return false;
@@ -195,8 +236,8 @@ public class MainController {
         String title = questionTitleField.getText();
         String text = questionTextField.getText();
         int points = Integer.parseInt(questionPointsField.getText());
-        String type = questionTypeField.getText();
-        int answerLines = Integer.parseInt(answerLinesField.getText());
+        String type = questionTypeField.getValue();
+        int answerLines = answerLinesField.getValue();
         return new Question(title, text, points, type, answerLines);
     }
 
@@ -326,8 +367,8 @@ public class MainController {
         questionTitleField.clear();
         questionTextField.clear();
         questionPointsField.clear();
-        questionTypeField.clear();
-        answerLinesField.clear();
+        questionTypeField.setValue(null);
+        answerLinesField.getValueFactory().setValue(0);
     }
 
     
