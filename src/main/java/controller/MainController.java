@@ -40,9 +40,9 @@ public class MainController {
     private TreeTableColumn<Question, String> pointsColumn;
 
     @FXML
-    private TextField questionTitleField;
+    private TextArea questionTitleField;
     @FXML
-    private TextField questionTextField;
+    private TextArea questionTextField;
     @FXML
     private TextField questionPointsField;
     @FXML
