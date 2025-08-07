@@ -27,9 +27,11 @@ public class MainController {
     @FXML
     private TextField moduleField;
     @FXML
-    private TextField teacherField;
-    @FXML
     private TextField semesterField;
+    @FXML
+    private TextField fachbereichField;
+    @FXML
+    private TextField hochschuleField;
 
     @FXML
     private TreeTableView<Question> questionsTable;
@@ -77,7 +79,7 @@ public class MainController {
         questionsTable.setRoot(root);
         questionsTable.setShowRoot(false);
 
-        exam = new Exam("", "", "", "", "");
+        exam = new Exam("", "", "", "", "", "");
 
         questionTypeField.getItems().addAll("Offene Frage", "QCM");
 
@@ -251,7 +253,7 @@ public class MainController {
         Stage stage = (Stage) examTitleField.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
-            WordExporter.export(exam, moduleField.getText(), teacherField.getText(), semesterField.getText(), file.getAbsolutePath());
+            WordExporter.export(exam, file.getAbsolutePath());
         }
     }
 
@@ -309,7 +311,7 @@ public class MainController {
         if (file != null) {
             String fileName = file.getName();
             if (fileName.endsWith(".docx")) {
-                WordExporter.export(variedExam, moduleField.getText(), teacherField.getText(), semesterField.getText(), file.getAbsolutePath());
+                WordExporter.export(variedExam, file.getAbsolutePath());
             } else if (fileName.endsWith(".json")) {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
@@ -347,16 +349,18 @@ public class MainController {
     private void updateUIFromExam() {
         examTitleField.setText(exam.getTitle());
         moduleField.setText(exam.getModule());
-        teacherField.setText(exam.getTeacher());
         semesterField.setText(exam.getSemester());
+        fachbereichField.setText(exam.getFachbereich());
+        hochschuleField.setText(exam.getHochschule());
         refreshTreeTableView();
     }
 
     private void updateExamMetadata() {
         exam.setTitle(examTitleField.getText());
         exam.setModule(moduleField.getText());
-        exam.setTeacher(teacherField.getText());
         exam.setSemester(semesterField.getText());
+        exam.setFachbereich(fachbereichField.getText());
+        exam.setHochschule(hochschuleField.getText());
     }
 
     private void updateTotalPoints() {

@@ -10,20 +10,22 @@ public class Exam {
     private String title;
     private String author;
     private String module;
-    private String teacher;
     private String semester;
+    private String fachbereich;
+    private String hochschule;
     private List<Question> questions;
 
     public Exam() {
         this.questions = new ArrayList<>();
     }
 
-    public Exam(String title, String author, String module, String teacher, String semester) {
+    public Exam(String title, String author, String module, String semester, String fachbereich, String hochschule) {
         this.title = title;
         this.author = author;
         this.module = module;
-        this.teacher = teacher;
         this.semester = semester;
+        this.fachbereich = fachbereich;
+        this.hochschule = hochschule;
         this.questions = new ArrayList<>();
     }
 
@@ -32,8 +34,9 @@ public class Exam {
         this.title = other.title;
         this.author = other.author;
         this.module = other.module;
-        this.teacher = other.teacher;
         this.semester = other.semester;
+        this.fachbereich = other.fachbereich;
+        this.hochschule = other.hochschule;
         this.questions = new ArrayList<>(other.questions);
     }
 
@@ -62,20 +65,28 @@ public class Exam {
         this.module = module;
     }
 
-    public String getTeacher() {
-        return teacher;
-    }
-
-    public void setTeacher(String teacher) {
-        this.teacher = teacher;
-    }
-
     public String getSemester() {
         return semester;
     }
 
     public void setSemester(String semester) {
         this.semester = semester;
+    }
+
+    public String getFachbereich() {
+        return fachbereich;
+    }
+
+    public void setFachbereich(String fachbereich) {
+        this.fachbereich = fachbereich;
+    }
+
+    public String getHochschule() {
+        return hochschule;
+    }
+
+    public void setHochschule(String hochschule) {
+        this.hochschule = hochschule;
     }
 
     public List<Question> getQuestions() {

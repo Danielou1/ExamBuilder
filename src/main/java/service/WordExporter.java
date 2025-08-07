@@ -15,10 +15,10 @@ import model.Question;
 
 public class WordExporter {
 
-    public static void export(Exam exam, String module, String teacher, String semester, String filePath) {
+    public static void export(Exam exam, String filePath) {
         try (XWPFDocument document = new XWPFDocument()) {
             // Seite 1: Deckblatt
-            createCoverPage(document, exam, module, teacher, semester);
+            createCoverPage(document, exam);
 
             // Leere Seite einfügen
             document.createParagraph().setPageBreak(true);
@@ -38,7 +38,7 @@ public class WordExporter {
         }
     }
 
-    private static void createCoverPage(XWPFDocument document, Exam exam, String module, String teacher, String semester) {
+    private static void createCoverPage(XWPFDocument document, Exam exam) {
         // Titel der Klausur
         XWPFParagraph title = document.createParagraph();
         title.setAlignment(ParagraphAlignment.CENTER);
@@ -54,15 +54,31 @@ public class WordExporter {
         XWPFParagraph metaParagraph = metaRow.getCell(0).getParagraphs().get(0);
         metaParagraph.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun metaRun = metaParagraph.createRun();
-        metaRun.setText("Modul: " + module + " | " + "Lehrperson: " + teacher + " | " + "Semester: " + semester  +"\n");
+                metaRun.setText(exam.getHochschule() + " | " + "Fachbereich: " + exam.getFachbereich());
+        metaRun.setBold(true);
+        metaRun.addBreak();
+        metaRun.setText("Modul: " + exam.getModule() + " | " + "Semester: " + exam.getSemester());
+        metaRun.setBold(true);
+
+        // Specific instruction phrase in a table
+        XWPFTable specificInstructionTable = document.createTable(1, 1);
+        specificInstructionTable.setWidth("100%");
+        XWPFTableRow instructionTableRow = specificInstructionTable.getRow(0);
+        XWPFParagraph instructionTableParagraph = instructionTableRow.getCell(0).getParagraphs().get(0);
+        instructionTableParagraph.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun instructionTableRun = instructionTableParagraph.createRun();
+        instructionTableRun.setText("\nBitte lesen Sie die folgenden Hinweise aufmerksam durch!");
+        instructionTableRun.setBold(true);
 
         // Anweisungen
         XWPFParagraph instructions = document.createParagraph();
-        XWPFRun instructionsRun = instructions.createRun();       
-        String instructionsContent = "Bitte lesen Sie die folgenden Hinweise aufmerksam durch!\n\nHinweise:\n\u2022 Erg\u00e4nzen Sie bitte auf diesem Deckblatt die untenstehenden Angaben und unterschreiben Sie in dem vorgesehenen Feld (Unterschrift).\n\u2022 Der Klausurbogen enth\u00e4lt ein Zusatzblatt. Weitere Zusatzbl\u00e4tter erhalten Sie bei Bedarf von der Aufsicht. Tragen Sie auf eventuell genutzten weiteren Zusatzbl\u00e4ttern sofort Ihren Nachnamen, die Matrikelnummer und die Aufgabenummer ein.\n\u2022 Verwenden Sie einen dokumentenechten Schreibstift (d. h. kein Bleistift). Verwenden Sie keinen Stift mit roter oder gr\u00fcner Farbe.\n\u2022 Trennen Sie den Klausurbogen nicht auf. Nehmen Sie den Klausurbogen nicht mit nach Hause.\n\u2022 Elektronische und nicht elektronische Hilfsmittel sind nicht zugelassen, mit Ausnahme eines Taschenrechners (kein Smartphone!). Schalten Sie alle mitgebrachten elektronischen Ger\u00e4te \u2013 auch Fitnessarmb\u00e4nder, MP3-Player, etc. \u2013 aus (bzw. komplett lautlos) und legen Sie diese  au\u00dfer Reichweite (z. B. in Ihren Rucksack).\n\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten.\n\u2022 Notieren Sie die Antworten direkt in den Klausurbogen. Der daf\u00fcr vorgesehene Platz ist bei durchschnittlicher Handschriftgr\u00f6\u00dfe ausreichend.\n\u2022 Sie k\u00f6nnen die Klausur jederzeit abgeben. Aus Respekt gegen\u00fcber Ihren Mitstudierenden verlassen Sie bitte 10 Minuten vor dem Ende der Bearbeitungszeit den Klausurraum nicht mehr, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n\nViel Erfolg!";
+        XWPFRun instructionsRun = instructions.createRun();
+        String instructionsContent = "\nHinweise:\n\u2022 Erg\u00e4nzen Sie bitte auf diesem Deckblatt die untenstehenden Angaben und unterschreiben Sie in dem vorgesehenen Feld (Unterschrift).\n\u2022 Der Klausurbogen enth\u00e4lt ein Zusatzblatt. Weitere Zusatzbl\u00e4tter erhalten Sie bei Bedarf von der Aufsicht. Tragen Sie auf eventuell genutzten weiteren Zusatzbl\u00e4ttern sofort Ihren Nachnamen, die Matrikelnummer und die Aufgabenummer ein.\n\u2022 Verwenden Sie einen dokumentenechten Schreibstift (d. h. kein Bleistift). Verwenden Sie keinen Stift mit roter oder gr\u00fcner Farbe.\n\u2022 Trennen Sie den Klausurbogen nicht auf. Nehmen Sie den Klausurbogen nicht mit nach Hause.\n\u2022 Elektronische und nicht elektronische Hilfsmittel sind nicht zugelassen, mit Ausnahme eines Taschenrechners (kein Smartphone!). Schalten Sie alle mitgebrachten elektronischen Ger\u00e4te \u2013 auch Fitnessarmb\u00e4nder, MP3-Player, etc. \u2013 aus (bzw. komplett lautlos) und legen Sie diese  au\u00dfer Reichweite (z. B. in Ihren Rucksack).\n\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten.\n\u2022 Notieren Sie die Antworten direkt in den Klausurbogen. Der daf\u00fcr vorgesehene Platz ist bei durchschnittlicher Handschriftgr\u00f6\u00dfe ausreichend.\n\u2022 Sie k\u00f6nnen die Klausur jederzeit abgeben. Aus Respekt gegen\u00fcber Ihren Mitstudierenden verlassen Sie bitte 10 Minuten vor dem Ende der Bearbeitungszeit den Klausurraum nicht mehr, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n\nViel Erfolg!";
             String[] lines = instructionsContent.split("\n");
             for (int i = 0; i < lines.length; i++) {
             instructionsRun.setText(lines[i]);
+            instructionsRun.setBold(true);
+            instructionsRun.setFontSize(11);
             if (i < lines.length - 1) {
                 instructionsRun.addBreak();
             }
@@ -71,6 +87,7 @@ public class WordExporter {
         // Studenteninformationen
         XWPFParagraph studentInfo = document.createParagraph();
         XWPFRun studentInfoRun = studentInfo.createRun();
+        studentInfoRun.setBold(true);
         studentInfoRun.setText("\nAbschnitt: Von dem/der Studierenden auszufüllen");
         studentInfoRun.addBreak();
         studentInfoRun.setText("Name: ______________________________________________");
@@ -84,31 +101,42 @@ public class WordExporter {
         // Notentabelle
         XWPFParagraph gradingInfo = document.createParagraph();
         XWPFRun gradingInfoRun = gradingInfo.createRun();
+        gradingInfoRun.setBold(true);
         gradingInfoRun.setText("\nAbschnitt: Von dem/der Prüfenden auszufüllen");
 
-        XWPFTable gradingTable = document.createTable(exam.getQuestions().size() + 2, 3);
+        int numQuestions = exam.getQuestions().size();
+        XWPFTable gradingTable = document.createTable(3, numQuestions + 1); // 3 rows, numQuestions + 1 columns
         gradingTable.setWidth("100%");
 
-        // Header
-        XWPFTableRow header = gradingTable.getRow(0);
-        header.getCell(0).setText("Aufgabe");
-        header.getCell(1).setText("Punkte Max");
-        header.getCell(2).setText("Erreichte Punkte");
-
-        // Zeilen für jede Frage
-        for (int i = 0; i < exam.getQuestions().size(); i++) {
-            Question q = exam.getQuestions().get(i);
-            XWPFTableRow row = gradingTable.getRow(i + 1);
-            row.getCell(0).setText("A" + (i + 1));
-            row.getCell(1).setText(String.valueOf(q.getPoints()));
-            row.getCell(2).setText("______");
+        // Row 1: Question numbers (A1, A2, ...) and "Gesamt"
+        XWPFTableRow headerRow = gradingTable.getRow(0);
+        for (int i = 0; i < numQuestions; i++) {
+            XWPFRun run = headerRow.getCell(i).getParagraphs().get(0).createRun();
+            run.setText("A" + (i + 1));
+            run.setBold(true);
         }
+        XWPFRun totalHeaderRun = headerRow.getCell(numQuestions).getParagraphs().get(0).createRun();
+        totalHeaderRun.setText("Gesamt");
+        totalHeaderRun.setBold(true);
 
-        // Gesamtpunktzahl
-        XWPFTableRow totalRow = gradingTable.getRow(exam.getQuestions().size() + 1);
-        totalRow.getCell(0).setText("Gesamt");
-        totalRow.getCell(1).setText(String.valueOf(exam.getTotalPoints()));
-        totalRow.getCell(2).setText("______");
+        // Row 2: Max points for each question and total max points
+        XWPFTableRow maxPointsRow = gradingTable.getRow(1);
+        for (int i = 0; i < numQuestions; i++) {
+            XWPFRun run = maxPointsRow.getCell(i).getParagraphs().get(0).createRun();
+            run.setText(String.valueOf(exam.getQuestions().get(i).getPoints()));
+            run.setBold(true);
+        }
+        XWPFRun totalMaxPointsRun = maxPointsRow.getCell(numQuestions).getParagraphs().get(0).createRun();
+        totalMaxPointsRun.setText(String.valueOf(exam.getTotalPoints()));
+        totalMaxPointsRun.setBold(true);
+
+        // Row 3: Empty fields for achieved points
+        XWPFTableRow achievedPointsRow = gradingTable.getRow(2);
+        for (int i = 0; i <= numQuestions; i++) { // Loop up to numQuestions to include the "Gesamt" column
+            XWPFRun run = achievedPointsRow.getCell(i).getParagraphs().get(0).createRun();
+            run.setText("______");
+            run.setBold(true);
+        }
     }
 
     private static void createQuestionsPage(XWPFDocument document, Exam exam) {

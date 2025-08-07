@@ -39,10 +39,14 @@
                     <TextField fx:id="moduleField" />
                 </HBox>
                 <HBox spacing="10">
-                    <Label text="Lehrperson:" />
-                    <TextField fx:id="teacherField" />
                     <Label text="Semester:" />
                     <TextField fx:id="semesterField" />
+                </HBox>
+                <HBox spacing="10">
+                    <Label text="Fachbereich:" />
+                    <TextField fx:id="fachbereichField" />
+                    <Label text="Hochschule/Uni:" />
+                    <TextField fx:id="hochschuleField" />
                 </HBox>
             </VBox>
         </VBox>
