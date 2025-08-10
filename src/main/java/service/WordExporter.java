@@ -9,6 +9,8 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.apache.poi.xwpf.usermodel.XWPFFooter;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
 
 import model.Exam;
 import model.Question;
@@ -25,6 +27,24 @@ public class WordExporter {
 
             // Seite 2: Fragen
             createQuestionsPage(document, exam);
+
+            // Page numbering
+            XWPFFooter footer = document.createFooter(org.apache.poi.wp.usermodel.HeaderFooterType.DEFAULT);
+            XWPFParagraph paragraph = footer.getParagraphArray(0);
+            if (paragraph == null) {
+                paragraph = footer.createParagraph();
+            }
+            paragraph.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun run = paragraph.createRun();
+            run.setText("Seite ");
+            paragraph.getCTP().addNewR().addNewFldChar().setFldCharType(STFldCharType.BEGIN);
+            paragraph.getCTP().addNewR().addNewInstrText().setStringValue("PAGE");
+            paragraph.getCTP().addNewR().addNewFldChar().setFldCharType(STFldCharType.END);
+            run = paragraph.createRun();
+            run.setText(" / ");
+            paragraph.getCTP().addNewR().addNewFldChar().setFldCharType(STFldCharType.BEGIN);
+            paragraph.getCTP().addNewR().addNewInstrText().setStringValue("NUMPAGES");
+            paragraph.getCTP().addNewR().addNewFldChar().setFldCharType(STFldCharType.END);
 
             // Speichern des Dokuments
             try (FileOutputStream out = new FileOutputStream(filePath)) {
@@ -60,6 +80,8 @@ public class WordExporter {
         metaRun.setText("Modul: " + exam.getModule() + " | " + "Semester: " + exam.getSemester());
         metaRun.setBold(true);
 
+        document.createParagraph();
+
         // Specific instruction phrase in a table
         XWPFTable specificInstructionTable = document.createTable(1, 1);
         specificInstructionTable.setWidth("100%");
@@ -78,7 +100,7 @@ public class WordExporter {
             for (int i = 0; i < lines.length; i++) {
             instructionsRun.setText(lines[i]);
             instructionsRun.setBold(true);
-            instructionsRun.setFontSize(11);
+            instructionsRun.setFontSize(10);
             if (i < lines.length - 1) {
                 instructionsRun.addBreak();
             }
@@ -86,7 +108,9 @@ public class WordExporter {
 
         // Studenteninformationen
         XWPFParagraph studentInfo = document.createParagraph();
+        studentInfo.setSpacingBefore(200);
         XWPFRun studentInfoRun = studentInfo.createRun();
+        studentInfoRun.setFontSize(10);
         studentInfoRun.setBold(true);
         studentInfoRun.setText("\nAbschnitt: Von dem/der Studierenden auszufüllen");
         studentInfoRun.addBreak();
@@ -100,7 +124,9 @@ public class WordExporter {
 
         // Notentabelle
         XWPFParagraph gradingInfo = document.createParagraph();
+        gradingInfo.setSpacingBefore(200);
         XWPFRun gradingInfoRun = gradingInfo.createRun();
+        gradingInfoRun.setFontSize(10);
         gradingInfoRun.setBold(true);
         gradingInfoRun.setText("\nAbschnitt: Von dem/der Prüfenden auszufüllen");
 
@@ -148,8 +174,6 @@ public class WordExporter {
             if (i < exam.getQuestions().size() - 1) {
                 XWPFParagraph continueMessage = document.createParagraph();
                 continueMessage.setAlignment(ParagraphAlignment.CENTER);
-                XWPFRun continueRun = continueMessage.createRun();
-                continueRun.setText("Fortsetzung der Aufgabe auf der nächsten Seite...");
                 continueMessage.setPageBreak(true);
             }
         }
@@ -160,7 +184,18 @@ public class WordExporter {
         XWPFParagraph questionTitle = document.createParagraph();
         XWPFRun questionTitleRun = questionTitle.createRun();
         String titleText = question.getTitle() != null && !question.getTitle().isEmpty() ? question.getTitle() + " " : "";
-        questionTitleRun.setText("Aufgabe " + questionNumber + ": " + titleText + "(" + question.getPoints() + " Punkte)");
+        
+        String formattedQuestionNumber;
+        if (questionNumber.contains(".")) {
+            // For sub-questions, extract the letter part (e.g., 'a' from '1.a')
+            formattedQuestionNumber = questionNumber.substring(questionNumber.lastIndexOf('.') + 1);
+        } else {
+            // For main questions, use the number as is.
+            formattedQuestionNumber = questionNumber;
+        }
+
+        // Construct the title string
+        questionTitleRun.setText(formattedQuestionNumber + ". " + titleText + "(" + question.getPoints() + " Punkte)");
         questionTitleRun.setBold(true);
 
         // Fragentext
