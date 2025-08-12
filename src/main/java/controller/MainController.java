@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -12,6 +13,7 @@ import javafx.stage.Stage;
 import model.Exam;
 import model.Question;
 import service.WordExporter;
+import utils.LoadingIndicator;
 
 import java.io.File;
 import java.io.IOException;
@@ -180,7 +182,9 @@ public class MainController {
             Question questionToUpdate = selectedItem.getValue();
             questionToUpdate.setTitle(questionTitleField.getText());
             questionToUpdate.setText(questionTextField.getText());
-            questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
+            if (questionToUpdate.getSubQuestions() == null || questionToUpdate.getSubQuestions().isEmpty()) {
+                questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
+            }
             questionToUpdate.setType(questionTypeField.getValue());
             questionToUpdate.setAnswerLines(answerLinesField.getValue());
             refreshTreeTableView();
@@ -255,7 +259,23 @@ public class MainController {
         Stage stage = (Stage) examTitleField.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
-            WordExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
+            Task<Void> exportTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    WordExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
+                    return null;
+                }
+            };
+
+            exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
+            exportTask.setOnFailed(e -> {
+                LoadingIndicator.hide();
+                // Handle exceptions from the task
+                exportTask.getException().printStackTrace();
+            });
+
+            new Thread(exportTask).start();
+            LoadingIndicator.show();
         }
     }
 
@@ -311,21 +331,37 @@ public class MainController {
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
-            String fileName = file.getName();
-            if (fileName.endsWith(".docx")) {
-                WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
-            } else if (fileName.endsWith(".json")) {
-                try {
-                    ObjectMapper mapper = new ObjectMapper();
-                    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                    mapper.writeValue(file, variedExam);
-                    System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
+            Task<Void> exportTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    String fileName = file.getName();
+                    if (fileName.endsWith(".docx")) {
+                        WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
+                    } else if (fileName.endsWith(".json")) {
+                        try {
+                            ObjectMapper mapper = new ObjectMapper();
+                            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                            mapper.writeValue(file, variedExam);
+                            System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.out.println("Unsupported file type selected.");
+                    }
+                    return null;
                 }
-            } else {
-                System.out.println("Unsupported file type selected.");
-            }
+            };
+
+            exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
+            exportTask.setOnFailed(e -> {
+                LoadingIndicator.hide();
+                // Handle exceptions from the task
+                exportTask.getException().printStackTrace();
+            });
+
+            new Thread(exportTask).start();
+            LoadingIndicator.show();
         }
     }
 

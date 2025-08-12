@@ -2,6 +2,7 @@ package service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -192,25 +193,45 @@ public class WordExporter {
         // Fragentitel
         XWPFParagraph questionTitle = document.createParagraph();
         XWPFRun questionTitleRun = questionTitle.createRun();
-        String titleText = question.getTitle() != null && !question.getTitle().isEmpty() ? question.getTitle() + " " : "";
         
-        String formattedQuestionNumber;
+        String titlePrefix;
         if (questionNumber.contains(".")) {
-            // For sub-questions, extract the letter part (e.g., 'a' from '1.a')
-            formattedQuestionNumber = questionNumber.substring(questionNumber.lastIndexOf('.') + 1);
+            // Sub-question
+            titlePrefix = questionNumber.substring(questionNumber.lastIndexOf('.') + 1) + ". ";
         } else {
-            // For main questions, use the number as is.
-            formattedQuestionNumber = questionNumber;
+            // Main question
+            titlePrefix = questionNumber + ". ";
         }
 
-        // Construct the title string
-        questionTitleRun.setText(formattedQuestionNumber + ". " + titleText + "(" + question.getPoints() + " Punkte)");
+        String titleText = question.getTitle() != null && !question.getTitle().isEmpty() ? question.getTitle() + " " : "";
+        
+        String pointsText;
+        if (questionNumber.contains(".")) {
+            // Sub-question
+            pointsText = "(" + question.getPoints() + " Punkte)";
+        } else {
+            // Main question
+            if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {
+                // With sub-questions
+                String pointsDetail = question.getSubQuestions().stream()
+                        .map(q -> String.valueOf(q.getPoints()))
+                        .collect(Collectors.joining(" + "));
+                pointsText = "(" + pointsDetail + " = " + question.getPoints() + " Punkte)";
+            } else {
+                // Without sub-questions
+                pointsText = "(" + question.getPoints() + " Punkte)";
+            }
+        }
+
+        questionTitleRun.setText(titlePrefix + titleText + pointsText);
         questionTitleRun.setBold(true);
 
         // Fragentext
-        XWPFParagraph questionText = document.createParagraph();
-        XWPFRun questionTextRun = questionText.createRun();
-        questionTextRun.setText(question.getText());
+        if (question.getText() != null && !question.getText().isEmpty()) {
+            XWPFParagraph questionText = document.createParagraph();
+            XWPFRun questionTextRun = questionText.createRun();
+            questionTextRun.setText(question.getText());
+        }
 
         // Add answer lines
         for (int i = 0; i < question.getAnswerLines(); i++) {

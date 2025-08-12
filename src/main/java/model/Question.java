@@ -53,6 +53,9 @@ public class Question {
     }
 
     public int getPoints() {
+        if (subQuestions != null && !subQuestions.isEmpty()) {
+            return subQuestions.stream().mapToInt(Question::getPoints).sum();
+        }
         return points;
     }
 

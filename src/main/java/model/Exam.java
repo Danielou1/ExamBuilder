@@ -114,14 +114,6 @@ public class Exam {
     }
 
     public int getTotalPoints() {
-        return questions.stream().mapToInt(this::calculateQuestionPoints).sum();
-    }
-
-    private int calculateQuestionPoints(Question question) {
-        int points = question.getPoints();
-        if (question.getSubQuestions() != null) {
-            points += question.getSubQuestions().stream().mapToInt(this::calculateQuestionPoints).sum();
-        }
-        return points;
+        return questions.stream().mapToInt(Question::getPoints).sum();
     }
 }
