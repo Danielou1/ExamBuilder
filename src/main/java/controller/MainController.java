@@ -32,6 +32,8 @@ public class MainController {
     private TextField fachbereichField;
     @FXML
     private TextField hochschuleField;
+    @FXML
+    private TextField hilfsmittelField;
 
     @FXML
     private TreeTableView<Question> questionsTable;
@@ -79,7 +81,7 @@ public class MainController {
         questionsTable.setRoot(root);
         questionsTable.setShowRoot(false);
 
-        exam = new Exam("", "", "", "", "", "");
+        exam = new Exam("", "", "", "", "", "", "");
 
         questionTypeField.getItems().addAll("Offene Frage", "QCM");
 
@@ -253,7 +255,7 @@ public class MainController {
         Stage stage = (Stage) examTitleField.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
-            WordExporter.export(exam, file.getAbsolutePath());
+            WordExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
         }
     }
 
@@ -311,7 +313,7 @@ public class MainController {
         if (file != null) {
             String fileName = file.getName();
             if (fileName.endsWith(".docx")) {
-                WordExporter.export(variedExam, file.getAbsolutePath());
+                WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
             } else if (fileName.endsWith(".json")) {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
@@ -352,6 +354,9 @@ public class MainController {
         semesterField.setText(exam.getSemester());
         fachbereichField.setText(exam.getFachbereich());
         hochschuleField.setText(exam.getHochschule());
+        if (exam.getHilfsmittel() != null) {
+            hilfsmittelField.setText(exam.getHilfsmittel());
+        }
         refreshTreeTableView();
     }
 
@@ -361,6 +366,7 @@ public class MainController {
         exam.setSemester(semesterField.getText());
         exam.setFachbereich(fachbereichField.getText());
         exam.setHochschule(hochschuleField.getText());
+        exam.setHilfsmittel(hilfsmittelField.getText());
     }
 
     private void updateTotalPoints() {
@@ -374,10 +380,6 @@ public class MainController {
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
     }
-
-    
-
-    
 
     private Question rephraseQuestionRecursive(Question originalQuestion) {
         String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());

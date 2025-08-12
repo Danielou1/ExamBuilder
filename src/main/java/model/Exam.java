@@ -3,9 +3,6 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Datenmodell für die Klausur, enthält eine Liste von Fragen und Metadaten.
- */
 public class Exam {
     private String title;
     private String author;
@@ -13,19 +10,21 @@ public class Exam {
     private String semester;
     private String fachbereich;
     private String hochschule;
+    private String hilfsmittel;
     private List<Question> questions;
 
     public Exam() {
         this.questions = new ArrayList<>();
     }
 
-    public Exam(String title, String author, String module, String semester, String fachbereich, String hochschule) {
+    public Exam(String title, String author, String module, String semester, String fachbereich, String hochschule, String hilfsmittel) {
         this.title = title;
         this.author = author;
         this.module = module;
         this.semester = semester;
         this.fachbereich = fachbereich;
         this.hochschule = hochschule;
+        this.hilfsmittel = hilfsmittel;
         this.questions = new ArrayList<>();
     }
 
@@ -37,6 +36,7 @@ public class Exam {
         this.semester = other.semester;
         this.fachbereich = other.fachbereich;
         this.hochschule = other.hochschule;
+        this.hilfsmittel = other.hilfsmittel;
         this.questions = new ArrayList<>(other.questions);
     }
 
@@ -87,6 +87,14 @@ public class Exam {
 
     public void setHochschule(String hochschule) {
         this.hochschule = hochschule;
+    }
+
+    public String getHilfsmittel() {
+        return hilfsmittel;
+    }
+
+    public void setHilfsmittel(String hilfsmittel) {
+        this.hilfsmittel = hilfsmittel;
     }
 
     public List<Question> getQuestions() {

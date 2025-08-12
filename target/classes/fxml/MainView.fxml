@@ -48,6 +48,10 @@
                     <Label text="Hochschule/Uni:" />
                     <TextField fx:id="hochschuleField" />
                 </HBox>
+                <HBox spacing="10">
+                    <Label text="Hinweise:" />
+                    <TextField fx:id="hilfsmittelField" HBox.hgrow="ALWAYS" />
+                </HBox>
             </VBox>
         </VBox>
     </top>

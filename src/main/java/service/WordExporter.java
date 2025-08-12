@@ -11,16 +11,19 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.poi.xwpf.usermodel.XWPFFooter;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
+import org.apache.poi.wp.usermodel.HeaderFooterType;
+
 
 import model.Exam;
 import model.Question;
+import utils.Rephraser;
 
 public class WordExporter {
 
-    public static void export(Exam exam, String filePath) {
+    public static void export(Exam exam, String filePath, String hilfsmittel) {
         try (XWPFDocument document = new XWPFDocument()) {
             // Seite 1: Deckblatt
-            createCoverPage(document, exam);
+            createCoverPage(document, exam, hilfsmittel);
 
             // Leere Seite einfügen
             document.createParagraph().setPageBreak(true);
@@ -29,7 +32,7 @@ public class WordExporter {
             createQuestionsPage(document, exam);
 
             // Page numbering
-            XWPFFooter footer = document.createFooter(org.apache.poi.wp.usermodel.HeaderFooterType.DEFAULT);
+            XWPFFooter footer = document.createFooter(HeaderFooterType.DEFAULT);
             XWPFParagraph paragraph = footer.getParagraphArray(0);
             if (paragraph == null) {
                 paragraph = footer.createParagraph();
@@ -58,7 +61,7 @@ public class WordExporter {
         }
     }
 
-    private static void createCoverPage(XWPFDocument document, Exam exam) {
+    private static void createCoverPage(XWPFDocument document, Exam exam, String hilfsmittel) {
         // Titel der Klausur
         XWPFParagraph title = document.createParagraph();
         title.setAlignment(ParagraphAlignment.CENTER);
@@ -96,8 +99,14 @@ public class WordExporter {
         XWPFParagraph instructions = document.createParagraph();
         XWPFRun instructionsRun = instructions.createRun();
         String instructionsContent = "\nHinweise:\n\u2022 Erg\u00e4nzen Sie bitte auf diesem Deckblatt die untenstehenden Angaben und unterschreiben Sie in dem vorgesehenen Feld (Unterschrift).\n\u2022 Der Klausurbogen enth\u00e4lt ein Zusatzblatt. Weitere Zusatzbl\u00e4tter erhalten Sie bei Bedarf von der Aufsicht. Tragen Sie auf eventuell genutzten weiteren Zusatzbl\u00e4ttern sofort Ihren Nachnamen, die Matrikelnummer und die Aufgabenummer ein.\n\u2022 Verwenden Sie einen dokumentenechten Schreibstift (d. h. kein Bleistift). Verwenden Sie keinen Stift mit roter oder gr\u00fcner Farbe.\n\u2022 Trennen Sie den Klausurbogen nicht auf. Nehmen Sie den Klausurbogen nicht mit nach Hause.\n\u2022 Elektronische und nicht elektronische Hilfsmittel sind nicht zugelassen, mit Ausnahme eines Taschenrechners (kein Smartphone!). Schalten Sie alle mitgebrachten elektronischen Ger\u00e4te \u2013 auch Fitnessarmb\u00e4nder, MP3-Player, etc. \u2013 aus (bzw. komplett lautlos) und legen Sie diese  au\u00dfer Reichweite (z. B. in Ihren Rucksack).\n\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten.\n\u2022 Notieren Sie die Antworten direkt in den Klausurbogen. Der daf\u00fcr vorgesehene Platz ist bei durchschnittlicher Handschriftgr\u00f6\u00dfe ausreichend.\n\u2022 Sie k\u00f6nnen die Klausur jederzeit abgeben. Aus Respekt gegen\u00fcber Ihren Mitstudierenden verlassen Sie bitte 10 Minuten vor dem Ende der Bearbeitungszeit den Klausurraum nicht mehr, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n\nViel Erfolg!";
-            String[] lines = instructionsContent.split("\n");
-            for (int i = 0; i < lines.length; i++) {
+
+        if (hilfsmittel != null && !hilfsmittel.isEmpty()) {
+            String prompt = "Réécris le paragraphe 'Hinweise' suivant pour y inclure cette règle sur les aides autorisées : "
+                    + hilfsmittel + ". Le paragraphe original est : " + instructionsContent;
+            instructionsContent = Rephraser.rephrase(prompt);
+        }
+        String[] lines = instructionsContent.split("\n");
+        for (int i = 0; i < lines.length; i++) {
             instructionsRun.setText(lines[i]);
             instructionsRun.setBold(true);
             instructionsRun.setFontSize(10);
