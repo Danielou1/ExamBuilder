@@ -228,9 +228,24 @@ public class WordExporter {
 
         // Fragentext
         if (question.getText() != null && !question.getText().isEmpty()) {
-            XWPFParagraph questionText = document.createParagraph();
-            XWPFRun questionTextRun = questionText.createRun();
-            questionTextRun.setText(question.getText());
+            XWPFParagraph questionTextParagraph = document.createParagraph();
+            XWPFRun questionTextRun = questionTextParagraph.createRun();
+            if ("QCM".equals(question.getType())) {
+                String[] lines = question.getText().split("\r?\n");
+                for (int i = 0; i < lines.length; i++) {
+                    String line = lines[i].trim();
+                    if (line.startsWith("A)") || line.startsWith("B)") || line.startsWith("C)") || line.startsWith("D)")) {
+                        questionTextRun.setText("☐ " + line);
+                    } else {
+                        questionTextRun.setText(line);
+                    }
+                    if (i < lines.length - 1) {
+                        questionTextRun.addBreak();
+                    }
+                }
+            } else {
+                questionTextRun.setText(question.getText());
+            }
         }
 
         // Add answer lines

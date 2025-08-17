@@ -87,6 +87,14 @@ public class MainController {
 
         questionTypeField.getItems().addAll("Offene Frage", "QCM");
 
+        questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if ("QCM".equals(newVal)) {
+                questionTextField.setPromptText("Geben Sie die Frage ein, gefolgt von den Antwortmöglichkeiten im Format:\nA) Antwort 1\nB) Antwort 2\nC) Antwort 3");
+            } else {
+                questionTextField.setPromptText("Aufgabentext");
+            }
+        });
+
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 populateQuestionDetails(newValue.getValue());
