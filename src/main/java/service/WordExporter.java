@@ -228,22 +228,20 @@ public class WordExporter {
 
         // Fragentext
         if (question.getText() != null && !question.getText().isEmpty()) {
-            XWPFParagraph questionTextParagraph = document.createParagraph();
-            XWPFRun questionTextRun = questionTextParagraph.createRun();
-            if ("QCM".equals(question.getType())) {
+            if ("MCQ".equals(question.getType())) {
                 String[] lines = question.getText().split("\r?\n");
-                for (int i = 0; i < lines.length; i++) {
-                    String line = lines[i].trim();
-                    if (line.startsWith("A)") || line.startsWith("B)") || line.startsWith("C)") || line.startsWith("D)")) {
-                        questionTextRun.setText("☐ " + line);
+                for (String line : lines) {
+                    XWPFParagraph questionTextParagraph = document.createParagraph();
+                    XWPFRun questionTextRun = questionTextParagraph.createRun();
+                    if (line.trim().startsWith("A)") || line.trim().startsWith("B)") || line.trim().startsWith("C)") || line.trim().startsWith("D)")) {
+                        questionTextRun.setText("☐ " + line.trim());
                     } else {
                         questionTextRun.setText(line);
                     }
-                    if (i < lines.length - 1) {
-                        questionTextRun.addBreak();
-                    }
                 }
             } else {
+                XWPFParagraph questionTextParagraph = document.createParagraph();
+                XWPFRun questionTextRun = questionTextParagraph.createRun();
                 questionTextRun.setText(question.getText());
             }
         }

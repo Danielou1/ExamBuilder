@@ -2,8 +2,10 @@
   "title" : "Klausur",
   "author" : "",
   "module" : "Projektmanagement",
-  "teacher" : "Danielou Mounsande ",
   "semester" : "SommerSemester2025",
+  "fachbereich" : "Fachbereich:  Mathematik, Naturwissenschaften und Informatik",
+  "hochschule" : "Technische Hochschule Mittelhessen",
+  "hilfsmittel" : " Die Bearbeitungszeit beträgt 90 Minuten. Es wird alle 30 Minuten die verbleibende Bearbeitungszeit angesagt",
   "questions" : [ {
     "title" : "Projektdefinition und Projektrisiken",
     "text" : "",
@@ -39,6 +41,27 @@
       "answerLines" : 4
     } ],
     "answerLines" : 0
+  }, {
+    "title" : "MCQ",
+    "text" : "Sie können mehrere Antworten ankreuzen",
+    "points" : 4,
+    "type" : "MCQ",
+    "subQuestions" : [ {
+      "title" : "Was kann der Begleitausschuss frühzeitig erkennen?",
+      "text" : "A) Akzeptanzprobleme  \nB) Finanzierungsprobleme \nC) Technische Schwierigkeiten \nD) Ressourcenengpässe ",
+      "points" : 2,
+      "type" : "MCQ",
+      "subQuestions" : [ ],
+      "answerLines" : 0
+    }, {
+      "title" : "Was beschreibt die Prinzipal-Agent-Theorie?",
+      "text" : "A) Das mögliche Verhalten von Vertragspartnern in Hierarchien \nB) Das Kommunikationsmanagement in einem Projekt \nC) Die technischen Risiken eines Projekts \nD) keine der vorgenannten Antworten ",
+      "points" : 2,
+      "type" : "MCQ",
+      "subQuestions" : [ ],
+      "answerLines" : 0
+    } ],
+    "answerLines" : 0
   } ],
-  "totalPoints" : 30
+  "totalPoints" : 19
 }

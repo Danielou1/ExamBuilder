@@ -85,13 +85,16 @@ public class MainController {
 
         exam = new Exam("", "", "", "", "", "", "");
 
-        questionTypeField.getItems().addAll("Offene Frage", "QCM");
+        questionTypeField.getItems().addAll("Offene Frage", "MCQ");
 
         questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if ("QCM".equals(newVal)) {
+            if ("MCQ".equals(newVal)) {
                 questionTextField.setPromptText("Geben Sie die Frage ein, gefolgt von den Antwortmöglichkeiten im Format:\nA) Antwort 1\nB) Antwort 2\nC) Antwort 3");
+                answerLinesField.setDisable(true);
+                answerLinesField.getValueFactory().setValue(0);
             } else {
                 questionTextField.setPromptText("Aufgabentext");
+                answerLinesField.setDisable(false);
             }
         });
 
@@ -194,7 +197,9 @@ public class MainController {
                 questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
             }
             questionToUpdate.setType(questionTypeField.getValue());
-            questionToUpdate.setAnswerLines(answerLinesField.getValue());
+            if (!answerLinesField.isDisable()) {
+                questionToUpdate.setAnswerLines(answerLinesField.getValue());
+            }
             refreshTreeTableView();
             clearQuestionFields();
             setEditMode(false);
@@ -221,8 +226,8 @@ public class MainController {
     }
 
     private boolean isQuestionInputInvalid() {
-        if (questionTitleField.getText().isEmpty() || questionPointsField.getText().isEmpty()) {
-            System.out.println("Title and Points are required fields for a main question.");
+        if (questionPointsField.getText().isEmpty()) {
+            System.out.println("Points are required fields for a main question.");
             return true;
         }
         try {
@@ -251,9 +256,15 @@ public class MainController {
     private Question createQuestionFromInput() {
         String title = questionTitleField.getText();
         String text = questionTextField.getText();
-        int points = Integer.parseInt(questionPointsField.getText());
+        int points = 0;
+        if (!questionPointsField.getText().isEmpty()) {
+            points = Integer.parseInt(questionPointsField.getText());
+        }
         String type = questionTypeField.getValue();
-        int answerLines = answerLinesField.getValue();
+        int answerLines = 0;
+        if (!answerLinesField.isDisable()) {
+            answerLines = answerLinesField.getValue();
+        }
         return new Question(title, text, points, type, answerLines);
     }
 
