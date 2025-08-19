@@ -23,6 +23,15 @@ public class Rephraser {
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY;
 
     private static String loadApiKey() {
+        // For local testing, you can uncomment the following line and add your API key.
+        // IMPORTANT: Do not commit this file with the API key uncommented.
+        // return "YOUR_API_KEY";
+
+        String apiKey = System.getenv("GEMINI_API_KEY");
+        if (apiKey != null) {
+            return apiKey;
+        }
+
         Properties prop = new Properties();
         try (InputStream input = Rephraser.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (input == null) {

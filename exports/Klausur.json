@@ -19,7 +19,7 @@
       "subQuestions" : [ ],
       "answerLines" : 3
     }, {
-      "title" : "Geben Sie ein Beispiel (fiktiv) für ein konkretes Projekt, dass die zuvor genannten Eigenschaftenhat.",
+      "title" : "Geben Sie ein Beispiel (fiktiv) für ein konkretes Projekt, dass die zuvor genannten Eigenschaften hat.",
       "text" : "",
       "points" : 3,
       "type" : "Offen",
@@ -44,7 +44,7 @@
   }, {
     "title" : "MCQ",
     "text" : "Sie können mehrere Antworten ankreuzen",
-    "points" : 4,
+    "points" : 10,
     "type" : "MCQ",
     "subQuestions" : [ {
       "title" : "Was kann der Begleitausschuss frühzeitig erkennen?",
@@ -60,8 +60,78 @@
       "type" : "MCQ",
       "subQuestions" : [ ],
       "answerLines" : 0
+    }, {
+      "title" : "Ein Teammitglied möchte sein Versagen in einer Teamsitzung mit dem Projektleiter verbergen und nimmt sich vor „nicht zu kommunizieren“. Welche Aussage diesbezüglich ist nicht zutreffend?",
+      "text" : "A) Die abweichende Darstellung einer wahren Situation ist bei einer Informationsasymmetrie zwischen Teammitglied und der Projektleitung gut möglich.\nB) Das ansonsten zuverlässige Teammitglied vermeidet die Kommunikation und bleibt der Sitzung einfach fern.\nC) Bei einem gleichen Wissensstand ist eine abweichende Darstellung einer wahren Situation in der Regel nicht gut möglich.\nD) keine der vorgenannten Antworten ",
+      "points" : 4,
+      "type" : "MCQ",
+      "subQuestions" : [ ],
+      "answerLines" : 0
+    }, {
+      "title" : "Der/die Projektleiter/in fragt Sie nach dem verspätetem betreten des Besprechungsraumes: „Wissen\nSie eigentlich wieviel Uhr es ist? (im Raum hängt gut sichtbar eine Uhr). Wie verhalten Sie sich unter\nAnwendung des Kommunikationsmodells nach Schulz von Thun (4 Ohren)? ",
+      "text" : "A) Der Sender bitte um eine Sachinformation, ich antworte mit „JA“.\nB) Der Sender vertraut mir, da die Uhr im Raum falsch gehen könnte, ich antworte mit der korrekten Uhrzeit.\nC) Der Sender appelliert an meine Pünktlichkeit. Ich entschuldige mich für die Verspätung.\nD) Der Sender offenbart dadurch, dass er eine neue Uhr braucht. Ich schenke ihm bei nächster Gelegenheit eine neue Uhr. ",
+      "points" : 2,
+      "type" : "MCQ",
+      "subQuestions" : [ ],
+      "answerLines" : 0
+    } ],
+    "answerLines" : 0
+  }, {
+    "title" : "Zieldefinitionen und Make-Or-Buy",
+    "text" : "Definieren sie jeweils ein Projektziel, dem nur eines der SMART-Kriterien fehlt. Erläutern Sie\nzudem, warum das Kriterium nicht erfüllt ist.",
+    "points" : 20,
+    "type" : "Offene Frage",
+    "subQuestions" : [ {
+      "title" : "S(M)ART – nicht messbar",
+      "text" : "",
+      "points" : 2,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "S(M)ART – nicht messbar",
+      "text" : "",
+      "points" : 2,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "SM(A)RT – nicht attraktiv",
+      "text" : "",
+      "points" : 2,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "SMA(R)T – nicht realisierbar",
+      "text" : "",
+      "points" : 2,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "SMAR(T) – nicht terminiert",
+      "text" : "",
+      "points" : 2,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "Geben Sie ein Beispiel für eine Make-Or-Buy-Entscheidung, die nach Anwendung des\nEntscheidungsprozesses eine nachvollziehbare Make-Entscheidung ergeben wird. Begründen Sie kurz",
+      "text" : "",
+      "points" : 4,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
+    }, {
+      "title" : "Geben Sie ein Beispiel für eine Make-Or-Buy-Entscheidung, die nach Anwendung des\nEntscheidungsprozesses eine nachvollziehbare Buy-Entscheidung ergeben wird. Begründen Sie kurz",
+      "text" : "",
+      "points" : 6,
+      "type" : "Offene Frage",
+      "subQuestions" : [ ],
+      "answerLines" : 6
     } ],
     "answerLines" : 0
   } ],
-  "totalPoints" : 19
+  "totalPoints" : 45
 }

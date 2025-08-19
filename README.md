@@ -49,6 +49,34 @@ Or, you can run the packaged JAR file:
 java -jar target/exambuilder-1.0-SNAPSHOT.jar
 ```
 
+## Configuration
+
+To use the question rephrasing feature, you need to provide a Gemini API key.
+
+### Option 1: Environment Variable (Recommended)
+
+Set the `GEMINI_API_KEY` environment variable to your API key.
+
+*   **Windows:**
+    ```bash
+    setx GEMINI_API_KEY "YOUR_API_KEY"
+    ```
+*   **macOS/Linux:**
+    ```bash
+    export GEMINI_API_KEY="YOUR_API_KEY"
+    ```
+
+### Option 2: Hardcode the API Key (For local testing only)
+
+1.  Open the file `src/main/java/utils/Rephraser.java`.
+2.  Uncomment the following line:
+    ```java
+    // return "YOUR_API_KEY";
+    ```
+3.  Replace `"YOUR_API_KEY"` with your actual API key.
+
+**IMPORTANT:** Do not commit this file with the API key uncommented.
+
 ## Author
 
 *   **Danielou Mounsande**
