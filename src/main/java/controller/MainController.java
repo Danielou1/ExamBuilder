@@ -8,6 +8,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import model.Exam;
@@ -71,6 +72,12 @@ public class MainController {
     @FXML
     private Label totalPointsLabel;
 
+    @FXML
+    private BorderPane mainPane;
+
+    @FXML
+    private ToggleButton themeToggleButton;
+
     private Exam exam;
 
     @FXML
@@ -107,6 +114,24 @@ public class MainController {
                 setEditMode(false);
             }
         });
+
+        if (mainPane != null) {
+            mainPane.getStylesheets().add(getClass().getResource("/styles/light-theme.css").toExternalForm());
+        }
+
+        if (themeToggleButton != null) {
+            themeToggleButton.setOnAction(event -> {
+                if (themeToggleButton.isSelected()) {
+                    mainPane.getStylesheets().remove(getClass().getResource("/styles/light-theme.css").toExternalForm());
+                    mainPane.getStylesheets().add(getClass().getResource("/styles/dark-theme.css").toExternalForm());
+                    themeToggleButton.setText("Light Mode");
+                } else {
+                    mainPane.getStylesheets().remove(getClass().getResource("/styles/dark-theme.css").toExternalForm());
+                    mainPane.getStylesheets().add(getClass().getResource("/styles/light-theme.css").toExternalForm());
+                    themeToggleButton.setText("Dark Mode");
+                }
+            });
+        }
 
         setEditMode(false);
     }
@@ -323,64 +348,72 @@ public class MainController {
     private void exportVariedVersion() {
         updateExamMetadata();
 
-        // 1. Create a copy of the exam to avoid modifying the original.
-        Exam variedExam = new Exam(exam);
-
-        // 2. Create a new list of rephrased questions.
-        List<Question> rephrasedQuestions = new ArrayList<>();
-        for (Question originalQuestion : variedExam.getQuestions()) {
-            rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
-        }
-
-        // 3. Shuffle the new list of rephrased questions.
-        Collections.shuffle(rephrasedQuestions);
-
-        // 4. Set the rephrased and shuffled list on our new exam.
-        variedExam.setQuestions(rephrasedQuestions);
-
-        // 5. Proceed with exporting the varied exam.
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Varied Exam");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Word Documents", "*.docx"),
                 new FileChooser.ExtensionFilter("JSON Files", "*.json")
         );
-        fileChooser.setInitialFileName(variedExam.getTitle() + "_varied");
+        fileChooser.setInitialFileName(exam.getTitle() + "_varied");
         Stage stage = (Stage) examTitleField.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
-            Task<Void> exportTask = new Task<>() {
+            LoadingIndicator.show();
+
+            Task<Exam> rephraseTask = new Task<>() {
                 @Override
-                protected Void call() throws Exception {
-                    String fileName = file.getName();
-                    if (fileName.endsWith(".docx")) {
-                        WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
-                    } else if (fileName.endsWith(".json")) {
-                        try {
-                            ObjectMapper mapper = new ObjectMapper();
-                            mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                            mapper.writeValue(file, variedExam);
-                            System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        System.out.println("Unsupported file type selected.");
+                protected Exam call() throws Exception {
+                    Exam variedExam = new Exam(exam);
+                    List<Question> rephrasedQuestions = new ArrayList<>();
+                    for (Question originalQuestion : variedExam.getQuestions()) {
+                        rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
                     }
-                    return null;
+                    Collections.shuffle(rephrasedQuestions);
+                    variedExam.setQuestions(rephrasedQuestions);
+                    return variedExam;
                 }
             };
 
-            exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
-            exportTask.setOnFailed(e -> {
-                LoadingIndicator.hide();
-                // Handle exceptions from the task
-                exportTask.getException().printStackTrace();
+            rephraseTask.setOnSucceeded(e -> {
+                Exam variedExam = rephraseTask.getValue();
+                Task<Void> exportTask = new Task<>() {
+                    @Override
+                    protected Void call() throws Exception {
+                        String fileName = file.getName();
+                        if (fileName.endsWith(".docx")) {
+                            WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
+                        } else if (fileName.endsWith(".json")) {
+                            try {
+                                ObjectMapper mapper = new ObjectMapper();
+                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                                mapper.writeValue(file, variedExam);
+                                System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        } else {
+                            System.out.println("Unsupported file type selected.");
+                        }
+                        return null;
+                    }
+                };
+
+                exportTask.setOnSucceeded(event -> LoadingIndicator.hide());
+                exportTask.setOnFailed(event -> {
+                    LoadingIndicator.hide();
+                    exportTask.getException().printStackTrace();
+                });
+
+                new Thread(exportTask).start();
             });
 
-            new Thread(exportTask).start();
-            LoadingIndicator.show();
+            rephraseTask.setOnFailed(e -> {
+                LoadingIndicator.hide();
+                rephraseTask.getException().printStackTrace();
+            });
+
+            new Thread(rephraseTask).start();
         }
     }
 

@@ -13,21 +13,30 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainController">
+<BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainController">
     <top>
         <VBox>
-            <MenuBar>
-                <Menu text="Datei">
-                    <MenuItem text="Importieren von JSON" onAction="#importExamFromJson" />
-                    <MenuItem text="Speichern als JSON" onAction="#saveExamToJson" />
-                    <MenuItem text="Exportieren als .docx" onAction="#exportToWord" />
-                    <MenuItem text="Exportieren als Variierte Version" onAction="#exportVariedVersion" />
-                </Menu>
-            </MenuBar>
+            <HBox alignment="CENTER_RIGHT" spacing="10">
+                <padding>
+                    <Insets bottom="5" right="10" top="5" />
+                </padding>
+                <MenuBar>
+                    <Menu text="Datei">
+                        <MenuItem text="Importieren von JSON" onAction="#importExamFromJson" />
+                        <MenuItem text="Speichern als JSON" onAction="#saveExamToJson" />
+                        <MenuItem text="Exportieren als .docx" onAction="#exportToWord" />
+                        <MenuItem text="Exportieren als Variierte Version" onAction="#exportVariedVersion" />
+                    </Menu>
+                </MenuBar>
+                <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                    <ToggleButton fx:id="themeToggleButton" text="Dark Mode" />
+                </HBox>
+            </HBox>
             <VBox spacing="10" BorderPane.alignment="CENTER">
                 <padding>
                     <Insets bottom="10" left="10" right="10" top="10" />

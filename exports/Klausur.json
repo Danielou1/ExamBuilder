@@ -79,7 +79,7 @@
   }, {
     "title" : "Zieldefinitionen und Make-Or-Buy",
     "text" : "Definieren sie jeweils ein Projektziel, dem nur eines der SMART-Kriterien fehlt. Erläutern Sie\nzudem, warum das Kriterium nicht erfüllt ist.",
-    "points" : 20,
+    "points" : 10,
     "type" : "Offene Frage",
     "subQuestions" : [ {
       "title" : "S(M)ART – nicht messbar",
@@ -116,10 +116,17 @@
       "type" : "Offene Frage",
       "subQuestions" : [ ],
       "answerLines" : 6
-    }, {
+    } ],
+    "answerLines" : 0
+  }, {
+    "title" : "Make-Or-Buy",
+    "text" : "",
+    "points" : 12,
+    "type" : "Offene Frage",
+    "subQuestions" : [ {
       "title" : "Geben Sie ein Beispiel für eine Make-Or-Buy-Entscheidung, die nach Anwendung des\nEntscheidungsprozesses eine nachvollziehbare Make-Entscheidung ergeben wird. Begründen Sie kurz",
       "text" : "",
-      "points" : 4,
+      "points" : 6,
       "type" : "Offene Frage",
       "subQuestions" : [ ],
       "answerLines" : 6
@@ -133,5 +140,5 @@
     } ],
     "answerLines" : 0
   } ],
-  "totalPoints" : 45
+  "totalPoints" : 47
 }

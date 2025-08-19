@@ -1,0 +1,80 @@
+/* General Styling */
+.root {
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-base: #E3F2FD; /* Light Blue */
+    -fx-background: #FFFFFF;
+    -fx-control-inner-background: #FFFFFF;
+}
+
+/* Button Styling */
+.button {
+    -fx-background-color: #2196F3; /* Blue */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+}
+
+.button:hover {
+    -fx-background-color: #1976D2; /* Darker Blue */
+}
+
+/* Label Styling */
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+/* TextField Styling */
+.text-field, .text-area {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: #2196F3; /* Blue */
+}
+
+/* TreeTableView Styling */
+.tree-table-view {
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+    -fx-background-radius: 5;
+}
+
+.tree-table-view .column-header-background {
+    -fx-background-color: #BBDEFB; /* Lighter Blue */
+}
+
+.tree-table-view .column-header .label {
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+}
+
+.tree-table-view .table-cell {
+    -fx-padding: 8px;
+    -fx-border-color: transparent #BDBDBD transparent transparent;
+}
+
+/* ComboBox Styling */
+.combo-box {
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+}
+
+/* Spinner Styling */
+.spinner {
+    -fx-border-color: #BDBDBD;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+}
+
+/* MenuBar Styling */
+.menu-bar {
+    -fx-background-color: #FFFFFF;
+}

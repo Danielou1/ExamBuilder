@@ -1,0 +1,99 @@
+/* General Styling */
+.root {
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-base: #212121; /* Dark Gray */
+    -fx-background: #303030;
+    -fx-control-inner-background: #424242;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* Button Styling */
+.button {
+    -fx-background-color: #2196F3; /* Blue */
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 15;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+}
+
+.button:hover {
+    -fx-background-color: #1976D2; /* Darker Blue */
+}
+
+/* Label Styling */
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* TextField Styling */
+.text-field, .text-area {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-border-color: #616161;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #424242;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: #2196F3; /* Blue */
+}
+
+/* TreeTableView Styling */
+.tree-table-view {
+    -fx-border-color: #616161;
+    -fx-border-width: 1px;
+    -fx-background-radius: 5;
+    -fx-background-color: #424242;
+}
+
+.tree-table-view .column-header-background {
+    -fx-background-color: #0D47A1; /* Dark Blue */
+}
+
+.tree-table-view .column-header .label {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+}
+
+.tree-table-view .table-cell {
+    -fx-padding: 8px;
+    -fx-border-color: transparent #616161 transparent transparent;
+    -fx-text-fill: #FFFFFF;
+}
+
+.tree-table-view .table-row-cell:odd {
+    -fx-background-color: #424242;
+}
+
+.tree-table-view .table-row-cell:even {
+    -fx-background-color: #303030;
+}
+
+/* ComboBox Styling */
+.combo-box {
+    -fx-border-color: #616161;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+    -fx-background-color: #424242;
+}
+
+/* Spinner Styling */
+.spinner {
+    -fx-border-color: #616161;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5;
+    -fx-background-color: #424242;
+}
+
+/* MenuBar Styling */
+.menu-bar {
+    -fx-background-color: #212121;
+}
+
+.menu .label{
+    -fx-text-fill: #FFFFFF;
+}
