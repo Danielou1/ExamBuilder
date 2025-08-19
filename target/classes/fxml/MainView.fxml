@@ -33,7 +33,7 @@
                     <Insets bottom="10" left="10" right="10" top="10" />
                 </padding>
                 <HBox spacing="10">
-                    <Label text="Titel der Klausur:" />
+                    <Label text="Titel der Prüfung:" />
                     <TextField fx:id="examTitleField" HBox.hgrow="ALWAYS" />
                     <Label text="Modul:" />
                     <TextField fx:id="moduleField" />
