@@ -68,7 +68,7 @@
       "subQuestions" : [ ],
       "answerLines" : 0
     }, {
-      "title" : "Der/die Projektleiter/in fragt Sie nach dem verspätetem betreten des Besprechungsraumes: „Wissen\nSie eigentlich wieviel Uhr es ist? (im Raum hängt gut sichtbar eine Uhr). Wie verhalten Sie sich unter\nAnwendung des Kommunikationsmodells nach Schulz von Thun (4 Ohren)? ",
+      "title" : "Der/die Projektleiter/in fragt Sie nach dem verspätetem betreten des Besprechungsraumes: „Wissen Sie eigentlich wieviel Uhr es ist? (im Raum hängt gut sichtbar eine Uhr). Wie verhalten Sie sich unter Anwendung des Kommunikationsmodells nach Schulz von Thun (4 Ohren)? ",
       "text" : "A) Der Sender bitte um eine Sachinformation, ich antworte mit „JA“.\nB) Der Sender vertraut mir, da die Uhr im Raum falsch gehen könnte, ich antworte mit der korrekten Uhrzeit.\nC) Der Sender appelliert an meine Pünktlichkeit. Ich entschuldige mich für die Verspätung.\nD) Der Sender offenbart dadurch, dass er eine neue Uhr braucht. Ich schenke ihm bei nächster Gelegenheit eine neue Uhr. ",
       "points" : 2,
       "type" : "MCQ",
