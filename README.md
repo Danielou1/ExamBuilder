@@ -8,7 +8,7 @@ ExamBuilder is a desktop application for creating and managing exams. It allows 
 
 *   Create and manage questions with different types (e.g., multiple choice, open-ended).
 *   Organize questions into exams.
-*   Export exams to DOCX and JSON formats.
+*   Export exams to DOCX, PDF and JSON formats.
 *   Rephrase questions using an integrated tool.
 
 ## Technologies Used
@@ -17,6 +17,7 @@ ExamBuilder is a desktop application for creating and managing exams. It allows 
 *   JavaFX 19
 *   Maven
 *   Apache POI for DOCX export
+*   iText for PDF export
 *   Jackson for JSON serialization
 *   Log4j2 for logging
 

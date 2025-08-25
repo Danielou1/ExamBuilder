@@ -6,7 +6,7 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
-
+import com.itextpdf.layout.properties.TextAlignment;
 import model.Exam;
 import model.Question;
 
@@ -18,7 +18,7 @@ public class PdfExporter {
              Document document = new Document(pdf)) {
 
             // Add content to the PDF
-            document.add(new Paragraph(exam.getTitle()).setBold().setFontSize(20).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            document.add(new Paragraph(exam.getTitle()).setBold().setFontSize(20).setTextAlignment(TextAlignment.CENTER));
             document.add(new Paragraph("Modul: " + exam.getModule()));
             document.add(new Paragraph("Semester: " + exam.getSemester()));
             document.add(new Paragraph("Fachbereich: " + exam.getFachbereich()));
