@@ -23,7 +23,13 @@ import java.util.Collections;
 import java.util.List;
 import utils.Rephraser;
 
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+
 public class MainController {
+
+    @FXML
+    private Button newQuestionButton;
 
     @FXML
     private TextField examTitleField;
@@ -120,21 +126,41 @@ public class MainController {
         }
 
         if (themeToggleButton != null) {
+            themeToggleButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.MOON_ALT));
             themeToggleButton.setOnAction(event -> {
                 if (themeToggleButton.isSelected()) {
                     mainPane.getStylesheets().remove(getClass().getResource("/styles/light-theme.css").toExternalForm());
                     mainPane.getStylesheets().add(getClass().getResource("/styles/dark-theme.css").toExternalForm());
-                    themeToggleButton.setText("Light Mode");
+                    themeToggleButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SUN_ALT));
                 } else {
                     mainPane.getStylesheets().remove(getClass().getResource("/styles/dark-theme.css").toExternalForm());
                     mainPane.getStylesheets().add(getClass().getResource("/styles/light-theme.css").toExternalForm());
-                    themeToggleButton.setText("Dark Mode");
+                    themeToggleButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.MOON_ALT));
                 }
             });
         }
 
         setEditMode(false);
+        setTooltips();
+        setIcons();
     }
+
+    private void setIcons() {
+        newQuestionButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
+        addQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE));
+        addSubQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_SQUARE));
+        updateQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.EDIT));
+        deleteQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
+    }
+
+    private void setTooltips() {
+        Tooltip.install(newQuestionButton, new Tooltip("Neue Frage erstellen"));
+        Tooltip.install(addQuestionMenuItem.getGraphic(), new Tooltip("Frage hinzufügen"));
+        Tooltip.install(addSubQuestionMenuItem.getGraphic(), new Tooltip("Sub-Frage hinzufügen"));
+        Tooltip.install(updateQuestionMenuItem.getGraphic(), new Tooltip("Frage aktualisieren"));
+        Tooltip.install(deleteQuestionMenuItem.getGraphic(), new Tooltip("Frage löschen"));
+    }
+
 
     private void setEditMode(boolean isEditing) {
         editPane.setDisable(!isEditing);
@@ -237,14 +263,23 @@ public class MainController {
     private void deleteQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            TreeItem<Question> parent = selectedItem.getParent();
-            if (parent != null && parent != questionsTable.getRoot()) {
-                parent.getValue().getSubQuestions().remove(selectedItem.getValue());
-            } else {
-                exam.getQuestions().remove(selectedItem.getValue());
-            }
-            refreshTreeTableView();
-            setEditMode(false);
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Frage löschen");
+            alert.setHeaderText("Sind Sie sicher, dass Sie diese Frage löschen möchten?");
+            alert.setContentText("Diese Aktion kann nicht rückgängig gemacht werden.");
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    TreeItem<Question> parent = selectedItem.getParent();
+                    if (parent != null && parent != questionsTable.getRoot()) {
+                        parent.getValue().getSubQuestions().remove(selectedItem.getValue());
+                    } else {
+                        exam.getQuestions().remove(selectedItem.getValue());
+                    }
+                    refreshTreeTableView();
+                    setEditMode(false);
+                }
+            });
         } else {
             System.out.println("Please select a question to delete.");
         }
@@ -414,6 +449,20 @@ public class MainController {
             });
 
             new Thread(rephraseTask).start();
+        }
+    }
+
+    @FXML
+    private void exportToPdf() {
+        updateExamMetadata();
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Exam as PDF");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        fileChooser.setInitialFileName(exam.getTitle() + ".pdf");
+        Stage stage = (Stage) examTitleField.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+        if (file != null) {
+            service.PdfExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
         }
     }
 

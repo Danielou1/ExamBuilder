@@ -44,7 +44,7 @@
   }, {
     "title" : "MCQ",
     "text" : "Sie können mehrere Antworten ankreuzen",
-    "points" : 10,
+    "points" : 12,
     "type" : "MCQ",
     "subQuestions" : [ {
       "title" : "Was kann der Begleitausschuss frühzeitig erkennen?",
@@ -61,8 +61,8 @@
       "subQuestions" : [ ],
       "answerLines" : 0
     }, {
-      "title" : "Ein Teammitglied möchte sein Versagen in einer Teamsitzung mit dem Projektleiter verbergen und nimmt sich vor „nicht zu kommunizieren“. Welche Aussage diesbezüglich ist nicht zutreffend?",
-      "text" : "A) Die abweichende Darstellung einer wahren Situation ist bei einer Informationsasymmetrie zwischen Teammitglied und der Projektleitung gut möglich.\nB) Das ansonsten zuverlässige Teammitglied vermeidet die Kommunikation und bleibt der Sitzung einfach fern.\nC) Bei einem gleichen Wissensstand ist eine abweichende Darstellung einer wahren Situation in der Regel nicht gut möglich.\nD) keine der vorgenannten Antworten ",
+      "title" : "Ein Teammitglied möchte sein Versagen in einer Teamsitzung mit dem Projektleiter verbergen und nimmt sich vor „nicht zu kommunizieren“. Welche Aussage diesbezüglich ist nichtzutreffend?",
+      "text" : "A) Die abweichende Darstellung einer wahren Situation ist bei einer Informationsasymmetrie zwischen Teammitglied und der Projektleitung gut möglich.\nB) Das ansonsten zuverlässige Teammitglied vermeidet die Kommunikation und bleibt der Sitzung einfach fern.\nC) Bei einem gleichen Wissensstand ist eine abweichende Darstellung einer wahren Situation in der Regel nicht gut möglich.\nD) keine der vorgenannten Antworten. ",
       "points" : 4,
       "type" : "MCQ",
       "subQuestions" : [ ],
@@ -70,6 +70,13 @@
     }, {
       "title" : "Der/die Projektleiter/in fragt Sie nach dem verspätetem betreten des Besprechungsraumes: „Wissen Sie eigentlich wieviel Uhr es ist? (im Raum hängt gut sichtbar eine Uhr). Wie verhalten Sie sich unter Anwendung des Kommunikationsmodells nach Schulz von Thun (4 Ohren)? ",
       "text" : "A) Der Sender bitte um eine Sachinformation, ich antworte mit „JA“.\nB) Der Sender vertraut mir, da die Uhr im Raum falsch gehen könnte, ich antworte mit der korrekten Uhrzeit.\nC) Der Sender appelliert an meine Pünktlichkeit. Ich entschuldige mich für die Verspätung.\nD) Der Sender offenbart dadurch, dass er eine neue Uhr braucht. Ich schenke ihm bei nächster Gelegenheit eine neue Uhr. ",
+      "points" : 2,
+      "type" : "MCQ",
+      "subQuestions" : [ ],
+      "answerLines" : 0
+    }, {
+      "title" : "Welche Probleme können bzgl. des Erlebensfeldes in der Kommunikation auftreten? ",
+      "text" : "A) Die Wahrnehmung eines wahrnehmbaren Sachverhalts kann bei Empfänger eingeschränkt sein.\nB) Bei einer perfekten Wahrnehmung eines wahrnehmbaren Sachverhalts kann die mangelnde Kognition (im Sinne der geistigen Verarbeitungsfähigkeit) dazu führen, dass eine falsche Reaktion (Verhalten Kommunikation) erfolgt.\nC) Bei einer perfekten Wahrnehmung eines wahrnehmbaren Sachverhalts und der vollständigen Kognition (im Sinne der geistigen Verarbeitungsfähigkeit) kann es passieren, dass das Ergebnis des Denkprozesses falsch kommuniziert wird.\nD) Alle der vorgenannten Antworten",
       "points" : 2,
       "type" : "MCQ",
       "subQuestions" : [ ],
@@ -140,5 +147,5 @@
     } ],
     "answerLines" : 0
   } ],
-  "totalPoints" : 47
+  "totalPoints" : 49
 }

@@ -30,6 +30,7 @@
                         <MenuItem text="Importieren von JSON" onAction="#importExamFromJson" />
                         <MenuItem text="Speichern als JSON" onAction="#saveExamToJson" />
                         <MenuItem text="Exportieren als .docx" onAction="#exportToWord" />
+                        <MenuItem text="Exportieren als .pdf" onAction="#exportToPdf" />
                         <MenuItem text="Exportieren als Variierte Version" onAction="#exportVariedVersion" />
                     </Menu>
                 </MenuBar>
@@ -86,7 +87,7 @@
             <padding>
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
-            <Button onAction="#newQuestion" text="Neue Frage" />
+            <Button fx:id="newQuestionButton" onAction="#newQuestion" text="Neue Frage" />
             <VBox fx:id="editPane" spacing="10">
                 <Label text="Frage bearbeiten" />
                 <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
