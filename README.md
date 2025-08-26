@@ -50,6 +50,14 @@ Or, you can run the packaged JAR file:
 java -jar target/exambuilder-1.0-SNAPSHOT.jar
 ```
 
+## Running Tests
+
+To run the unit tests, use the following Maven command:
+
+```bash
+mvn test
+```
+
 ## Configuration
 
 To use the question rephrasing feature, you need to provide a Gemini API key.
