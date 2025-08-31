@@ -1,5 +1,7 @@
 # ExamBuilder
 
+[![Java CI with Maven](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml/badge.svg)](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml)
+
 ## Description
 
 ExamBuilder is a modern desktop application designed for educators to streamline the creation, management, and distribution of exams. With an intuitive user interface, it allows for the creation of complex exams, which can be saved, loaded, and exported into multiple standard formats.
@@ -23,7 +25,8 @@ The application is built with JavaFX and includes advanced features like questio
 ## Technologies Used
 
 *   **Core:** Java 19, JavaFX 19
-*   **Build:** Maven
+*   **Build:** Maven (with Maven Wrapper)
+*   **CI/CD:** GitHub Actions
 *   **File Formats:**
     *   Apache POI `5.2.2` (for `.docx` Word export)
     *   iText `7.2.6` (for `.pdf` export)
@@ -45,9 +48,13 @@ The application is built with JavaFX and includes advanced features like questio
     ```bash
     cd ExamBuilder
     ```
-3.  Build the project using Maven:
+3.  Build the project using the Maven Wrapper:
     ```bash
-    mvn clean install
+    # On Windows
+    mvnw clean install
+
+    # On macOS/Linux
+    ./mvnw clean install
     ```
 
 ## Usage
@@ -55,7 +62,11 @@ The application is built with JavaFX and includes advanced features like questio
 Run the application using the dedicated Maven plugin:
 
 ```bash
-mvn javafx:run
+# On Windows
+.mvnw javafx:run
+
+# On macOS/Linux
+./mvnw javafx:run
 ```
 
 Alternatively, you can run the packaged JAR file from the `target` directory:
@@ -85,10 +96,14 @@ Set the `GEMINI_API_KEY` environment variable to your API key. This is the most 
 
 ## Running Tests
 
-To run the suite of unit tests, use the following Maven command:
+To run the suite of unit tests, use the Maven wrapper:
 
 ```bash
-mvn test
+# On Windows
+.mvnw test
+
+# On macOS/Linux
+./mvnw test
 ```
 
 ## Author
