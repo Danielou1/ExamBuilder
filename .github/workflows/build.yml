@@ -23,6 +23,5 @@ jobs:
 
     - name: Build with Maven Wrapper
       run: |
-        cd ExamBuilder
         chmod +x ./mvnw
         ./mvnw clean install
