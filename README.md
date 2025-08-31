@@ -2,24 +2,38 @@
 
 ## Description
 
-ExamBuilder is a desktop application for creating and managing exams. It allows users to create questions, organize them into exams, and export them to various formats such as DOCX and JSON.
+ExamBuilder is a modern desktop application designed for educators to streamline the creation, management, and distribution of exams. With an intuitive user interface, it allows for the creation of complex exams, which can be saved, loaded, and exported into multiple standard formats.
+
+The application is built with JavaFX and includes advanced features like question rephrasing via the Gemini API and dynamic theme switching.
 
 ## Features
 
-*   Create and manage questions with different types (e.g., multiple choice, open-ended).
-*   Organize questions into exams.
-*   Export exams to DOCX, PDF and JSON formats.
-*   Rephrase questions using an integrated tool.
+*   **Full Project Lifecycle:** Create, save, and load entire exam projects.
+*   **Question Management:** Add, edit, and delete questions within an exam.
+*   **Supported Question Types:**
+    *   Multiple Choice Questions (MCQ)
+    *   Open-Ended Questions
+*   **Import/Export:**
+    *   **Import** exams from `JSON` files.
+    *   **Export** exams to `PDF`, `DOCX`, and `JSON` formats for easy distribution and grading.
+*   **AI-Powered Rephrasing:** Integrate with the Gemini API to automatically rephrase questions, offering alternative phrasings.
+*   **Customizable UI:** Instantly switch between a **light** and **dark** theme.
+*   **User-Friendly:** Enjoy a clean interface with icons (via FontAwesomeFX) and helpful dialogs.
 
 ## Technologies Used
 
-*   Java 19
-*   JavaFX 19
-*   Maven
-*   Apache POI for DOCX export
-*   iText for PDF export
-*   Jackson for JSON serialization
-*   Log4j2 for logging
+*   **Core:** Java 19, JavaFX 19
+*   **Build:** Maven
+*   **File Formats:**
+    *   Apache POI `5.2.2` (for `.docx` Word export)
+    *   iText `7.2.6` (for `.pdf` export)
+    *   Jackson `2.13.3` (for `.json` serialization)
+*   **UI:**
+    *   FontAwesomeFX `4.7.0-9.1.2` (for icons)
+*   **Logging:** Log4j2 `2.17.1`
+*   **Testing:**
+    *   JUnit 5 `5.8.2`
+    *   Mockito `4.5.1`
 
 ## Installation
 
@@ -38,53 +52,44 @@ ExamBuilder is a desktop application for creating and managing exams. It allows 
 
 ## Usage
 
-Run the application using the following command:
+Run the application using the dedicated Maven plugin:
 
 ```bash
 mvn javafx:run
 ```
 
-Or, you can run the packaged JAR file:
+Alternatively, you can run the packaged JAR file from the `target` directory:
 
 ```bash
 java -jar target/exambuilder-1.0-SNAPSHOT.jar
 ```
 
-## Running Tests
-
-To run the unit tests, use the following Maven command:
-
-```bash
-mvn test
-```
-
 ## Configuration
 
-To use the question rephrasing feature, you need to provide a Gemini API key.
+To use the AI-powered question rephrasing feature, you must provide a Gemini API key.
 
-### Option 1: Environment Variable (Recommended)
+### Environment Variable (Recommended)
 
-Set the `GEMINI_API_KEY` environment variable to your API key.
+Set the `GEMINI_API_KEY` environment variable to your API key. This is the most secure and recommended method.
 
 *   **Windows:**
     ```bash
     setx GEMINI_API_KEY "YOUR_API_KEY"
     ```
+    *(Note: You may need to restart your terminal or IDE for the change to take effect.)*
+
 *   **macOS/Linux:**
     ```bash
     export GEMINI_API_KEY="YOUR_API_KEY"
     ```
 
-### Option 2: Hardcode the API Key (For local testing only)
+## Running Tests
 
-1.  Open the file `src/main/java/utils/Rephraser.java`.
-2.  Uncomment the following line:
-    ```java
-    // return "YOUR_API_KEY";
-    ```
-3.  Replace `"YOUR_API_KEY"` with your actual API key.
+To run the suite of unit tests, use the following Maven command:
 
-**IMPORTANT:** Do not commit this file with the API key uncommented.
+```bash
+mvn test
+```
 
 ## Author
 

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
-Test set: model.ExamTest
+Test set: utils.RephraserTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.118 s -- in model.ExamTest
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in utils.RephraserTest
