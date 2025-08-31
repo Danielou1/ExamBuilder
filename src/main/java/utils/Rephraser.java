@@ -61,7 +61,6 @@ public class Rephraser {
             ObjectNode partNode = contentsNode.addObject().putObject("parts");
             // Prompt modifié pour obtenir seulement le texte reformulé dans la langue d'origine
             partNode.put("text", "Rephrase the following text, keeping the original language and providing only the rephrased version: " + originalText);
-
             String requestBody = objectMapper.writeValueAsString(rootNode);
 
             // Build the HTTP request
