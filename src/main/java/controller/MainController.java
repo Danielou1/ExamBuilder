@@ -1,19 +1,43 @@
 package controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableRow;
+import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.CheckBoxTreeTableCell;
-import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -21,18 +45,7 @@ import model.Exam;
 import model.Question;
 import service.WordExporter;
 import utils.LoadingIndicator;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import utils.Rephraser;
-
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 
 public class MainController {
 
@@ -112,25 +125,8 @@ public class MainController {
         selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
         selectedColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(selectedColumn));
 
-        questionsTable.setRowFactory(tv -> new TreeTableRow<Question>() {
-            @Override
-            protected void updateItem(Question item, boolean empty) {
-                super.updateItem(item, empty);
-                getStyleClass().remove("deselected-row");
-                if (item != null && !empty) {
-                    item.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
-                        if (isNowSelected) {
-                            getStyleClass().remove("deselected-row");
-                        } else {
-                            getStyleClass().add("deselected-row");
-                        }
-                    });
-                    if (!item.isSelected()) {
-                        getStyleClass().add("deselected-row");
-                    }
-                }
-            }
-        });
+        setupRowFactory();
+        setupContextMenu();
 
         titleColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getTitle()));
         typeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getType()));
@@ -185,6 +181,56 @@ public class MainController {
         setIcons();
     }
 
+    private void setupRowFactory() {
+        questionsTable.setRowFactory(tv -> {
+            TreeTableRow<Question> row = new TreeTableRow<>() {
+                @Override
+                protected void updateItem(Question item, boolean empty) {
+                    super.updateItem(item, empty);
+                    getStyleClass().remove("deselected-row");
+                    if (item != null && !empty) {
+                        item.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                            if (isNowSelected) {
+                                getStyleClass().remove("deselected-row");
+                            } else {
+                                getStyleClass().add("deselected-row");
+                            }
+                        });
+                        if (!item.isSelected()) {
+                            getStyleClass().add("deselected-row");
+                        }
+                    }
+                }
+            };
+            return row;
+        });
+    }
+
+    private void setupContextMenu() {
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem editItem = new MenuItem("Frage bearbeiten");
+        editItem.setOnAction(e -> editQuestion());
+        MenuItem saveItem = new MenuItem("Änderungen speichern");
+        saveItem.setOnAction(e -> updateQuestion());
+        MenuItem deleteItem = new MenuItem("Frage löschen");
+        deleteItem.setOnAction(e -> deleteQuestion());
+        MenuItem addSubItem = new MenuItem("Sub-Frage hinzufügen");
+        addSubItem.setOnAction(e -> addSubQuestion());
+
+        contextMenu.getItems().addAll(editItem, saveItem, new SeparatorMenuItem(), addSubItem, deleteItem);
+
+        contextMenu.setOnShowing(e -> {
+            boolean noSelection = questionsTable.getSelectionModel().getSelectedItem() == null;
+            boolean isEditing = !editPane.isDisable();
+            editItem.setDisable(noSelection || isEditing);
+            saveItem.setDisable(noSelection || !isEditing);
+            deleteItem.setDisable(noSelection);
+            addSubItem.setDisable(noSelection || isEditing);
+        });
+
+        questionsTable.setContextMenu(contextMenu);
+    }
+
     @FXML
     private void openHinweiseDialog() {
         try {
@@ -219,6 +265,7 @@ public class MainController {
         actionsMenuButton.setDisable(selectionModeActive);
         editPane.setDisable(selectionModeActive);
         hinweiseButton.setDisable(selectionModeActive);
+        questionsTable.setContextMenu(selectionModeActive ? null : questionsTable.getContextMenu());
 
         if (selectionModeActive) {
             selectionModeButton.setText("Mode Édition");

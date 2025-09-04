@@ -1,68 +1,103 @@
 {
-  "title": "Testklausur für neue Funktionen",
-  "module": "Software Engineering",
-  "semester": "WS2025/26",
-  "fachbereich": "Informatik",
-  "hochschule": "Meine Hochschule",
-  "hilfsmittel": "Taschenrechner, Formelsammlung",
-  "allgemeineHinweise": "Zugelassene Hilfsmittel: Taschenrechner, Formelsammlung.\nDie Bearbeitungszeit beträgt 90 Minuten.",
+  "title": "Klausur",
+  "author": "",
+  "module": "Projektmanagement",
+  "semester": "SommerSemester2025",
+  "fachbereich": "Mathematik, Naturwissenschaften und Informatik",
+  "hochschule": "Technische Hochschule Mittelhessen",
+  "hilfsmittel": "ein handgeschriebenes Blatt(Vorder und Rückseite)",
+  "allgemeineHinweise": "ein handgeschriebenes Blatt(Vorder und Rückseite) darf man mitnehmen, bearbeitungszeit 90min",
   "bearbeitungszeit": 90,
   "questions": [
     {
-      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-      "title": "Frage 1: UML",
-      "text": "Was ist der Zweck eines Klassendiagramms?",
-      "points": 10,
-      "type": "Offene Frage",
-      "subQuestions": [],
-      "answerLines": 5,
-      "selected": true,
-      "musterloesung": "Ein Klassendiagramm beschreibt die Struktur eines Systems, indem es die Klassen des Systems, ihre Attribute, Operationen (oder Methoden) und die Beziehungen zwischen den Objekten zeigt."
-    },
-    {
-      "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
-      "title": "Frage 2: Java",
-      "text": "Welches dieser Schlüsselwörter ist in Java nicht vorhanden?",
-      "points": 5,
-      "type": "MCQ",
-      "subQuestions": [],
-      "answerLines": 0,
-      "selected": false,
-      "musterloesung": "C) pointer"
-    },
-    {
-      "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
-      "title": "Frage 3: Design Patterns",
-      "text": "Beschreiben Sie das Singleton-Pattern.",
+      "id": "f1b5e6a7-c8d9-4e0f-a1b2-c3d4e5f6a7b8",
+      "title": "Projektdefinition und Projektrisiken",
+      "text": "",
       "points": 15,
-      "type": "Offene Frage",
+      "type": "Offen",
       "subQuestions": [
         {
-          "id": "d4e5f6a7-b8c9-0123-4567-890abcdef123",
-          "title": "Teil a",
-          "text": "Was ist der Hauptvorteil?",
-          "points": 5,
-          "type": "Offene Frage",
+          "id": "a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d",
+          "title": "Geben Sie an, welche Eigenschaften ein Projekt unter Anderem hat.",
+          "text": "",
+          "points": 3,
+          "type": "Offen",
           "subQuestions": [],
           "answerLines": 3,
           "selected": true,
-          "musterloesung": "Stellt sicher, dass nur eine Instanz einer Klasse existiert und bietet einen globalen Zugriffspunkt auf diese Instanz."
+          "musterloesung": "Einmaligkeit, Zielvorgabe, zeitliche Befristung, begrenzte Ressourcen, projektspezifische Organisation, Komplexität."
         },
         {
-          "id": "e5f6a7b8-c9d0-1234-5678-90abcdef1234",
-          "title": "Teil b",
-          "text": "Was ist ein potenzieller Nachteil?",
-          "points": 10,
-          "type": "Offene Frage",
+          "id": "b3c4d5e6-f7a8-4b9c-8d1e-2f3a4b5c6d7e",
+          "title": "Geben Sie ein Beispiel (fiktiv) für ein konkretes Projekt, dass die zuvor genannten Eigenschaften hat.",
+          "text": "",
+          "points": 3,
+          "type": "Offen",
           "subQuestions": [],
           "answerLines": 4,
           "selected": true,
-          "musterloesung": "Kann globale Zustände einführen und das Unit-Testing erschweren, da Abhängigkeiten schwer zu mocken sind."
+          "musterloesung": "Die Entwicklung einer neuen mobilen App zur Notizverwaltung. Es ist einmalig (neue App), hat ein klares Ziel (App-Launch), ist zeitlich befristet (6 Monate Entwicklungszeit) und hat begrenzte Ressourcen (Budget X, 3 Entwickler)."
+        },
+        {
+          "id": "c4d5e6f7-a8b9-4c0d-9e1f-3a4b5c6d7e8f",
+          "title": "Nennen Sie fünf Projektrisiken.",
+          "text": "",
+          "points": 5,
+          "type": "Offen",
+          "subQuestions": [],
+          "answerLines": 5,
+          "selected": true,
+          "musterloesung": "1. Technische Risiken (Technologie versagt)\n2. Ressourcenrisiken (Teammitglied fällt aus)\n3. Terminrisiken (Lieferverzug)\n4. Finanzielle Risiken (Budgetüberschreitung)\n5. Akzeptanzrisiken (Kunde nimmt Ergebnis nicht an)"
+        },
+        {
+          "id": "d5e6f7a8-b9c0-4d1e-a0f1-4b5c6d7e8f9a",
+          "title": "Was beschreibt die Prinzipal-Agenten-Theorie?",
+          "text": "",
+          "points": 4,
+          "type": "Offen",
+          "subQuestions": [],
+          "answerLines": 4,
+          "selected": true,
+          "musterloesung": "Beschreibt eine Beziehung, in der eine Partei (Prinzipal) eine andere (Agent) beauftragt, eine Aufgabe auszuführen. Aufgrund von Informationsasymmetrien und unterschiedlichen Interessen können Probleme wie Moral Hazard und Adverse Selection entstehen."
         }
       ],
       "answerLines": 0,
       "selected": true,
-      "musterloesung": "Siehe Teifragen a und b."
+      "musterloesung": ""
+    },
+    {
+      "id": "e6f7a8b9-c0d1-4e2f-b1a2-5c6d7e8f9a0b",
+      "title": "MCQ",
+      "text": "Sie können mehrere Antworten ankreuzen",
+      "points": 12,
+      "type": "MCQ",
+      "subQuestions": [
+        {
+          "id": "f7a8b9c0-d1e2-4f3a-c2b3-6d7e8f9a0b1c",
+          "title": "Was kann der Begleitausschuss frühzeitig erkennen?",
+          "text": "A) Akzeptanzprobleme  \nB) Finanzierungsprobleme \nC) Technische Schwierigkeiten \nD) Ressourcenengpässe ",
+          "points": 2,
+          "type": "MCQ",
+          "subQuestions": [],
+          "answerLines": 0,
+          "selected": true,
+          "musterloesung": "A, B, D"
+        },
+        {
+          "id": "a8b9c0d1-e2f3-4a4b-b3c4-7e8f9a0b1c2d",
+          "title": "Was beschreibt die Prinzipal-Agent-Theorie?",
+          "text": "A) Das mögliche Verhalten von Vertragspartnern in Hierarchien \nB) Das Kommunikationsmanagement in einem Projekt \nC) Die technischen Risiken eines Projekts \nD) keine der vorgenannten Antworten ",
+          "points": 2,
+          "type": "MCQ",
+          "subQuestions": [],
+          "answerLines": 0,
+          "selected": true,
+          "musterloesung": "A"
+        }
+      ],
+      "answerLines": 0,
+      "selected": true,
+      "musterloesung": ""
     }
   ]
 }

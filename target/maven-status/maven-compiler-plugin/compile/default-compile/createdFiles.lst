@@ -1,7 +1,6 @@
 main\ExamBuilder.class
 controller\MainController$4.class
 model\Exam.class
-controller\MainController.class
 controller\MainController$3.class
 utils\Rephraser.class
 model\Question.class
