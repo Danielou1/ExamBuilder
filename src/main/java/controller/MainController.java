@@ -8,11 +8,14 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeTableCell;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.Exam;
 import model.Question;
@@ -35,6 +38,8 @@ public class MainController {
 
     @FXML
     private Button newQuestionButton;
+    @FXML
+    private Button hinweiseButton;
 
     @FXML
     private TextField examTitleField;
@@ -46,8 +51,6 @@ public class MainController {
     private TextField fachbereichField;
     @FXML
     private TextField hochschuleField;
-    @FXML
-    private TextField hilfsmittelField;
 
     @FXML
     private TreeTableView<Question> questionsTable;
@@ -183,21 +186,45 @@ public class MainController {
     }
 
     @FXML
+    private void openHinweiseDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/fxml/HinweiseDialog.fxml"));
+            VBox page = loader.load();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Hinweise, Hilfsmittel & Zeit bearbeiten");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(mainPane.getScene().getWindow());
+            Scene scene = new Scene(page);
+            dialogStage.setScene(scene);
+
+            HinweiseDialogController controller = loader.getController();
+            controller.setDialogStage(dialogStage);
+            controller.setData(this.exam);
+
+            dialogStage.showAndWait();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void toggleSelectionMode() {
         boolean selectionModeActive = selectionModeButton.isSelected();
         selectedColumn.setEditable(selectionModeActive);
 
-        // Disable other UI parts to avoid conflicts
         newQuestionButton.setDisable(selectionModeActive);
         actionsMenuButton.setDisable(selectionModeActive);
         editPane.setDisable(selectionModeActive);
+        hinweiseButton.setDisable(selectionModeActive);
 
         if (selectionModeActive) {
             selectionModeButton.setText("Mode Édition");
-            questionsTable.getSelectionModel().clearSelection(); // Clear selection to avoid confusion
+            questionsTable.getSelectionModel().clearSelection();
         } else {
-            selectionModeButton.setText("Mode Sélection");
-            // Re-enable action buttons if a row is selected
+            selectionModeButton.setText("ModeSélection");
             actionsMenuButton.setDisable(questionsTable.getSelectionModel().getSelectedItem() == null);
         }
     }
@@ -213,6 +240,7 @@ public class MainController {
 
     private void setTooltips() {
         Tooltip.install(newQuestionButton, new Tooltip("Neue Frage erstellen"));
+        Tooltip.install(hinweiseButton, new Tooltip("Hinweise, Hilfsmittel und Bearbeitungszeit für die Prüfung festlegen"));
         Tooltip.install(addQuestionMenuItem.getGraphic(), new Tooltip("Frage hinzufügen"));
         Tooltip.install(addSubQuestionMenuItem.getGraphic(), new Tooltip("Sub-Frage hinzufügen"));
         Tooltip.install(editQuestionMenuItem.getGraphic(), new Tooltip("Frage bearbeiten"));
@@ -231,7 +259,7 @@ public class MainController {
         clearQuestionFields();
         setEditMode(true);
         addQuestionMenuItem.setDisable(false);
-        updateQuestionMenuItem.setDisable(true); // Disable save when new
+        updateQuestionMenuItem.setDisable(true);
     }
 
     @FXML
@@ -240,7 +268,7 @@ public class MainController {
         if (selectedItem != null) {
             populateQuestionDetails(selectedItem.getValue());
             setEditMode(true);
-            addQuestionMenuItem.setDisable(true); // Can't add while editing
+            addQuestionMenuItem.setDisable(true);
         }
     }
 
@@ -254,7 +282,6 @@ public class MainController {
     }
 
     private void refreshTreeTableView() {
-        // Save selection
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         Question selectedQuestion = selectedItem != null ? selectedItem.getValue() : null;
 
@@ -266,7 +293,6 @@ public class MainController {
         }
         questionsTable.setRoot(root);
 
-        // Restore selection
         if (selectedQuestion != null) {
             findAndSelectQuestion(questionsTable.getRoot(), selectedQuestion);
         }
@@ -445,13 +471,13 @@ public class MainController {
         fileChooser.setTitle("Save Exam as Word Document");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Word Documents", "*.docx"));
         fileChooser.setInitialFileName(exam.getTitle() + ".docx");
-        Stage stage = (Stage) examTitleField.getScene().getWindow();
+        Stage stage = (Stage) mainPane.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
             Task<Void> exportTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    WordExporter.export(examToExport, file.getAbsolutePath(), hilfsmittelField.getText());
+                    WordExporter.export(examToExport, file.getAbsolutePath());
                     return null;
                 }
             };
@@ -477,7 +503,7 @@ public class MainController {
             fileChooser.setTitle("Save Exam as JSON");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
             fileChooser.setInitialFileName(exam.getTitle() + ".json");
-            Stage stage = (Stage) examTitleField.getScene().getWindow();
+            Stage stage = (Stage) mainPane.getScene().getWindow();
             File file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 mapper.writeValue(file, exam);
@@ -502,7 +528,7 @@ public class MainController {
                 new FileChooser.ExtensionFilter("JSON Files", "*.json")
         );
         fileChooser.setInitialFileName(exam.getTitle() + "_varied");
-        Stage stage = (Stage) examTitleField.getScene().getWindow();
+        Stage stage = (Stage) mainPane.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
@@ -511,7 +537,7 @@ public class MainController {
             Task<Exam> rephraseTask = new Task<>() {
                 @Override
                 protected Exam call() throws Exception {
-                    Exam variedExam = new Exam(examToExport); // Use the filtered exam
+                    Exam variedExam = new Exam(examToExport);
                     List<Question> rephrasedQuestions = new ArrayList<>();
                     for (Question originalQuestion : variedExam.getQuestions()) {
                         rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
@@ -529,7 +555,7 @@ public class MainController {
                     protected Void call() throws Exception {
                         String fileName = file.getName();
                         if (fileName.endsWith(".docx")) {
-                            WordExporter.export(variedExam, file.getAbsolutePath(), hilfsmittelField.getText());
+                            WordExporter.export(variedExam, file.getAbsolutePath());
                         } else if (fileName.endsWith(".json")) {
                             try {
                                 ObjectMapper mapper = new ObjectMapper();
@@ -570,7 +596,7 @@ public class MainController {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Open Exam JSON File");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
-            Stage stage = (Stage) examTitleField.getScene().getWindow();
+            Stage stage = (Stage) mainPane.getScene().getWindow();
             File file = fileChooser.showOpenDialog(stage);
             if (file != null) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -589,9 +615,6 @@ public class MainController {
         semesterField.setText(exam.getSemester());
         fachbereichField.setText(exam.getFachbereich());
         hochschuleField.setText(exam.getHochschule());
-        if (exam.getHilfsmittel() != null) {
-            hilfsmittelField.setText(exam.getHilfsmittel());
-        }
         refreshTreeTableView();
     }
 
@@ -601,7 +624,6 @@ public class MainController {
         exam.setSemester(semesterField.getText());
         exam.setFachbereich(fachbereichField.getText());
         exam.setHochschule(hochschuleField.getText());
-        exam.setHilfsmittel(hilfsmittelField.getText());
     }
 
     private void updateTotalPoints() {

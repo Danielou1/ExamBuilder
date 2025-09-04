@@ -10,7 +10,9 @@ public class Exam {
     private String semester;
     private String fachbereich;
     private String hochschule;
-    private String hilfsmittel;
+    private String hilfsmittel; // Allowed aids (checkboxes)
+    private String allgemeineHinweise; // General instructions (textarea)
+    private int bearbeitungszeit; // Exam duration in minutes
     private List<Question> questions;
 
     public Exam() {
@@ -37,6 +39,8 @@ public class Exam {
         this.fachbereich = other.fachbereich;
         this.hochschule = other.hochschule;
         this.hilfsmittel = other.hilfsmittel;
+        this.allgemeineHinweise = other.allgemeineHinweise;
+        this.bearbeitungszeit = other.bearbeitungszeit;
         this.questions = new ArrayList<>(other.questions);
     }
 
@@ -95,6 +99,22 @@ public class Exam {
 
     public void setHilfsmittel(String hilfsmittel) {
         this.hilfsmittel = hilfsmittel;
+    }
+
+    public String getAllgemeineHinweise() {
+        return allgemeineHinweise;
+    }
+
+    public void setAllgemeineHinweise(String allgemeineHinweise) {
+        this.allgemeineHinweise = allgemeineHinweise;
+    }
+
+    public int getBearbeitungszeit() {
+        return bearbeitungszeit;
+    }
+
+    public void setBearbeitungszeit(int bearbeitungszeit) {
+        this.bearbeitungszeit = bearbeitungszeit;
     }
 
     public List<Question> getQuestions() {

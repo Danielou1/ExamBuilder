@@ -6,11 +6,14 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Datenmodell für eine einzelne Frage in der Klausur.
  */
 public class Question {
+    private UUID id;
     private String title;
     private String text;
     private int points;
@@ -22,16 +25,40 @@ public class Question {
     private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     public Question() {
+        this.id = UUID.randomUUID();
         this.subQuestions = new ArrayList<>();
     }
 
     public Question(String title, String text, int points, String type, int answerLines) {
+        this.id = UUID.randomUUID();
         this.title = title;
         this.text = text;
         this.points = points;
         this.type = type;
         this.answerLines = answerLines;
         this.subQuestions = new ArrayList<>();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Question question = (Question) o;
+        return id.equals(question.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    // --- ID Getter/Setter ---
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     // --- JavaFX Property Methods for 'selected' ---
@@ -47,7 +74,6 @@ public class Question {
 
     // --- Standard Getters/Setters ---
 
-    // Getter/Setter for 'selected' used by Jackson for JSON serialization
     public boolean getSelected() {
         return selected.get();
     }
