@@ -1,5 +1,9 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +16,10 @@ public class Question {
     private int points;
     private String type;
     private List<Question> subQuestions;
-
     private int answerLines;
+    private String musterloesung = "";
+
+    private final BooleanProperty selected = new SimpleBooleanProperty(false);
 
     public Question() {
         this.subQuestions = new ArrayList<>();
@@ -28,7 +34,28 @@ public class Question {
         this.subQuestions = new ArrayList<>();
     }
 
-    // Getter und Setter
+    // --- JavaFX Property Methods for 'selected' ---
+
+    @JsonIgnore
+    public boolean isSelected() {
+        return selected.get();
+    }
+
+    public BooleanProperty selectedProperty() {
+        return selected;
+    }
+
+    // --- Standard Getters/Setters ---
+
+    // Getter/Setter for 'selected' used by Jackson for JSON serialization
+    public boolean getSelected() {
+        return selected.get();
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected.set(selected);
+    }
+
     public int getAnswerLines() {
         return answerLines;
     }
@@ -81,5 +108,13 @@ public class Question {
 
     public void addSubQuestion(Question subQuestion) {
         this.subQuestions.add(subQuestion);
+    }
+
+    public String getMusterloesung() {
+        return musterloesung;
+    }
+
+    public void setMusterloesung(String musterloesung) {
+        this.musterloesung = musterloesung;
     }
 }

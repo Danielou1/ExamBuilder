@@ -3,10 +3,13 @@ package controller;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTreeTableCell;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -21,6 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import utils.Rephraser;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
@@ -47,6 +52,8 @@ public class MainController {
     @FXML
     private TreeTableView<Question> questionsTable;
     @FXML
+    private TreeTableColumn<Question, Boolean> selectedColumn;
+    @FXML
     private TreeTableColumn<Question, String> titleColumn;
     @FXML
     private TreeTableColumn<Question, String> typeColumn;
@@ -60,6 +67,8 @@ public class MainController {
     @FXML
     private TextArea questionTextField;
     @FXML
+    private TextArea musterloesungField;
+    @FXML
     private TextField questionPointsField;
     @FXML
     private ComboBox<String> questionTypeField;
@@ -71,9 +80,13 @@ public class MainController {
     @FXML
     private MenuItem addSubQuestionMenuItem;
     @FXML
+    private MenuItem editQuestionMenuItem;
+    @FXML
     private MenuItem updateQuestionMenuItem;
     @FXML
     private MenuItem deleteQuestionMenuItem;
+    @FXML
+    private MenuButton actionsMenuButton;
 
     @FXML
     private Label totalPointsLabel;
@@ -83,11 +96,39 @@ public class MainController {
 
     @FXML
     private ToggleButton themeToggleButton;
+    @FXML
+    private ToggleButton selectionModeButton;
 
     private Exam exam;
 
     @FXML
     public void initialize() {
+        questionsTable.setEditable(true);
+
+        selectedColumn.setEditable(false);
+        selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
+        selectedColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(selectedColumn));
+
+        questionsTable.setRowFactory(tv -> new TreeTableRow<Question>() {
+            @Override
+            protected void updateItem(Question item, boolean empty) {
+                super.updateItem(item, empty);
+                getStyleClass().remove("deselected-row");
+                if (item != null && !empty) {
+                    item.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
+                        if (isNowSelected) {
+                            getStyleClass().remove("deselected-row");
+                        } else {
+                            getStyleClass().add("deselected-row");
+                        }
+                    });
+                    if (!item.isSelected()) {
+                        getStyleClass().add("deselected-row");
+                    }
+                }
+            }
+        });
+
         titleColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getTitle()));
         typeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getType()));
         pointsColumn.setCellValueFactory(param -> new SimpleStringProperty(Integer.toString(param.getValue().getValue().getPoints())));
@@ -112,13 +153,8 @@ public class MainController {
         });
 
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                populateQuestionDetails(newValue.getValue());
-                setEditMode(true);
-            } else {
-                clearQuestionFields();
-                setEditMode(false);
-            }
+            boolean itemSelected = (newValue != null);
+            actionsMenuButton.setDisable(!itemSelected);
         });
 
         if (mainPane != null) {
@@ -140,16 +176,38 @@ public class MainController {
             });
         }
 
-        setEditMode(false);
+        editPane.setDisable(true);
+        actionsMenuButton.setDisable(true);
         setTooltips();
         setIcons();
+    }
+
+    @FXML
+    private void toggleSelectionMode() {
+        boolean selectionModeActive = selectionModeButton.isSelected();
+        selectedColumn.setEditable(selectionModeActive);
+
+        // Disable other UI parts to avoid conflicts
+        newQuestionButton.setDisable(selectionModeActive);
+        actionsMenuButton.setDisable(selectionModeActive);
+        editPane.setDisable(selectionModeActive);
+
+        if (selectionModeActive) {
+            selectionModeButton.setText("Mode Édition");
+            questionsTable.getSelectionModel().clearSelection(); // Clear selection to avoid confusion
+        } else {
+            selectionModeButton.setText("Mode Sélection");
+            // Re-enable action buttons if a row is selected
+            actionsMenuButton.setDisable(questionsTable.getSelectionModel().getSelectedItem() == null);
+        }
     }
 
     private void setIcons() {
         newQuestionButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
         addQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE));
         addSubQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_SQUARE));
-        updateQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.EDIT));
+        editQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PENCIL_SQUARE_ALT));
+        updateQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.SAVE));
         deleteQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
     }
 
@@ -157,39 +215,49 @@ public class MainController {
         Tooltip.install(newQuestionButton, new Tooltip("Neue Frage erstellen"));
         Tooltip.install(addQuestionMenuItem.getGraphic(), new Tooltip("Frage hinzufügen"));
         Tooltip.install(addSubQuestionMenuItem.getGraphic(), new Tooltip("Sub-Frage hinzufügen"));
-        Tooltip.install(updateQuestionMenuItem.getGraphic(), new Tooltip("Frage aktualisieren"));
+        Tooltip.install(editQuestionMenuItem.getGraphic(), new Tooltip("Frage bearbeiten"));
+        Tooltip.install(updateQuestionMenuItem.getGraphic(), new Tooltip("Änderungen speichern"));
         Tooltip.install(deleteQuestionMenuItem.getGraphic(), new Tooltip("Frage löschen"));
     }
 
-
     private void setEditMode(boolean isEditing) {
         editPane.setDisable(!isEditing);
-        addQuestionMenuItem.setDisable(isEditing);
-        addSubQuestionMenuItem.setDisable(!isEditing);
         updateQuestionMenuItem.setDisable(!isEditing);
-        deleteQuestionMenuItem.setDisable(!isEditing);
     }
 
     @FXML
     private void newQuestion() {
         questionsTable.getSelectionModel().clearSelection();
         clearQuestionFields();
-        editPane.setDisable(false);
+        setEditMode(true);
         addQuestionMenuItem.setDisable(false);
-        addSubQuestionMenuItem.setDisable(true);
-        updateQuestionMenuItem.setDisable(true);
-        deleteQuestionMenuItem.setDisable(true);
+        updateQuestionMenuItem.setDisable(true); // Disable save when new
+    }
+
+    @FXML
+    private void editQuestion() {
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            populateQuestionDetails(selectedItem.getValue());
+            setEditMode(true);
+            addQuestionMenuItem.setDisable(true); // Can't add while editing
+        }
     }
 
     private void populateQuestionDetails(Question question) {
         questionTitleField.setText(question.getTitle());
         questionTextField.setText(question.getText());
+        musterloesungField.setText(question.getMusterloesung());
         questionPointsField.setText(String.valueOf(question.getPoints()));
         questionTypeField.setValue(question.getType());
         answerLinesField.getValueFactory().setValue(question.getAnswerLines());
     }
 
     private void refreshTreeTableView() {
+        // Save selection
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        Question selectedQuestion = selectedItem != null ? selectedItem.getValue() : null;
+
         TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, "", 0));
         for (Question q : exam.getQuestions()) {
             TreeItem<Question> questionItem = new TreeItem<>(q);
@@ -197,7 +265,25 @@ public class MainController {
             root.getChildren().add(questionItem);
         }
         questionsTable.setRoot(root);
+
+        // Restore selection
+        if (selectedQuestion != null) {
+            findAndSelectQuestion(questionsTable.getRoot(), selectedQuestion);
+        }
         updateTotalPoints();
+    }
+    
+    private boolean findAndSelectQuestion(TreeItem<Question> current, Question target) {
+        if (current.getValue().equals(target)) {
+            questionsTable.getSelectionModel().select(current);
+            return true;
+        }
+        for (TreeItem<Question> child : current.getChildren()) {
+            if (findAndSelectQuestion(child, target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void populateSubQuestions(TreeItem<Question> parentItem, Question parentQuestion) {
@@ -244,6 +330,7 @@ public class MainController {
             Question questionToUpdate = selectedItem.getValue();
             questionToUpdate.setTitle(questionTitleField.getText());
             questionToUpdate.setText(questionTextField.getText());
+            questionToUpdate.setMusterloesung(musterloesungField.getText());
             if (questionToUpdate.getSubQuestions() == null || questionToUpdate.getSubQuestions().isEmpty()) {
                 questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
             }
@@ -325,12 +412,35 @@ public class MainController {
         if (!answerLinesField.isDisable()) {
             answerLines = answerLinesField.getValue();
         }
-        return new Question(title, text, points, type, answerLines);
+        Question newQuestion = new Question(title, text, points, type, answerLines);
+        newQuestion.setMusterloesung(musterloesungField.getText());
+        return newQuestion;
+    }
+
+    private List<Question> filterSelected(List<Question> questions) {
+        List<Question> selected = new ArrayList<>();
+        for (Question q : questions) {
+            if (q.isSelected()) {
+                Question copy = new Question(q.getTitle(), q.getText(), q.getPoints(), q.getType(), q.getAnswerLines());
+                copy.setMusterloesung(q.getMusterloesung());
+                copy.setSelected(q.getSelected());
+
+                if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
+                    copy.setSubQuestions(filterSelected(q.getSubQuestions()));
+                }
+                selected.add(copy);
+            }
+        }
+        return selected;
     }
 
     @FXML
     private void exportToWord() {
         updateExamMetadata();
+        
+        Exam examToExport = new Exam(exam);
+        examToExport.setQuestions(filterSelected(exam.getQuestions()));
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Exam as Word Document");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Word Documents", "*.docx"));
@@ -341,7 +451,7 @@ public class MainController {
             Task<Void> exportTask = new Task<>() {
                 @Override
                 protected Void call() throws Exception {
-                    WordExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
+                    WordExporter.export(examToExport, file.getAbsolutePath(), hilfsmittelField.getText());
                     return null;
                 }
             };
@@ -349,7 +459,6 @@ public class MainController {
             exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
             exportTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                // Handle exceptions from the task
                 exportTask.getException().printStackTrace();
             });
 
@@ -383,6 +492,9 @@ public class MainController {
     private void exportVariedVersion() {
         updateExamMetadata();
 
+        Exam examToExport = new Exam(exam);
+        examToExport.setQuestions(filterSelected(exam.getQuestions()));
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Varied Exam");
         fileChooser.getExtensionFilters().addAll(
@@ -399,7 +511,7 @@ public class MainController {
             Task<Exam> rephraseTask = new Task<>() {
                 @Override
                 protected Exam call() throws Exception {
-                    Exam variedExam = new Exam(exam);
+                    Exam variedExam = new Exam(examToExport); // Use the filtered exam
                     List<Question> rephrasedQuestions = new ArrayList<>();
                     for (Question originalQuestion : variedExam.getQuestions()) {
                         rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
@@ -453,20 +565,6 @@ public class MainController {
     }
 
     @FXML
-    private void exportToPdf() {
-        updateExamMetadata();
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Exam as PDF");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-        fileChooser.setInitialFileName(exam.getTitle() + ".pdf");
-        Stage stage = (Stage) examTitleField.getScene().getWindow();
-        File file = fileChooser.showSaveDialog(stage);
-        if (file != null) {
-            service.PdfExporter.export(exam, file.getAbsolutePath(), hilfsmittelField.getText());
-        }
-    }
-
-    @FXML
     private void importExamFromJson() {
         try {
             FileChooser fileChooser = new FileChooser();
@@ -513,6 +611,7 @@ public class MainController {
     private void clearQuestionFields() {
         questionTitleField.clear();
         questionTextField.clear();
+        musterloesungField.clear();
         questionPointsField.clear();
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
@@ -528,6 +627,8 @@ public class MainController {
                 originalQuestion.getType(),
                 originalQuestion.getAnswerLines()
         );
+        rephrasedQuestion.setMusterloesung(originalQuestion.getMusterloesung());
+
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
             List<Question> rephrasedSubQuestions = new ArrayList<>();

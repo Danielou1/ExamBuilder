@@ -7,5 +7,4 @@ model\Question.class
 service\WordExporter.class
 controller\MainController$2.class
 controller\MainController$1.class
-service\PdfExporter.class
 utils\LoadingIndicator.class

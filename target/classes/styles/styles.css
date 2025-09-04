@@ -38,6 +38,11 @@
     -fx-padding: 5px;
 }
 
+.deselected-row {
+    -fx-font-style: italic;
+    -fx-opacity: 0.6;
+}
+
 /* Specific VBox Styling */
 .vbox {
     -fx-padding: 10px;

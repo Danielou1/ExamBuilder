@@ -30,11 +30,11 @@
                         <MenuItem text="Importieren von JSON" onAction="#importExamFromJson" />
                         <MenuItem text="Speichern als JSON" onAction="#saveExamToJson" />
                         <MenuItem text="Exportieren als .docx" onAction="#exportToWord" />
-                        <MenuItem text="Exportieren als .pdf" onAction="#exportToPdf" />
                         <MenuItem text="Exportieren als Variierte Version" onAction="#exportVariedVersion" />
                     </Menu>
                 </MenuBar>
                 <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                    <ToggleButton fx:id="selectionModeButton" text="Mode Sélection" onAction="#toggleSelectionMode"/>
                     <ToggleButton fx:id="themeToggleButton" text="Dark Mode" />
                 </HBox>
             </HBox>
@@ -69,6 +69,7 @@
         <VBox>
             <TreeTableView fx:id="questionsTable" VBox.vgrow="ALWAYS">
                 <columns>
+                    <TreeTableColumn fx:id="selectedColumn" prefWidth="75.0" text="Ausgewählt" />
                     <TreeTableColumn fx:id="titleColumn" prefWidth="150.0" text="Titel" />
                     <TreeTableColumn fx:id="typeColumn" prefWidth="100.0" text="Typ" />
                     <TreeTableColumn fx:id="pointsColumn" prefWidth="75.0" text="Punkte" />
@@ -92,6 +93,7 @@
                 <Label text="Frage bearbeiten" />
                 <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
                 <TextArea fx:id="questionTextField" prefHeight="150" promptText="Aufgabentext" wrapText="true" />
+                <TextArea fx:id="musterloesungField" prefHeight="100" promptText="Musterlösung" wrapText="true" />
                 <TextField fx:id="questionPointsField" promptText="Punkte" />
                 <ComboBox fx:id="questionTypeField" promptText="Typ" />
                 <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
@@ -99,7 +101,8 @@
                     <items>
                         <MenuItem fx:id="addQuestionMenuItem" text="Frage hinzufügen" onAction="#addQuestion" />
                         <MenuItem fx:id="addSubQuestionMenuItem" text="Sub-Frage hinzufügen" onAction="#addSubQuestion" />
-                        <MenuItem fx:id="updateQuestionMenuItem" text="Frage aktualisieren" onAction="#updateQuestion" />
+                        <MenuItem fx:id="editQuestionMenuItem" text="Frage bearbeiten" onAction="#editQuestion" />
+                        <MenuItem fx:id="updateQuestionMenuItem" text="Änderungen speichern" onAction="#updateQuestion" />
                         <MenuItem fx:id="deleteQuestionMenuItem" text="Frage löschen" onAction="#deleteQuestion" />
                     </items>
                 </MenuButton>
