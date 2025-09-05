@@ -604,22 +604,21 @@ public class MainController {
         if (file != null) {
             LoadingIndicator.show();
 
-            Task<Exam> rephraseTask = new Task<>() {
+            Task<Exam> shuffleTask = new Task<>() {
                 @Override
                 protected Exam call() throws Exception {
                     Exam variedExam = new Exam(examToExport);
-                    List<Question> rephrasedQuestions = new ArrayList<>();
+                    List<Question> shuffledQuestions = new ArrayList<>();
                     for (Question originalQuestion : variedExam.getQuestions()) {
-                        rephrasedQuestions.add(rephraseQuestionRecursive(originalQuestion));
+                        shuffledQuestions.add(shuffleSubQuestionsRecursive(originalQuestion));
                     }
-                    Collections.shuffle(rephrasedQuestions);
-                    variedExam.setQuestions(rephrasedQuestions);
+                    variedExam.setQuestions(shuffledQuestions);
                     return variedExam;
                 }
             };
 
-            rephraseTask.setOnSucceeded(e -> {
-                Exam variedExam = rephraseTask.getValue();
+            shuffleTask.setOnSucceeded(e -> {
+                Exam variedExam = shuffleTask.getValue();
                 Task<Void> exportTask = new Task<>() {
                     @Override
                     protected Void call() throws Exception {
@@ -651,12 +650,12 @@ public class MainController {
                 new Thread(exportTask).start();
             });
 
-            rephraseTask.setOnFailed(e -> {
+            shuffleTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                rephraseTask.getException().printStackTrace();
+                shuffleTask.getException().printStackTrace();
             });
 
-            new Thread(rephraseTask).start();
+            new Thread(shuffleTask).start();
         }
     }
 
@@ -709,28 +708,28 @@ public class MainController {
         answerLinesField.getValueFactory().setValue(0);
     }
 
-    private Question rephraseQuestionRecursive(Question originalQuestion) {
-        String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
-        String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
-        Question rephrasedQuestion = new Question(
-                rephrasedTitle,
-                rephrasedText,
+    private Question shuffleSubQuestionsRecursive(Question originalQuestion) {
+        // Create a copy to avoid modifying the original object in the table
+        Question copiedQuestion = new Question(
+                originalQuestion.getTitle(),
+                originalQuestion.getText(),
                 originalQuestion.getPoints(),
                 originalQuestion.getType(),
                 originalQuestion.getAnswerLines()
         );
-        rephrasedQuestion.setMusterloesung(originalQuestion.getMusterloesung());
-        rephrasedQuestion.setId(originalQuestion.getId());
-
+        copiedQuestion.setMusterloesung(originalQuestion.getMusterloesung());
+        copiedQuestion.setId(originalQuestion.getId());
+        copiedQuestion.setSelected(originalQuestion.getSelected());
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
-            List<Question> rephrasedSubQuestions = new ArrayList<>();
+            List<Question> shuffledSubQuestions = new ArrayList<>();
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                rephrasedSubQuestions.add(rephraseQuestionRecursive(originalSubQuestion));
+                // Recursively shuffle sub-questions of sub-questions
+                shuffledSubQuestions.add(shuffleSubQuestionsRecursive(originalSubQuestion));
             }
-            Collections.shuffle(rephrasedSubQuestions);
-            rephrasedQuestion.setSubQuestions(rephrasedSubQuestions);
+            Collections.shuffle(shuffledSubQuestions);
+            copiedQuestion.setSubQuestions(shuffledSubQuestions);
         }
-        return rephrasedQuestion;
+        return copiedQuestion;
     }
 }
