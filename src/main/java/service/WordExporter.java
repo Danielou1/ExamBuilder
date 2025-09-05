@@ -35,10 +35,18 @@ public class WordExporter {
     }
 
     public static void export(Exam exam, String filePath) {
+        exportDoc(exam, filePath, false);
+    }
+
+    public static void exportWithSolutions(Exam exam, String filePath) {
+        exportDoc(exam, filePath, true);
+    }
+
+    private static void exportDoc(Exam exam, String filePath, boolean withSolutions) {
         try (XWPFDocument document = new XWPFDocument()) {
             createCoverPage(document, exam);
             document.createParagraph().setPageBreak(true);
-            createQuestionsPage(document, exam);
+            createQuestionsPage(document, exam, withSolutions);
             createPageNumbering(document);
 
             try (FileOutputStream out = new FileOutputStream(filePath)) {
@@ -172,10 +180,10 @@ public class WordExporter {
         }
     }
 
-    private static void createQuestionsPage(XWPFDocument document, Exam exam) {
+    private static void createQuestionsPage(XWPFDocument document, Exam exam, boolean withSolutions) {
         for (int i = 0; i < exam.getQuestions().size(); i++) {
             Question q = exam.getQuestions().get(i);
-            writeQuestion(document, q, String.valueOf(i + 1));
+            writeQuestion(document, q, String.valueOf(i + 1), withSolutions);
 
             if (i < exam.getQuestions().size() - 1) {
                 XWPFParagraph continueMessage = document.createParagraph();
@@ -185,7 +193,7 @@ public class WordExporter {
         }
     }
 
-    private static void writeQuestion(XWPFDocument document, Question question, String questionNumber) {
+    private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions) {
         XWPFParagraph questionTitle = document.createParagraph();
         XWPFRun questionTitleRun = questionTitle.createRun();
         
@@ -234,16 +242,26 @@ public class WordExporter {
             }
         }
 
-        for (int i = 0; i < question.getAnswerLines(); i++) {
-            XWPFParagraph answerLine = document.createParagraph();
-            XWPFRun answerLineRun = answerLine.createRun();
-            answerLineRun.setText("__________________________________________________________________________________");
+        if (withSolutions) {
+            if (question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+                XWPFParagraph solutionParagraph = document.createParagraph();
+                XWPFRun solutionRun = solutionParagraph.createRun();
+                solutionRun.setText("\nLösung: " + question.getMusterloesung());
+                solutionRun.setColor("0000FF"); // Blue color for the solution
+                solutionRun.setItalic(true);
+            }
+        } else {
+            for (int i = 0; i < question.getAnswerLines(); i++) {
+                XWPFParagraph answerLine = document.createParagraph();
+                XWPFRun answerLineRun = answerLine.createRun();
+                answerLineRun.setText("__________________________________________________________________________________");
+            }
         }
 
         if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {
             for (int i = 0; i < question.getSubQuestions().size(); i++) {
                 Question subQuestion = question.getSubQuestions().get(i);
-                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i));
+                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions);
             }
         }
     }

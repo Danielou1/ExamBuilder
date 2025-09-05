@@ -32,11 +32,12 @@
                         <MenuItem text="Importieren von JSON" onAction="#importExamFromJson" />
                         <MenuItem text="Speichern als JSON" onAction="#saveExamToJson" />
                         <MenuItem text="Exportieren als .docx" onAction="#exportToWord" />
+                        <MenuItem text="Lösungsblatt exportieren (.docx)" onAction="#exportAnswerKey" />
                         <MenuItem text="Exportieren als Variierte Version" onAction="#exportVariedVersion" />
                     </Menu>
                 </MenuBar>
                 <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
-                    <ToggleButton fx:id="selectionModeButton" text="Mode Sélection" onAction="#toggleSelectionMode"/>
+                    <ToggleButton fx:id="selectionModeButton" text="Auswahl für Export" onAction="#toggleSelectionMode"/>
                     <ToggleButton fx:id="themeToggleButton" text="Dark Mode" />
                 </HBox>
             </HBox>
