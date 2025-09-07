@@ -21,10 +21,12 @@ import model.Exam;
 import model.Question;
 import service.WordExporter;
 import utils.LoadingIndicator;
+import org.controlsfx.control.textfield.TextFields;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -104,10 +106,14 @@ public class MainController {
 
     private Exam exam;
     private ContextMenu tableContextMenu;
+    private List<String> germanUniversities;
 
     @FXML
     public void initialize() {
         questionsTable.setEditable(true);
+
+        loadUniversities();
+        TextFields.bindAutoCompletion(hochschuleField, germanUniversities);
 
         selectedColumn.setEditable(false);
         selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
@@ -167,6 +173,86 @@ public class MainController {
         actionsMenuButton.setDisable(true);
         setTooltips();
         setIcons();
+    }
+
+    private void loadUniversities() {
+        germanUniversities = Arrays.asList(
+            "RWTH Aachen",
+            "Universität Augsburg",
+            "Universität Bamberg",
+            "Universität Bayreuth",
+            "Freie Universität Berlin",
+            "Humboldt-Universität zu Berlin",
+            "Technische Universität Berlin",
+            "Universität der Künste Berlin",
+            "Universität Bielefeld",
+            "Ruhr-Universität Bochum",
+            "Universität Bonn",
+            "Technische Universität Braunschweig",
+            "Universität Bremen",
+            "Technische Universität Chemnitz",
+            "Technische Universität Clausthal",
+            "Brandenburgische Technische Universität Cottbus-Senftenberg",
+            "Technische Universität Darmstadt",
+            "Technische Universität Dortmund",
+            "Technische Universität Dresden",
+            "Universität Duisburg-Essen",
+            "Heinrich-Heine-Universität Düsseldorf",
+            "Katholische Universität Eichstätt-Ingolstadt",
+            "Universität Erfurt",
+            "Friedrich-Alexander-Universität Erlangen-Nürnberg",
+            "Goethe-Universität Frankfurt am Main",
+            "Europa-Universität Viadrina Frankfurt (Oder)",
+            "Technische Universität Bergakademie Freiberg",
+            "Albert-Ludwigs-Universität Freiburg",
+            "Justus-Liebig-Universität Gießen",
+            "Georg-August-Universität Göttingen",
+            "Universität Greifswald",
+            "FernUniversität in Hagen",
+            "Martin-Luther-Universität Halle-Wittenberg",
+            "Universität Hamburg",
+            "Technische Universität Hamburg",
+            "Helmut-Schmidt-Universität/Universität der Bundeswehr Hamburg",
+            "Leibniz Universität Hannover",
+            "Ruprecht-Karls-Universität Heidelberg",
+            "Stiftung Universität Hildesheim",
+            "Technische Universität Ilmenau",
+            "Friedrich-Schiller-Universität Jena",
+            "Technische Universität Kaiserslautern",
+            "Karlsruher Institut für Technologie (KIT)",
+            "Universität Kassel",
+            "Christian-Albrechts-Universität zu Kiel",
+            "Universität zu Köln",
+            "Universität Konstanz",
+            "Universität Leipzig",
+            "Universität zu Lübeck",
+            "Otto-von-Guericke-Universität Magdeburg",
+            "Johannes Gutenberg-Universität Mainz",
+            "Universität Mannheim",
+            "Philipps-Universität Marburg",
+            "Ludwigs-Maximilians-Universität München (LMU)",
+            "Technische Universität München (TUM)",
+            "Universität der Bundeswehr München",
+            "Westfälische Wilhelms-Universität Münster",
+            "Carl von Ossietzky Universität Oldenburg",
+            "Universität Osnabrück",
+            "Universität Paderborn",
+            "Universität Passau",
+            "Universität Potsdam",
+            "Universität Regensburg",
+            "Universität Rostock",
+            "Universität des Saarlandes",
+            "Universität Siegen",
+            "Universität Hohenheim",
+            "Universität Stuttgart",
+            "Universität Trier",
+            "Eberhard Karls Universität Tübingen",
+            "Universität Ulm",
+            "Bauhaus-Universität Weimar",
+            "Julius-Maximilians-Universität Würzburg",
+            "Bergische Universität Wuppertal",
+            "Technische Hochschule Mittelhessen (THM)"
+        );
     }
 
     private void setupRowFactory() {
@@ -709,7 +795,6 @@ public class MainController {
     }
 
     private Question shuffleSubQuestionsRecursive(Question originalQuestion) {
-        // Create a copy to avoid modifying the original object in the table
         Question copiedQuestion = new Question(
                 originalQuestion.getTitle(),
                 originalQuestion.getText(),
@@ -724,7 +809,6 @@ public class MainController {
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
             List<Question> shuffledSubQuestions = new ArrayList<>();
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                // Recursively shuffle sub-questions of sub-questions
                 shuffledSubQuestions.add(shuffleSubQuestionsRecursive(originalSubQuestion));
             }
             Collections.shuffle(shuffledSubQuestions);
