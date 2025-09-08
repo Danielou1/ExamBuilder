@@ -22,7 +22,7 @@ public class Question {
     private int answerLines;
     private String musterloesung = "";
 
-    private final BooleanProperty selected = new SimpleBooleanProperty(false);
+    private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
     public Question() {
         this.id = UUID.randomUUID();

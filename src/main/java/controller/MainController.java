@@ -3,8 +3,6 @@ package controller;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -29,9 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import utils.Rephraser;
+import java.util.Optional;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
@@ -565,6 +561,31 @@ public class MainController {
         return newQuestion;
     }
 
+    private List<Question> getQuestionsForExport() {
+        List<Question> selectedQuestions = filterSelected(exam.getQuestions());
+
+        if (selectedQuestions.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Export-Optionen");
+            alert.setHeaderText("Keine Fragen für den Export ausgewählt.");
+            alert.setContentText("Möchten Sie alle Fragen exportieren?");
+
+            ButtonType buttonTypeExportAll = new ButtonType("Alle exportieren");
+            ButtonType buttonTypeCancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            alert.getButtonTypes().setAll(buttonTypeExportAll, buttonTypeCancel);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == buttonTypeExportAll) {
+                return exam.getQuestions();
+            } else {
+                return null; // Cancel export
+            }
+        } else {
+            return selectedQuestions;
+        }
+    }
+
     private List<Question> filterSelected(List<Question> questions) {
         List<Question> selected = new ArrayList<>();
         for (Question q : questions) {
@@ -572,7 +593,7 @@ public class MainController {
                 Question copy = new Question(q.getTitle(), q.getText(), q.getPoints(), q.getType(), q.getAnswerLines());
                 copy.setMusterloesung(q.getMusterloesung());
                 copy.setSelected(q.getSelected());
-                copy.setId(q.getId()); // Preserve ID in copy
+                copy.setId(q.getId());
 
                 if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
                     copy.setSubQuestions(filterSelected(q.getSubQuestions()));
@@ -586,9 +607,11 @@ public class MainController {
     @FXML
     private void exportToWord() {
         updateExamMetadata();
-        
+        List<Question> questionsToExport = getQuestionsForExport();
+        if (questionsToExport == null) return;
+
         Exam examToExport = new Exam(exam);
-        examToExport.setQuestions(filterSelected(exam.getQuestions()));
+        examToExport.setQuestions(questionsToExport);
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Exam as Word Document");
@@ -604,13 +627,11 @@ public class MainController {
                     return null;
                 }
             };
-
             exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
             exportTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
                 exportTask.getException().printStackTrace();
             });
-
             new Thread(exportTask).start();
             LoadingIndicator.show();
         }
@@ -619,9 +640,11 @@ public class MainController {
     @FXML
     private void exportAnswerKey() {
         updateExamMetadata();
-        
+        List<Question> questionsToExport = getQuestionsForExport();
+        if (questionsToExport == null) return;
+
         Exam examToExport = new Exam(exam);
-        examToExport.setQuestions(filterSelected(exam.getQuestions()));
+        examToExport.setQuestions(questionsToExport);
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Answer Key as Word Document");
@@ -637,13 +660,11 @@ public class MainController {
                     return null;
                 }
             };
-
             exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
             exportTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
                 exportTask.getException().printStackTrace();
             });
-
             new Thread(exportTask).start();
             LoadingIndicator.show();
         }
@@ -673,9 +694,11 @@ public class MainController {
     @FXML
     private void exportVariedVersion() {
         updateExamMetadata();
+        List<Question> questionsToExport = getQuestionsForExport();
+        if (questionsToExport == null) return;
 
         Exam examToExport = new Exam(exam);
-        examToExport.setQuestions(filterSelected(exam.getQuestions()));
+        examToExport.setQuestions(questionsToExport);
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Varied Exam");
