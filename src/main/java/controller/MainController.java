@@ -19,6 +19,7 @@ import model.Exam;
 import model.Question;
 import service.WordExporter;
 import utils.LoadingIndicator;
+import utils.Rephraser;
 import org.controlsfx.control.textfield.TextFields;
 
 import java.io.File;
@@ -713,21 +714,21 @@ public class MainController {
         if (file != null) {
             LoadingIndicator.show();
 
-            Task<Exam> shuffleTask = new Task<>() {
+            Task<Exam> rephraseAndShuffleTask = new Task<>() {
                 @Override
                 protected Exam call() throws Exception {
                     Exam variedExam = new Exam(examToExport);
-                    List<Question> shuffledQuestions = new ArrayList<>();
+                    List<Question> processedQuestions = new ArrayList<>();
                     for (Question originalQuestion : variedExam.getQuestions()) {
-                        shuffledQuestions.add(shuffleSubQuestionsRecursive(originalQuestion));
+                        processedQuestions.add(createVariedQuestionRecursive(originalQuestion));
                     }
-                    variedExam.setQuestions(shuffledQuestions);
+                    variedExam.setQuestions(processedQuestions);
                     return variedExam;
                 }
             };
 
-            shuffleTask.setOnSucceeded(e -> {
-                Exam variedExam = shuffleTask.getValue();
+            rephraseAndShuffleTask.setOnSucceeded(e -> {
+                Exam variedExam = rephraseAndShuffleTask.getValue();
                 Task<Void> exportTask = new Task<>() {
                     @Override
                     protected Void call() throws Exception {
@@ -759,12 +760,12 @@ public class MainController {
                 new Thread(exportTask).start();
             });
 
-            shuffleTask.setOnFailed(e -> {
+            rephraseAndShuffleTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                shuffleTask.getException().printStackTrace();
+                rephraseAndShuffleTask.getException().printStackTrace();
             });
 
-            new Thread(shuffleTask).start();
+            new Thread(rephraseAndShuffleTask).start();
         }
     }
 
@@ -817,10 +818,13 @@ public class MainController {
         answerLinesField.getValueFactory().setValue(0);
     }
 
-    private Question shuffleSubQuestionsRecursive(Question originalQuestion) {
+    private Question createVariedQuestionRecursive(Question originalQuestion) {
+        String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
+        String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
+
         Question copiedQuestion = new Question(
-                originalQuestion.getTitle(),
-                originalQuestion.getText(),
+                rephrasedTitle,
+                rephrasedText,
                 originalQuestion.getPoints(),
                 originalQuestion.getType(),
                 originalQuestion.getAnswerLines()
@@ -832,7 +836,7 @@ public class MainController {
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
             List<Question> shuffledSubQuestions = new ArrayList<>();
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                shuffledSubQuestions.add(shuffleSubQuestionsRecursive(originalSubQuestion));
+                shuffledSubQuestions.add(createVariedQuestionRecursive(originalSubQuestion));
             }
             Collections.shuffle(shuffledSubQuestions);
             copiedQuestion.setSubQuestions(shuffledSubQuestions);
