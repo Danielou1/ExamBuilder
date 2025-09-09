@@ -2,115 +2,62 @@
 
 [![Java CI with Maven](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml/badge.svg)](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml)
 
-## Description
+## Conception, Design and Implementation of a Software Solution for the Automated Creation and Administration of Exams
 
 ExamBuilder is a modern desktop application designed for educators to streamline the creation, management, and distribution of exams. With an intuitive user interface, it allows for the creation of complex exams, which can be saved, loaded, and exported into multiple standard formats.
 
-The application is built with JavaFX and includes advanced features like question rephrasing via the Gemini API and dynamic theme switching.
+## Key Features
 
-## Features
-
-*   **Full Project Lifecycle:** Create, save, and load entire exam projects.
-*   **Question Management:** Add, edit, and delete questions within an exam.
+*   **Exam Project Management:** Create, save, and load entire exam projects in JSON format.
+*   **Advanced Question Management:** Add, edit, and delete complex questions with nested sub-questions.
 *   **Supported Question Types:**
     *   Multiple Choice Questions (MCQ)
     *   Open-Ended Questions
-*   **Import/Export:**
-    *   **Import** exams from `JSON` files.
-    *   **Export** exams to `PDF`, `DOCX`, and `JSON` formats for easy distribution and grading.
-*   **AI-Powered Rephrasing:** Integrate with the Gemini API to automatically rephrase questions, offering alternative phrasings.
-*   **Customizable UI:** Instantly switch between a **light** and **dark** theme.
-*   **User-Friendly:** Enjoy a clean interface with icons (via FontAwesomeFX) and helpful dialogs.
+*   **Customizable Instructions:** A dedicated dialog allows for configuring the exam duration and allowed aids (calculator, notes, etc.) by modifying a standard text template.
+*   **Selective Export:** A dedicated "Selection Mode" allows for precisely choosing which questions to include in the final document.
+*   **Flexible Export Options:**
+    *   **Export to `.docx`:** Generates a professional exam in Microsoft Word format.
+    *   **Export Answer Key:** Generates a separate document with the solutions.
+    *   **Export Varied Version:** Generates a version of the exam where question text is rephrased (using a local synonym dictionary) and the order of sub-questions is shuffled.
+*   **Modern User Interface:**
+    *   Switch between Light and Dark themes.
+    *   Icons (via FontAwesomeFX) and tooltips for a better user experience.
+    *   Autocomplete field for German university names.
+    *   Right-click context menu for quick access to actions.
 
 ## Technologies Used
 
 *   **Core:** Java 19, JavaFX 19
 *   **Build:** Maven (with Maven Wrapper)
 *   **CI/CD:** GitHub Actions
-*   **File Formats:**
-    *   Apache POI `5.2.2` (for `.docx` Word export)
-    *   iText `7.2.6` (for `.pdf` export)
-    *   Jackson `2.13.3` (for `.json` serialization)
-*   **UI:**
-    *   FontAwesomeFX `4.7.0-9.1.2` (for icons)
-*   **Logging:** Log4j2 `2.17.1`
-*   **Testing:**
-    *   JUnit 5 `5.8.2`
-    *   Mockito `4.5.1`
+*   **Core Libraries:**
+    *   **Apache POI `5.2.2`** (for `.docx` Word export)
+    *   **Jackson `2.13.3`** (for `.json` serialization)
+    *   **ControlsFX `11.1.2`** (for autocomplete functionality)
+    *   **FontAwesomeFX `4.7.0-9.1.2`** (for icons)
+*   **Testing:** JUnit 5 `5.8.2`
 
-## Installation
+## How to Run
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/Danielou1/ExamBuilder.git
-    ```
-2.  Navigate to the project directory:
-    ```bash
-    cd ExamBuilder
-    ```
-3.  Build the project using the Maven Wrapper:
+1.  Ensure you have a JDK (Java Development Kit) version 19 or higher installed.
+2.  Clone the repository.
+3.  Navigate to the project directory.
+4.  Run the application using the Maven Wrapper:
+
     ```bash
     # On Windows
-    mvnw clean install
+    .\mvnw.cmd javafx:run
 
     # On macOS/Linux
-    ./mvnw clean install
+    ./mvnw javafx:run
     ```
-
-## Usage
-
-Run the application using the dedicated Maven plugin:
-
-```bash
-# On Windows
-.mvnw javafx:run
-
-# On macOS/Linux
-./mvnw javafx:run
-```
-
-Alternatively, you can run the packaged JAR file from the `target` directory:
-
-```bash
-java -jar target/exambuilder-1.0-SNAPSHOT.jar
-```
-
-## Configuration
-
-To use the AI-powered question rephrasing feature, you must provide a Gemini API key.
-
-### Environment Variable (Recommended)
-
-Set the `GEMINI_API_KEY` environment variable to your API key. This is the most secure and recommended method.
-
-*   **Windows:**
-    ```bash
-    setx GEMINI_API_KEY "YOUR_API_KEY"
-    ```
-    *(Note: You may need to restart your terminal or IDE for the change to take effect.)*
-
-*   **macOS/Linux:**
-    ```bash
-    export GEMINI_API_KEY="YOUR_API_KEY"
-    ```
-
-## Running Tests
-
-To run the suite of unit tests, use the Maven wrapper:
-
-```bash
-# On Windows
-.mvnw test
-
-# On macOS/Linux
-./mvnw test
-```
 
 ## Author
 
 *   **Danielou Mounsande**
 *   **Email:** mounsandedaniel@gmail.com
 *   **GitHub:** [github.com/Danielou1](https://github.com/Danielou1)
+*   **LinkedIn:** [linkedin.com/in/danielou-mounsande](https://www.linkedin.com/in/danielou-mounsande)
 
 ## License
 
