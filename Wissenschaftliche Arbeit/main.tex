@@ -1,0 +1,131 @@
+\documentclass[%
+    BCOR=8.25mm,         % Bindekorrektur
+    DIV=11,              % Satzspiegel
+    openany,
+    parskip=half,        % Abstand zwischen Absätzen
+    bibliography=totoc,  % Literaturverzeichnis im Inhaltsverzeichnis
+    headsepline=on,      % Trennlinie Kolumnentitel
+]{scrbook}
+
+% Préambule
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage[ngerman]{babel} % Deutsche typogr. Regeln + Trenntabelle
+\usepackage[T1]{fontenc}             % TeX Font-Codierung
+\usepackage{lmodern}                 % Latin Modern font
+\usepackage[utf8]{inputenc}          % Font-Codierung der Eingabedatei
+\usepackage[babel]{csquotes}         % Anführungszeichen
+\usepackage{graphicx} % Graphiken
+\usepackage{here}  % Neu eingefügt
+\usepackage{caption}                 % Bildunterschrift
+\usepackage{booktabs}                % Tabellen schöner
+\usepackage{listingsutf8}            % Listings mit Einstellungen
+\usepackage{amsmath}	               % Mathematik
+\usepackage[pdftex]{hyperref}  
+\usepackage{xurl} % Erlaubt URL-Umbrüche
+\hypersetup{
+    bookmarksopen=true,
+    bookmarksopenlevel=3,
+    colorlinks,
+    citecolor=blue,
+    linkcolor=blue,
+}
+\usepackage{scrhack}  % Unterdrückt Fehlermeldung von listings
+\usepackage{microtype}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% Clear headers and footers to customize
+\fancyhf{} 
+
+% Customize the footer
+\fancyfoot[C]{
+    \includegraphics[width=6cm]{img/mni-logo.pdf} % Adjust the logo size here
+    \hspace{0.4cm} % Adjust the space between logo and text
+    Danielou Mounsande Sandamoun\hspace{0.7cm} \thepage
+} 
+
+\renewcommand{\headrulewidth}{0pt} 
+\renewcommand{\footrulewidth}{0.4pt} 
+
+
+
+
+% Configuration du Stil für die Bibliographie
+\usepackage[
+    backend=biber,       % Verwende Biber als Backend
+    backref,             % Rückverweise von Literatur ins Dokument
+    style=numeric,       % Numerischer Zitierstil
+    sorting=none,         % Sortierung nach Name, Jahr, Titel
+    isbn=false           % ISBN in der Bibliographie ausblenden
+]{biblatex}
+
+% Lade die Citavi-Bibliothek
+\addbibresource{zitationen.bib} % Name der .bib-Datei
+
+%% Numérotation des sections und Tiefe des Inhalts
+\setcounter{tocdepth}{3}             % 3 Stufen im Inhaltsverzeichnis
+\setcounter{secnumdepth}{3} 		     % 3 Stufen in Abschnittnummerierung
+
+% ----------------------------------------------------------------------------
+\begin{document}
+%% Titelseite
+\begin{titlepage}
+    \begin{center}
+    \includegraphics[width=0.9\textwidth]{img/mni-logo.pdf}\\[4cm]
+    
+    \textbf{\huge\sffamily Einsatz von künstlicher Intelligenz in eingebetteten Systemen
+    }\\[1.5cm]
+    \Large Wissenschaftliche Arbeit\\
+    Ingenieur-Informatik Bachelor of Science (B.Sc.)
+    \\[1cm]
+    Vorgelegt von\\ [1.0cm]
+    
+    Danielou Mounsande Sandamoun\\~\\
+    Februar 2025
+    \end{center}
+    \vfill
+    \begin{tabular}{ll}
+        Referent der Arbeit: & Niklas Philipp\\ 
+    \end{tabular}
+\end{titlepage}
+\cleardoubleemptypage
+
+%% Sperrvermerk
+\newpage
+
+\cleardoubleemptypage
+
+%% Verzeichnisse
+\tableofcontents
+%\listoffigures
+%\listoftables
+%\lstlistoflistings
+
+\mainmatter 
+\pagestyle{fancy}
+
+% Beispiel für eine Zitation
+\input{einleitung}
+\input{Grundlagen}
+\input{einfuerung_in_ki}
+\input{anwendung_von_ki}
+\input{Fazit}
+%\appendix
+%\chapter{Anhang}
+
+\backmatter 
+%neu
+%% Verzeichnisse
+
+\listoffigures
+%\listoftables
+%\lstlistoflistings                                                                                                             
+                                                                                           
+\nocite{*} % Falls unreferenzierte Quellen auch angezeigt werden sollen
+\printbibliography % Drucke die Bibliographie
+%\appendix
+%\chapter{Anhang}
+% ----------------------------------------------------------------------------
+\end{document}
