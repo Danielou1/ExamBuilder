@@ -21,6 +21,7 @@ public class Question {
     private List<Question> subQuestions;
     private int answerLines;
     private String musterloesung = "";
+    private String imageBase64;
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
@@ -142,5 +143,13 @@ public class Question {
 
     public void setMusterloesung(String musterloesung) {
         this.musterloesung = musterloesung;
+    }
+
+    public String getImageBase64() {
+        return imageBase64;
+    }
+
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
     }
 }

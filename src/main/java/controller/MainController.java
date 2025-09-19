@@ -10,6 +10,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeTableCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -22,10 +25,13 @@ import utils.LoadingIndicator;
 import utils.Rephraser;
 import org.controlsfx.control.textfield.TextFields;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +43,8 @@ public class MainController {
 
     @FXML
     private Button newQuestionButton;
+    @FXML
+    private Button addImageButton;
     @FXML
     private Button hinweiseButton;
 
@@ -76,6 +84,8 @@ public class MainController {
     private ComboBox<String> questionTypeField;
     @FXML
     private Spinner<Integer> answerLinesField;
+    @FXML
+    private ImageView questionImageView;
 
     @FXML
     private MenuItem addQuestionMenuItem;
@@ -118,6 +128,7 @@ public class MainController {
 
         setupRowFactory();
         setupContextMenu();
+        setupImageContextMenu();
 
         titleColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getTitle()));
         typeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getType()));
@@ -145,6 +156,11 @@ public class MainController {
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             boolean itemSelected = (newValue != null);
             actionsMenuButton.setDisable(!itemSelected);
+            if (itemSelected) {
+                populateQuestionDetails(newValue.getValue());
+            } else {
+                clearQuestionFields();
+            }
         });
 
         if (mainPane != null) {
@@ -168,8 +184,22 @@ public class MainController {
 
         editPane.setDisable(true);
         actionsMenuButton.setDisable(true);
+        addImageButton.setDisable(true);
         setTooltips();
         setIcons();
+    }
+
+    private void setupImageContextMenu() {
+        ContextMenu imageContextMenu = new ContextMenu();
+        MenuItem removeItem = new MenuItem("Bild entfernen");
+        removeItem.setOnAction(event -> removeImage());
+        imageContextMenu.getItems().add(removeItem);
+
+        questionImageView.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.SECONDARY && questionImageView.getImage() != null) {
+                imageContextMenu.show(questionImageView, event.getScreenX(), event.getScreenY());
+            }
+        });
     }
 
     private void loadUniversities() {
@@ -333,6 +363,7 @@ public class MainController {
         selectedColumn.setEditable(selectionModeActive);
 
         newQuestionButton.setDisable(selectionModeActive);
+        addImageButton.setDisable(selectionModeActive);
         actionsMenuButton.setDisable(selectionModeActive);
         editPane.setDisable(selectionModeActive);
         hinweiseButton.setDisable(selectionModeActive);
@@ -350,6 +381,7 @@ public class MainController {
 
     private void setIcons() {
         newQuestionButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
+        addImageButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILE_IMAGE_ALT));
         addQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_CIRCLE));
         addSubQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS_SQUARE));
         editQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PENCIL_SQUARE_ALT));
@@ -360,6 +392,7 @@ public class MainController {
     private void setTooltips() {
         Tooltip.install(newQuestionButton, new Tooltip("Neue Frage erstellen"));
         Tooltip.install(hinweiseButton, new Tooltip("Hinweise, Hilfsmittel und Bearbeitungszeit für die Prüfung festlegen"));
+        Tooltip.install(addImageButton, new Tooltip("Ein Bild zu dieser Frage hinzufügen"));
         Tooltip.install(addQuestionMenuItem.getGraphic(), new Tooltip("Frage hinzufügen"));
         Tooltip.install(addSubQuestionMenuItem.getGraphic(), new Tooltip("Sub-Frage hinzufügen"));
         Tooltip.install(editQuestionMenuItem.getGraphic(), new Tooltip("Frage bearbeiten"));
@@ -369,6 +402,7 @@ public class MainController {
 
     private void setEditMode(boolean isEditing) {
         editPane.setDisable(!isEditing);
+        addImageButton.setDisable(!isEditing);
         updateQuestionMenuItem.setDisable(!isEditing);
     }
 
@@ -398,6 +432,13 @@ public class MainController {
         questionPointsField.setText(String.valueOf(question.getPoints()));
         questionTypeField.setValue(question.getType());
         answerLinesField.getValueFactory().setValue(question.getAnswerLines());
+
+        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
+            byte[] imageBytes = Base64.getDecoder().decode(question.getImageBase64());
+            questionImageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
+        } else {
+            questionImageView.setImage(null);
+        }
     }
 
     private void refreshTreeTableView() {
@@ -483,6 +524,7 @@ public class MainController {
             if (!answerLinesField.isDisable()) {
                 questionToUpdate.setAnswerLines(answerLinesField.getValue());
             }
+            // Image is already set by addImage/removeImage, no need to set it here again
             refreshTreeTableView();
             clearQuestionFields();
             setEditMode(false);
@@ -514,6 +556,42 @@ public class MainController {
             });
         } else {
             System.out.println("Please select a question to delete.");
+        }
+    }
+
+    @FXML
+    private void addImage() {
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            System.out.println("Please select a question first.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Bild auswählen");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp")
+        );
+        File selectedFile = fileChooser.showOpenDialog(mainPane.getScene().getWindow());
+
+        if (selectedFile != null) {
+            try {
+                byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
+                String base64String = Base64.getEncoder().encodeToString(fileContent);
+                selectedItem.getValue().setImageBase64(base64String);
+                questionImageView.setImage(new Image(new ByteArrayInputStream(fileContent)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @FXML
+    private void removeImage() {
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        if (selectedItem != null) {
+            selectedItem.getValue().setImageBase64(null);
+            questionImageView.setImage(null);
         }
     }
 
@@ -559,6 +637,8 @@ public class MainController {
         }
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
+        // Image is handled by addImage, but if we want to support it on creation, we'd set it here.
+        // For now, image is added during edit.
         return newQuestion;
     }
 
@@ -595,6 +675,7 @@ public class MainController {
                 copy.setMusterloesung(q.getMusterloesung());
                 copy.setSelected(q.getSelected());
                 copy.setId(q.getId());
+                copy.setImageBase64(q.getImageBase64()); // Copy image data
 
                 if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
                     copy.setSubQuestions(filterSelected(q.getSubQuestions()));
@@ -816,6 +897,7 @@ public class MainController {
         questionPointsField.clear();
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
+        questionImageView.setImage(null);
     }
 
     private Question createVariedQuestionRecursive(Question originalQuestion) {
@@ -832,6 +914,8 @@ public class MainController {
         copiedQuestion.setMusterloesung(originalQuestion.getMusterloesung());
         copiedQuestion.setId(originalQuestion.getId());
         copiedQuestion.setSelected(originalQuestion.getSelected());
+        copiedQuestion.setImageBase64(originalQuestion.getImageBase64()); // Copy image data
+
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
             List<Question> shuffledSubQuestions = new ArrayList<>();

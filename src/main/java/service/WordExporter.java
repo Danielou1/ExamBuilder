@@ -1,9 +1,13 @@
 package service;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.stream.Collectors;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -105,7 +109,7 @@ public class WordExporter {
         XWPFParagraph instructionTableParagraph = instructionTableRow.getCell(0).getParagraphs().get(0);
         instructionTableParagraph.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun instructionTableRun = instructionTableParagraph.createRun();
-        instructionTableRun.setText("\nBitte lesen Sie die folgenden Hinweise aufmerksam durch!");
+        instructionTableRun.setText("\nPlease lesen Sie die folgenden Hinweise aufmerksam durch!");
         instructionTableRun.setBold(true);
 
         XWPFParagraph instructions = document.createParagraph();
@@ -239,6 +243,28 @@ public class WordExporter {
                 XWPFParagraph questionTextParagraph = document.createParagraph();
                 XWPFRun questionTextRun = questionTextParagraph.createRun();
                 questionTextRun.setText(question.getText());
+            }
+        }
+
+        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = Base64.getDecoder().decode(question.getImageBase64());
+                int pictureType = XWPFDocument.PICTURE_TYPE_PNG; // Default to PNG
+
+                if (imageBytes.length > 8 && (imageBytes[0] & 0xFF) == 0xFF && (imageBytes[1] & 0xFF) == 0xD8) {
+                    pictureType = XWPFDocument.PICTURE_TYPE_JPEG;
+                } else if (imageBytes.length > 4 && (imageBytes[0] & 0xFF) == 0x47 && (imageBytes[1] & 0xFF) == 0x49 && (imageBytes[2] & 0xFF) == 0x46) {
+                    pictureType = XWPFDocument.PICTURE_TYPE_GIF;
+                } else if (imageBytes.length > 2 && (imageBytes[0] & 0xFF) == 0x42 && (imageBytes[1] & 0xFF) == 0x4D) {
+                    pictureType = XWPFDocument.PICTURE_TYPE_BMP;
+                }
+
+                XWPFParagraph paragraph = document.createParagraph();
+                XWPFRun run = paragraph.createRun();
+                run.addPicture(new ByteArrayInputStream(imageBytes), pictureType, "image.png", Units.toEMU(400), Units.toEMU(300));
+
+            } catch (InvalidFormatException | IOException e) {
+                e.printStackTrace();
             }
         }
 
