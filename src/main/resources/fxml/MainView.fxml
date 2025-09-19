@@ -20,6 +20,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.ScrollPane?>
 
 <BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainController">
     <top>
@@ -89,34 +90,37 @@
         </VBox>
     </center>
     <right>
-        <VBox spacing="10" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets bottom="10" left="10" right="10" top="10" />
-            </padding>
-            <HBox spacing="10">
-                <Button fx:id="newQuestionButton" onAction="#newQuestion" text="Neue Frage" />
-                <Button fx:id="addImageButton" onAction="#addImage" text="Bild hinzufügen" />
-            </HBox>
-            <VBox fx:id="editPane" spacing="10">
-                <Label text="Frage bearbeiten" />
-                <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
-                <TextArea fx:id="questionTextField" prefHeight="150" promptText="Aufgabentext" wrapText="true" />
-                <TextArea fx:id="musterloesungField" prefHeight="100" promptText="Musterlösung" wrapText="true" />
-                <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
-                <TextField fx:id="questionPointsField" promptText="Punkte" />
-                <ComboBox fx:id="questionTypeField" promptText="Typ" />
-                <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
-                <MenuButton fx:id="actionsMenuButton" text="Aktionen">
-                    <items>
-                        <MenuItem fx:id="addQuestionMenuItem" text="Frage hinzufügen" onAction="#addQuestion" />
-                        <MenuItem fx:id="addSubQuestionMenuItem" text="Sub-Frage hinzufügen" onAction="#addSubQuestion" />
-                        <MenuItem fx:id="editQuestionMenuItem" text="Frage bearbeiten" onAction="#editQuestion" />
-                        <MenuItem fx:id="updateQuestionMenuItem" text="Änderungen speichern" onAction="#updateQuestion" />
-                        <MenuItem fx:id="deleteQuestionMenuItem" text="Frage löschen" onAction="#deleteQuestion" />
-                    </items>
-                </MenuButton>
-            </VBox>
-        </VBox>
+        <ScrollPane fitToWidth="true">
+            <content>
+                <VBox spacing="10" BorderPane.alignment="CENTER">
+                    <padding>
+                        <Insets bottom="10" left="10" right="10" top="10" />
+                    </padding>
+                    <HBox spacing="10">
+                        <Button fx:id="newQuestionButton" onAction="#newQuestion" text="Neue Frage" />
+                        <Button fx:id="addImageButton" onAction="#addImage" text="Bild hinzufügen" />
+                    </HBox>
+                    <VBox fx:id="editPane" spacing="10">
+                        <Label text="Frage bearbeiten" />
+                        <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
+                        <TextArea fx:id="questionTextField" prefHeight="150" promptText="Aufgabentext" wrapText="true" />
+                        <TextArea fx:id="musterloesungField" prefHeight="100" promptText="Musterlösung" wrapText="true" />
+                        <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+                        <TextField fx:id="questionPointsField" promptText="Punkte" />
+                        <ComboBox fx:id="questionTypeField" promptText="Typ" />
+                        <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
+                        <MenuButton fx:id="actionsMenuButton" text="Aktionen">
+                            <items>
+                                <MenuItem fx:id="addQuestionMenuItem" text="Frage hinzufügen" onAction="#addQuestion" />
+                                <MenuItem fx:id="addSubQuestionMenuItem" text="Sub-Frage hinzufügen" onAction="#addSubQuestion" />
+                                <MenuItem fx:id="editQuestionMenuItem" text="Frage bearbeiten" onAction="#editQuestion" />
+                                <MenuItem fx:id="updateQuestionMenuItem" text="Änderungen speichern" onAction="#updateQuestion" />
+                                <MenuItem fx:id="deleteQuestionMenuItem" text="Frage löschen" onAction="#deleteQuestion" />
+                            </items>
+                        </MenuButton>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
     </right>
 </BorderPane>
-
