@@ -114,6 +114,8 @@ public class MainController {
     private Exam exam;
     private ContextMenu tableContextMenu;
     private List<String> germanUniversities;
+    private String newQuestionImageBase64 = null;
+    private TreeItem<Question> parentForSubQuestion = null;
 
     @FXML
     public void initialize() {
@@ -154,13 +156,17 @@ public class MainController {
         });
 
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            boolean itemSelected = (newValue != null);
-            actionsMenuButton.setDisable(!itemSelected);
-            if (itemSelected) {
+            // This listener is now only for populating the edit pane when a direct selection is made.
+            if (newValue != null) {
+                parentForSubQuestion = null; // A new selection always resets the sub-question context
                 populateQuestionDetails(newValue.getValue());
             } else {
-                clearQuestionFields();
+                // Don't clear fields if we are in the middle of creating a sub-question
+                if (parentForSubQuestion == null) {
+                    clearQuestionFields();
+                }
             }
+            updateActionsState();
         });
 
         if (mainPane != null) {
@@ -182,11 +188,10 @@ public class MainController {
             });
         }
 
-        editPane.setDisable(true);
-        actionsMenuButton.setDisable(true);
-        addImageButton.setDisable(true);
+        setEditMode(false);
         setTooltips();
         setIcons();
+        updateActionsState();
     }
 
     private void setupImageContextMenu() {
@@ -375,7 +380,7 @@ public class MainController {
         } else {
             questionsTable.setContextMenu(tableContextMenu);
             selectionModeButton.setText("Auswahl für Export");
-            actionsMenuButton.setDisable(questionsTable.getSelectionModel().getSelectedItem() == null);
+            updateActionsState();
         }
     }
 
@@ -402,26 +407,46 @@ public class MainController {
 
     private void setEditMode(boolean isEditing) {
         editPane.setDisable(!isEditing);
+        updateActionsState();
+    }
+
+    private void updateActionsState() {
+        boolean selectionExists = questionsTable.getSelectionModel().getSelectedItem() != null;
+        boolean isEditing = !editPane.isDisable();
+
+        actionsMenuButton.setDisable(!(selectionExists || isEditing));
         addImageButton.setDisable(!isEditing);
-        updateQuestionMenuItem.setDisable(!isEditing);
+
+        boolean isUpdating = isEditing && selectionExists;
+        
+        if (parentForSubQuestion != null && isEditing) {
+            addQuestionMenuItem.setText("Sub-Frage speichern");
+        } else {
+            addQuestionMenuItem.setText("Frage hinzufügen");
+        }
+
+        addQuestionMenuItem.setDisable(isUpdating);
+        updateQuestionMenuItem.setDisable(!isUpdating);
+
+        editQuestionMenuItem.setDisable(!selectionExists || isEditing);
+        deleteQuestionMenuItem.setDisable(!selectionExists);
+        addSubQuestionMenuItem.setDisable(!selectionExists || isEditing);
     }
 
     @FXML
     private void newQuestion() {
+        parentForSubQuestion = null;
         questionsTable.getSelectionModel().clearSelection();
-        clearQuestionFields();
         setEditMode(true);
-        addQuestionMenuItem.setDisable(false);
-        updateQuestionMenuItem.setDisable(true);
     }
 
     @FXML
     private void editQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
+            parentForSubQuestion = null; // Editing a question is not creating a sub-question
             populateQuestionDetails(selectedItem.getValue());
             setEditMode(true);
-            addQuestionMenuItem.setDisable(true);
         }
     }
 
@@ -486,7 +511,14 @@ public class MainController {
     private void addQuestion() {
         if (isQuestionInputInvalid()) return;
         Question newQuestion = createQuestionFromInput();
-        exam.addQuestion(newQuestion);
+
+        if (parentForSubQuestion != null) {
+            parentForSubQuestion.getValue().addSubQuestion(newQuestion);
+            parentForSubQuestion = null; // Reset context after use
+        } else {
+            exam.addQuestion(newQuestion);
+        }
+
         refreshTreeTableView();
         clearQuestionFields();
         setEditMode(false);
@@ -494,17 +526,11 @@ public class MainController {
 
     @FXML
     private void addSubQuestion() {
-        if (isSubQuestionInputInvalid()) return;
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            Question parentQuestion = selectedItem.getValue();
-            Question subQuestion = createQuestionFromInput();
-            parentQuestion.addSubQuestion(subQuestion);
-            refreshTreeTableView();
-            clearQuestionFields();
-            setEditMode(false);
-        } else {
-            System.out.println("Please select a parent question first.");
+            parentForSubQuestion = selectedItem;
+            questionsTable.getSelectionModel().clearSelection();
+            setEditMode(true);
         }
     }
 
@@ -524,7 +550,6 @@ public class MainController {
             if (!answerLinesField.isDisable()) {
                 questionToUpdate.setAnswerLines(answerLinesField.getValue());
             }
-            // Image is already set by addImage/removeImage, no need to set it here again
             refreshTreeTableView();
             clearQuestionFields();
             setEditMode(false);
@@ -561,9 +586,11 @@ public class MainController {
 
     @FXML
     private void addImage() {
+        boolean isEditing = !editPane.isDisable();
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
-        if (selectedItem == null) {
-            System.out.println("Please select a question first.");
+
+        if (selectedItem == null && !isEditing) {
+             System.out.println("Please select or create a question first.");
             return;
         }
 
@@ -578,7 +605,15 @@ public class MainController {
             try {
                 byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
                 String base64String = Base64.getEncoder().encodeToString(fileContent);
-                selectedItem.getValue().setImageBase64(base64String);
+                
+                boolean isNewQuestionMode = isEditing && selectedItem == null;
+
+                if (isNewQuestionMode) {
+                    newQuestionImageBase64 = base64String;
+                } else if (selectedItem != null) {
+                    selectedItem.getValue().setImageBase64(base64String);
+                }
+
                 questionImageView.setImage(new Image(new ByteArrayInputStream(fileContent)));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -588,11 +623,16 @@ public class MainController {
 
     @FXML
     private void removeImage() {
+        boolean isEditing = !editPane.isDisable();
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
-        if (selectedItem != null) {
+        boolean isNewQuestionMode = isEditing && selectedItem == null;
+
+        if (isNewQuestionMode) {
+            newQuestionImageBase64 = null;
+        } else if (selectedItem != null) {
             selectedItem.getValue().setImageBase64(null);
-            questionImageView.setImage(null);
         }
+        questionImageView.setImage(null);
     }
 
     private boolean isQuestionInputInvalid() {
@@ -637,8 +677,11 @@ public class MainController {
         }
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
-        // Image is handled by addImage, but if we want to support it on creation, we'd set it here.
-        // For now, image is added during edit.
+        
+        if (newQuestionImageBase64 != null) {
+            newQuestion.setImageBase64(newQuestionImageBase64);
+        }
+
         return newQuestion;
     }
 
@@ -898,6 +941,8 @@ public class MainController {
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
         questionImageView.setImage(null);
+        newQuestionImageBase64 = null;
+        parentForSubQuestion = null;
     }
 
     private Question createVariedQuestionRecursive(Question originalQuestion) {
