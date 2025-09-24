@@ -8,9 +8,9 @@ ExamBuilder is a modern desktop application designed for educators to streamline
 
 ## Screenshots
 
-| Main Window | Instructions Dialog |
+| Main Window | Instructions Dialog (Link) |
 | :---: | :---: |
-| ![Main Window](Bericht_Exambuilder/img/exam.pdf) | ![Instructions Dialog](Bericht_Exambuilder/img/hinweise.pdf) |
+| ![Main Window (PDF)](img/exam.pdf) | [Instructions Dialog (PDF)](img/hinweise.pdf) |
 
 ## Key Features
 
@@ -32,6 +32,14 @@ ExamBuilder is a modern desktop application designed for educators to streamline
     *   Icons (via FontAwesomeFX) and tooltips for a better user experience.
     *   Autocomplete field for German university names.
     *   Right-click context menus for quick access to actions.
+
+## Recent Updates
+
+*   **Enhanced HTML Editor Data Binding:** Changes made in the rich text editor are now automatically saved to the question model when the editor loses focus, ensuring all modifications are preserved during export.
+*   **Accurate Word Formatting:** Resolved issues with bold, italic, and underline styles not being correctly applied in the generated Word documents.
+*   **Improved MCQ Detection:** Refined the detection logic for multiple-choice options in Word export to prevent unintended checkbox insertions within regular text.
+*   **PDF Export Deprecation:** Please note that PDF export is no longer supported; only Word export is available.
+*   **UI Language:** The entire application user interface is in German.
 
 ## Technologies Used
 

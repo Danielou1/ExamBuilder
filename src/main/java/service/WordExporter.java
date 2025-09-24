@@ -116,7 +116,7 @@ public class WordExporter {
         XWPFParagraph instructionTableParagraph = instructionTableRow.getCell(0).getParagraphs().get(0);
         instructionTableParagraph.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun instructionTableRun = instructionTableParagraph.createRun();
-        instructionTableRun.setText("\nPlease lesen Sie die folgenden Hinweise aufmerksam durch!");
+        instructionTableRun.setText("\nBitte lesen Sie die folgenden Hinweise aufmerksam durch!");
         instructionTableRun.setBold(true);
 
         XWPFParagraph instructions = document.createParagraph();
@@ -290,53 +290,37 @@ public class WordExporter {
         processNode(parsedHtml.body(), paragraph, document, false, false, false, null);
     }
 
-    private static void processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, String color) {
+    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, String color) {
+        XWPFRun run = paragraph.createRun();
+        run.setText(text);
+        run.setBold(bold);
+        run.setItalic(italic);
+        run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+        if (color != null) {
+            run.setColor(color);
+        }
+    }
+
+    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, String color) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
-            if (text.trim().isEmpty() && !text.equals(" ")) return;
+            if (text.trim().isEmpty() && !text.equals(" ")) return paragraph;
 
-            // Regex to find patterns like A), B), C) or a), b), c)
             java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b([A-Za-z])\\)");
             java.util.regex.Matcher matcher = pattern.matcher(text);
 
             int lastIndex = 0;
             while (matcher.find()) {
-                // Add text before the match
                 if (matcher.start() > lastIndex) {
-                    XWPFRun run = paragraph.createRun();
-                    run.setText(text.substring(lastIndex, matcher.start()));
-                    run.setBold(bold);
-                    run.setItalic(italic);
-                    run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
-                    if (color != null) {
-                        run.setColor(color);
-                    }
+                    appendStyledText(paragraph, text.substring(lastIndex, matcher.start()), bold, italic, underline, color);
                 }
-
-                // Add the checkbox and the option text
-                XWPFRun run = paragraph.createRun();
-                run.setText("\u2610 " + matcher.group(0)); // Unicode for an empty checkbox
-                run.setBold(bold);
-                run.setItalic(italic);
-                run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
-                if (color != null) {
-                    run.setColor(color);
-                }
+                appendStyledText(paragraph, "\u2610 " + matcher.group(0), bold, italic, underline, color);
                 lastIndex = matcher.end();
             }
 
-            // Add any remaining text after the last match
             if (lastIndex < text.length()) {
-                XWPFRun run = paragraph.createRun();
-                run.setText(text.substring(lastIndex));
-                run.setBold(bold);
-                run.setItalic(italic);
-                run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
-                if (color != null) {
-                    run.setColor(color);
-                }
+                appendStyledText(paragraph, text.substring(lastIndex), bold, italic, underline, color);
             }
-
         } else if (node instanceof Element) {
             Element element = (Element) node;
             boolean currentBold = element.tagName().equals("b") || element.tagName().equals("strong");
@@ -355,12 +339,13 @@ public class WordExporter {
             }
 
             for (Node childNode : element.childNodes()) {
-                processNode(childNode, paragraph, document, bold || currentBold, italic || currentItalic, underline || currentUnderline, newColor);
+                paragraph = processNode(childNode, paragraph, document, bold || currentBold, italic || currentItalic, underline || currentUnderline, newColor);
             }
 
             if (element.tagName().equals("br")) {
                 paragraph.createRun().addBreak();
             }
         }
+        return paragraph;
     }
 }

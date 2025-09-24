@@ -191,6 +191,18 @@ public class MainController {
         setTooltips();
         setIcons();
         updateActionsState();
+
+        questionTextField.focusedProperty().addListener((obs, oldVal, isFocused) -> {
+            if (!isFocused) { // The editor lost focus
+                TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+                if (selectedItem != null && !editPane.isDisable()) {
+                    Question questionToUpdate = selectedItem.getValue();
+                    if (questionToUpdate.getText() == null || !questionToUpdate.getText().equals(questionTextField.getHtmlText())) {
+                        questionToUpdate.setText(questionTextField.getHtmlText());
+                    }
+                }
+            }
+        });
     }
 
     private void setupImageContextMenu() {
