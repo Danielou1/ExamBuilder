@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.scene.web.HTMLEditor;
 
 public class MainController {
 
@@ -75,7 +76,7 @@ public class MainController {
     @FXML
     private TextArea questionTitleField;
     @FXML
-    private TextArea questionTextField;
+    private HTMLEditor questionTextField;
     @FXML
     private TextArea musterloesungField;
     @FXML
@@ -146,11 +147,9 @@ public class MainController {
 
         questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
             if ("MCQ".equals(newVal)) {
-                questionTextField.setPromptText("Geben Sie die Frage ein, gefolgt von den Antwortmöglichkeiten im Format:\nA) Antwort 1\nB) Antwort 2\nC) Antwort 3");
                 answerLinesField.setDisable(true);
                 answerLinesField.getValueFactory().setValue(0);
             } else {
-                questionTextField.setPromptText("Aufgabentext");
                 answerLinesField.setDisable(false);
             }
         });
@@ -452,7 +451,7 @@ public class MainController {
 
     private void populateQuestionDetails(Question question) {
         questionTitleField.setText(question.getTitle());
-        questionTextField.setText(question.getText());
+        questionTextField.setHtmlText(question.getText());
         musterloesungField.setText(question.getMusterloesung());
         questionPointsField.setText(String.valueOf(question.getPoints()));
         questionTypeField.setValue(question.getType());
@@ -541,7 +540,7 @@ public class MainController {
         if (selectedItem != null) {
             Question questionToUpdate = selectedItem.getValue();
             questionToUpdate.setTitle(questionTitleField.getText());
-            questionToUpdate.setText(questionTextField.getText());
+            questionToUpdate.setText(questionTextField.getHtmlText());
             questionToUpdate.setMusterloesung(musterloesungField.getText());
             if (questionToUpdate.getSubQuestions() == null || questionToUpdate.getSubQuestions().isEmpty()) {
                 questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
@@ -665,7 +664,7 @@ public class MainController {
 
     private Question createQuestionFromInput() {
         String title = questionTitleField.getText();
-        String text = questionTextField.getText();
+        String text = questionTextField.getHtmlText();
         int points = 0;
         if (!questionPointsField.getText().isEmpty()) {
             points = Integer.parseInt(questionPointsField.getText());
@@ -935,7 +934,7 @@ public class MainController {
 
     private void clearQuestionFields() {
         questionTitleField.clear();
-        questionTextField.clear();
+        questionTextField.setHtmlText("");
         musterloesungField.clear();
         questionPointsField.clear();
         questionTypeField.setValue(null);

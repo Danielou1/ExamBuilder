@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -20,6 +21,12 @@ import org.apache.poi.wp.usermodel.HeaderFooterType;
 
 import model.Exam;
 import model.Question;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
 public class WordExporter {
 
@@ -228,22 +235,7 @@ public class WordExporter {
         questionTitleRun.setBold(true);
 
         if (question.getText() != null && !question.getText().isEmpty()) {
-            if ("MCQ".equals(question.getType())) {
-                String[] lines = question.getText().split("\r?\n");
-                for (String line : lines) {
-                    XWPFParagraph questionTextParagraph = document.createParagraph();
-                    XWPFRun questionTextRun = questionTextParagraph.createRun();
-                    if (line.trim().startsWith("A)") || line.trim().startsWith("B)") || line.trim().startsWith("C)") || line.trim().startsWith("D)")) {
-                        questionTextRun.setText("☐ " + line.trim());
-                    } else {
-                        questionTextRun.setText(line);
-                    }
-                }
-            } else {
-                XWPFParagraph questionTextParagraph = document.createParagraph();
-                XWPFRun questionTextRun = questionTextParagraph.createRun();
-                questionTextRun.setText(question.getText());
-            }
+            appendHtml(document, question.getText());
         }
 
         if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
@@ -288,6 +280,86 @@ public class WordExporter {
             for (int i = 0; i < question.getSubQuestions().size(); i++) {
                 Question subQuestion = question.getSubQuestions().get(i);
                 writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions);
+            }
+        }
+    }
+
+    private static void appendHtml(XWPFDocument document, String html) {
+        Document parsedHtml = Jsoup.parse(html);
+        XWPFParagraph paragraph = document.createParagraph();
+        processNode(parsedHtml.body(), paragraph, document, false, false, false, null);
+    }
+
+    private static void processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, String color) {
+        if (node instanceof TextNode) {
+            String text = ((TextNode) node).text();
+            if (text.trim().isEmpty() && !text.equals(" ")) return;
+
+            // Regex to find patterns like A), B), C) or a), b), c)
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b([A-Za-z])\\)");
+            java.util.regex.Matcher matcher = pattern.matcher(text);
+
+            int lastIndex = 0;
+            while (matcher.find()) {
+                // Add text before the match
+                if (matcher.start() > lastIndex) {
+                    XWPFRun run = paragraph.createRun();
+                    run.setText(text.substring(lastIndex, matcher.start()));
+                    run.setBold(bold);
+                    run.setItalic(italic);
+                    run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+                    if (color != null) {
+                        run.setColor(color);
+                    }
+                }
+
+                // Add the checkbox and the option text
+                XWPFRun run = paragraph.createRun();
+                run.setText("\u2610 " + matcher.group(0)); // Unicode for an empty checkbox
+                run.setBold(bold);
+                run.setItalic(italic);
+                run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+                if (color != null) {
+                    run.setColor(color);
+                }
+                lastIndex = matcher.end();
+            }
+
+            // Add any remaining text after the last match
+            if (lastIndex < text.length()) {
+                XWPFRun run = paragraph.createRun();
+                run.setText(text.substring(lastIndex));
+                run.setBold(bold);
+                run.setItalic(italic);
+                run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+                if (color != null) {
+                    run.setColor(color);
+                }
+            }
+
+        } else if (node instanceof Element) {
+            Element element = (Element) node;
+            boolean currentBold = element.tagName().equals("b") || element.tagName().equals("strong");
+            boolean currentItalic = element.tagName().equals("i") || element.tagName().equals("em");
+            boolean currentUnderline = element.tagName().equals("u");
+            String newColor = color;
+
+            if (element.tagName().equals("font") && element.hasAttr("color")) {
+                newColor = element.attr("color").replace("#", "");
+            }
+
+            if (element.tagName().equals("p") || element.tagName().equals("div")) {
+                if (!paragraph.getRuns().isEmpty() || !paragraph.getText().isEmpty()) {
+                    paragraph = document.createParagraph();
+                }
+            }
+
+            for (Node childNode : element.childNodes()) {
+                processNode(childNode, paragraph, document, bold || currentBold, italic || currentItalic, underline || currentUnderline, newColor);
+            }
+
+            if (element.tagName().equals("br")) {
+                paragraph.createRun().addBreak();
             }
         }
     }

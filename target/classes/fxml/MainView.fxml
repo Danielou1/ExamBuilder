@@ -21,6 +21,8 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.web.HTMLEditor?>
+<?import javafx.scene.web.HTMLEditor?>
 
 <BorderPane fx:id="mainPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainController">
     <top>
@@ -103,7 +105,7 @@
                     <VBox fx:id="editPane" spacing="10">
                         <Label text="Frage bearbeiten" />
                         <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
-                        <TextArea fx:id="questionTextField" prefHeight="150" promptText="Aufgabentext" wrapText="true" />
+                                                                        <HTMLEditor fx:id="questionTextField" prefHeight="200.0" />
                         <TextArea fx:id="musterloesungField" prefHeight="100" promptText="Musterlösung" wrapText="true" />
                         <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
                         <TextField fx:id="questionPointsField" promptText="Punkte" />
