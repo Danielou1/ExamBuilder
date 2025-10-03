@@ -286,63 +286,77 @@ public class WordExporter {
 
     private static void appendHtml(XWPFDocument document, String html) {
         Document parsedHtml = Jsoup.parse(html);
+        // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
-        processNode(parsedHtml.body(), paragraph, document, false, false, false, null);
+        processNode(parsedHtml.body(), paragraph, document, false, false, false, false, null, null);
     }
 
-    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, String color) {
+    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color) {
         XWPFRun run = paragraph.createRun();
         run.setText(text);
         run.setBold(bold);
         run.setItalic(italic);
         run.setUnderline(underline ? org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE : org.apache.poi.xwpf.usermodel.UnderlinePatterns.NONE);
+        run.setStrikeThrough(strikethrough);
         if (color != null) {
             run.setColor(color);
         }
     }
 
-    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, String color) {
+    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
-            if (text.trim().isEmpty() && !text.equals(" ")) return paragraph;
-
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\b([A-Za-z])\\)");
-            java.util.regex.Matcher matcher = pattern.matcher(text);
-
-            int lastIndex = 0;
-            while (matcher.find()) {
-                if (matcher.start() > lastIndex) {
-                    appendStyledText(paragraph, text.substring(lastIndex, matcher.start()), bold, italic, underline, color);
-                }
-                appendStyledText(paragraph, "\u2610 " + matcher.group(0), bold, italic, underline, color);
-                lastIndex = matcher.end();
-            }
-
-            if (lastIndex < text.length()) {
-                appendStyledText(paragraph, text.substring(lastIndex), bold, italic, underline, color);
+            if (!text.trim().isEmpty() || text.equals(" ")) {
+                 appendStyledText(paragraph, text, bold, italic, underline, strikethrough, color);
             }
         } else if (node instanceof Element) {
             Element element = (Element) node;
-            boolean currentBold = element.tagName().equals("b") || element.tagName().equals("strong");
-            boolean currentItalic = element.tagName().equals("i") || element.tagName().equals("em");
-            boolean currentUnderline = element.tagName().equals("u");
-            String newColor = color;
+            String tagName = element.tagName().toLowerCase();
+            String style = element.attr("style").toLowerCase();
 
-            if (element.tagName().equals("font") && element.hasAttr("color")) {
+            // Determine styles from tags and CSS
+            boolean newBold = bold || tagName.equals("b") || tagName.equals("strong") || style.contains("font-weight: bold");
+            boolean newItalic = italic || tagName.equals("i") || tagName.equals("em") || style.contains("font-style: italic");
+            boolean newUnderline = underline || tagName.equals("u") || style.contains("text-decoration: underline");
+            boolean newStrikethrough = strikethrough || tagName.equals("strike") || style.contains("text-decoration: line-through");
+            String newColor = color;
+            String newListStyle = listStyle;
+
+            if (tagName.equals("font") && element.hasAttr("color")) {
                 newColor = element.attr("color").replace("#", "");
             }
 
-            if (element.tagName().equals("p") || element.tagName().equals("div")) {
-                if (!paragraph.getRuns().isEmpty() || !paragraph.getText().isEmpty()) {
+            // Handle block-level elements
+            if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol")) {
+                if (!paragraph.getRuns().isEmpty() || paragraph.getCTP().getPPr() != null) {
                     paragraph = document.createParagraph();
                 }
             }
-
-            for (Node childNode : element.childNodes()) {
-                paragraph = processNode(childNode, paragraph, document, bold || currentBold, italic || currentItalic, underline || currentUnderline, newColor);
+            
+            if (tagName.equals("ul")) {
+                newListStyle = "bullet";
+            } else if (tagName.equals("ol")) {
+                newListStyle = "number";
             }
 
-            if (element.tagName().equals("br")) {
+            if (tagName.equals("li")) {
+                if (!paragraph.getRuns().isEmpty()) {
+                     paragraph = document.createParagraph();
+                }
+                if ("bullet".equals(listStyle)) {
+                    paragraph.setNumID(java.math.BigInteger.ONE); // Simple bullet point
+                } else if ("number".equals(listStyle)) {
+                    paragraph.setNumID(java.math.BigInteger.valueOf(2)); // Simple numbering
+                }
+            }
+
+            // Recursive call for child nodes
+            for (Node childNode : element.childNodes()) {
+                paragraph = processNode(childNode, paragraph, document, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
+            }
+
+            // Handle line breaks
+            if (tagName.equals("br")) {
                 paragraph.createRun().addBreak();
             }
         }
