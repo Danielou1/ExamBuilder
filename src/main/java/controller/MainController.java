@@ -534,7 +534,29 @@ public class MainController {
 
     @FXML
     private void addQuestion() {
-        if (isQuestionInputInvalid()) return;
+        if (questionPointsField.getText().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Punktzahl fehlt");
+            alert.setHeaderText("Die Punktzahl für diese Frage fehlt.");
+            alert.setContentText("Möchten Sie mit 0 Punkten fortfahren oder die Punktzahl manuell eingeben?");
+
+            ButtonType continueButton = new ButtonType("Fortfahren mit 0 Punkten");
+            ButtonType modifyButton = new ButtonType("Manuell eingeben", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            alert.getButtonTypes().setAll(continueButton, modifyButton);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == continueButton) {
+                questionPointsField.setText("0");
+            } else {
+                return;
+            }
+        }
+
+        if (isPointsInvalid()) {
+            return;
+        }
+
         Question newQuestion = createQuestionFromInput();
 
         if (parentForSubQuestion != null) {
@@ -561,7 +583,29 @@ public class MainController {
 
     @FXML
     private void updateQuestion() {
-        if (isQuestionInputInvalid()) return;
+        if (questionPointsField.getText().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Punktzahl fehlt");
+            alert.setHeaderText("Die Punktzahl für diese Frage fehlt.");
+            alert.setContentText("Möchten Sie mit 0 Punkten fortfahren oder die Punktzahl manuell eingeben?");
+
+            ButtonType continueButton = new ButtonType("Fortfahren mit 0 Punkten");
+            ButtonType modifyButton = new ButtonType("Manuell eingeben", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            alert.getButtonTypes().setAll(continueButton, modifyButton);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == continueButton) {
+                questionPointsField.setText("0");
+            } else {
+                return;
+            }
+        }
+
+        if (isPointsInvalid()) {
+            return;
+        }
+
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
             Question questionToUpdate = selectedItem.getValue();
@@ -660,32 +704,14 @@ public class MainController {
         questionImageView.setImage(null);
     }
 
-    private boolean isQuestionInputInvalid() {
-        if (questionPointsField.getText().isEmpty()) {
-            System.out.println("Points are required fields for a main question.");
-            return true;
-        }
+    private boolean isPointsInvalid() {
         try {
             Integer.parseInt(questionPointsField.getText());
+            return false;
         } catch (NumberFormatException e) {
             System.out.println("Points must be a valid number.");
             return true;
         }
-        return false;
-    }
-
-    private boolean isSubQuestionInputInvalid() {
-        if (questionPointsField.getText().isEmpty()) {
-            System.out.println("Points is required for a sub-question.");
-            return true;
-        }
-        try {
-            Integer.parseInt(questionPointsField.getText());
-        } catch (NumberFormatException e) {
-            System.out.println("Points must be a valid number.");
-            return true;
-        }
-        return false;
     }
 
     private Question createQuestionFromInput() {
