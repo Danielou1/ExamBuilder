@@ -117,6 +117,8 @@ public class MainController {
     private List<String> germanUniversities;
     private String newQuestionImageBase64 = null;
     private TreeItem<Question> parentForSubQuestion = null;
+    private Stage hinweiseDialogStage;
+    private HinweiseDialogController hinweiseDialogController;
 
     @FXML
     public void initialize() {
@@ -348,28 +350,40 @@ public class MainController {
         questionsTable.setContextMenu(tableContextMenu);
     }
 
-    @FXML
-    private void openHinweiseDialog() {
+    private Stage primaryStage;
+
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        createHinweiseDialog();
+    }
+
+    private void createHinweiseDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(getClass().getResource("/fxml/HinweiseDialog.fxml"));
             VBox page = loader.load();
 
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Hinweise, Hilfsmittel & Zeit bearbeiten");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.initOwner(mainPane.getScene().getWindow());
+            hinweiseDialogStage = new Stage();
+            hinweiseDialogStage.setTitle("Hinweise, Hilfsmittel & Zeit bearbeiten");
+            hinweiseDialogStage.initModality(Modality.WINDOW_MODAL);
+            hinweiseDialogStage.initOwner(primaryStage);
             Scene scene = new Scene(page);
-            dialogStage.setScene(scene);
+            hinweiseDialogStage.setScene(scene);
 
-            HinweiseDialogController controller = loader.getController();
-            controller.setDialogStage(dialogStage);
-            controller.setData(this.exam);
-
-            dialogStage.showAndWait();
-
+            hinweiseDialogController = loader.getController();
+            hinweiseDialogController.setDialogStage(hinweiseDialogStage);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void openHinweiseDialog() {
+        if (hinweiseDialogStage != null) {
+            hinweiseDialogController.setData(this.exam);
+            hinweiseDialogStage.showAndWait();
+        } else {
+            System.err.println("Hinweise Dialog could not be created.");
         }
     }
 

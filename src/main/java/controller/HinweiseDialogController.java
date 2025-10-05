@@ -62,11 +62,7 @@ public class HinweiseDialogController {
     public void setData(Exam exam) {
         this.exam = exam;
 
-        String baseText = exam.getAllgemeineHinweise();
-        if (baseText == null || baseText.trim().isEmpty()) {
-            baseText = WordExporter.getStandardHinweise();
-        }
-        hinweiseAllgemeinArea.setText(baseText);
+        hinweiseAllgemeinArea.setText(WordExporter.getStandardHinweise());
 
         bearbeitungszeitSpinner.getValueFactory().setValue(exam.getBearbeitungszeit() > 0 ? exam.getBearbeitungszeit() : 90);
         String hilfsmittel = exam.getHilfsmittel() != null ? exam.getHilfsmittel() : "";

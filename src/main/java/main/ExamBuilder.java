@@ -14,6 +14,10 @@ public class ExamBuilder extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
         Parent root = loader.load();
         System.out.println("fxml loaded");
+
+        controller.MainController controller = loader.getController();
+        controller.setPrimaryStage(primaryStage);
+
         primaryStage.setTitle("ExamBuilder");
         Scene scene = new Scene(root, 800, 600);
         scene.getStylesheets().add("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
