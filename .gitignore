@@ -1,3 +1,13 @@
+# Configuration files
 /src/main/resources/config.properties
+
+# Ignored directories
 /Bericht_Exambuilder/
-Bachelorarbeit/
+/Bachelorarbeit/
+/Presentation_LaTeX/
+
+# Build output
+/target/
+
+# Other ignored files
+Presentation_LaTeX.zip
