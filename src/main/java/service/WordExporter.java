@@ -240,33 +240,13 @@ public class WordExporter {
         questionTitleRun.setBold(true);
 
         if (question.getText() != null && !question.getText().isEmpty()) {
-            appendHtml(document, question.getText());
-        }
-
-        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
-            try {
-                byte[] imageBytes = Base64.getDecoder().decode(question.getImageBase64());
-                int pictureType = XWPFDocument.PICTURE_TYPE_PNG; // Default to PNG
-
-                if (imageBytes.length > 8 && (imageBytes[0] & 0xFF) == 0xFF && (imageBytes[1] & 0xFF) == 0xD8) {
-                    pictureType = XWPFDocument.PICTURE_TYPE_JPEG;
-                } else if (imageBytes.length > 4 && (imageBytes[0] & 0xFF) == 0x47 && (imageBytes[1] & 0xFF) == 0x49 && (imageBytes[2] & 0xFF) == 0x46) {
-                    pictureType = XWPFDocument.PICTURE_TYPE_GIF;
-                } else if (imageBytes.length > 2 && (imageBytes[0] & 0xFF) == 0x42 && (imageBytes[1] & 0xFF) == 0x4D) {
-                    pictureType = XWPFDocument.PICTURE_TYPE_BMP;
-                }
-
-                XWPFParagraph paragraph = document.createParagraph();
-                XWPFRun run = paragraph.createRun();
-                run.addPicture(new ByteArrayInputStream(imageBytes), pictureType, "image.png", Units.toEMU(400), Units.toEMU(300));
-
-            } catch (InvalidFormatException | IOException e) {
-                e.printStackTrace();
-            }
+            appendHtml(document, question, withSolutions);
         }
 
         if (withSolutions) {
-            if (question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+            // For non-MCQ questions, print the musterloesung text field.
+            // For MCQs, the solution is handled by checking boxes within appendHtml.
+            if (!"MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
                 XWPFParagraph solutionParagraph = document.createParagraph();
                 XWPFRun solutionRun = solutionParagraph.createRun();
                 solutionRun.setText("\nLösung: " + question.getMusterloesung());
@@ -289,11 +269,11 @@ public class WordExporter {
         }
     }
 
-    private static void appendHtml(XWPFDocument document, String html) {
-        Document parsedHtml = Jsoup.parse(html);
+    private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions) {
+        Document parsedHtml = Jsoup.parse(question.getText());
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
-        processNode(parsedHtml.body(), paragraph, document, false, false, false, false, null, null);
+        processNode(parsedHtml.body(), paragraph, document, question, withSolutions, false, false, false, false, null, null);
     }
 
     private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color) {
@@ -308,7 +288,7 @@ public class WordExporter {
         }
     }
 
-    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
+    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
             if (!text.trim().isEmpty() || text.equals(" ")) {
@@ -322,7 +302,7 @@ public class WordExporter {
             // Determine styles from tags and CSS
             boolean newBold = bold || tagName.equals("b") || tagName.equals("strong") || style.contains("font-weight: bold");
             boolean newItalic = italic || tagName.equals("i") || tagName.equals("em") || style.contains("font-style: italic");
-            boolean newUnderline = underline || tagName.equals("u") || style.contains("text-decoration: underline");
+            boolean newUnderline = underline || tagName.equals("u") || tagName.equals("em") || style.contains("text-decoration: underline");
             boolean newStrikethrough = strikethrough || tagName.equals("strike") || style.contains("text-decoration: line-through");
             String newColor = color;
             String newListStyle = listStyle;
@@ -345,19 +325,49 @@ public class WordExporter {
             }
 
             if (tagName.equals("li")) {
-                if (!paragraph.getRuns().isEmpty()) {
-                     paragraph = document.createParagraph();
-                }
-                if ("bullet".equals(listStyle)) {
-                    paragraph.setNumID(java.math.BigInteger.ONE); // Simple bullet point
-                } else if ("number".equals(listStyle)) {
-                    paragraph.setNumID(java.math.BigInteger.valueOf(2)); // Simple numbering
+                // Special handling for MCQ list items due to HTMLEditor's output format
+                if ("MCQ".equals(question.getType())) {
+                    // Parse the inner HTML of the <li> to find individual options (text + <div>s)
+                    Document innerDoc = Jsoup.parse(element.html());
+                    Element body = innerDoc.body();
+
+                    // First option is usually direct text within the body
+                    String firstOptionText = body.ownText().trim();
+                    if (!firstOptionText.isEmpty()) {
+                        XWPFParagraph optionParagraph = document.createParagraph();
+                        XWPFRun checkboxRun = optionParagraph.createRun();
+                        checkboxRun.setText("☐ "); // Unchecked box
+                        appendStyledText(optionParagraph, firstOptionText, newBold, newItalic, newUnderline, newStrikethrough, newColor);
+                    }
+
+                    // Subsequent options are in <div> tags
+                    for (Element div : body.select("div")) {
+                        XWPFParagraph optionParagraph = document.createParagraph();
+                        XWPFRun checkboxRun = optionParagraph.createRun();
+                        checkboxRun.setText("☐ "); // Unchecked box
+                        appendStyledText(optionParagraph, div.text().trim(), newBold, newItalic, newUnderline, newStrikethrough, newColor);
+                    }
+
+                    // Skip further processing of children for this <li> as we've handled them
+                    return paragraph; 
+                } else {
+                    // Original list item handling for non-MCQ lists
+                    if (!paragraph.getRuns().isEmpty()) {
+                         paragraph = document.createParagraph();
+                    }
+                    if ("bullet".equals(listStyle)) {
+                        paragraph.setNumID(java.math.BigInteger.ONE); // Simple bullet point
+                    } else if ("number".equals(listStyle)) {
+                        paragraph.setNumID(java.math.BigInteger.valueOf(2)); // Simple numbering
+                    }
                 }
             }
 
-            // Recursive call for child nodes
-            for (Node childNode : element.childNodes()) {
-                paragraph = processNode(childNode, paragraph, document, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
+            // Recursive call for child nodes (only if not an MCQ <li> handled above)
+            if (!("MCQ".equals(question.getType()) && tagName.equals("li"))) {
+                for (Node childNode : element.childNodes()) {
+                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
+                }
             }
 
             // Handle line breaks

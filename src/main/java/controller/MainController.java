@@ -956,10 +956,41 @@ public class MainController {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 exam = mapper.readValue(file, Exam.class);
+
+                // Automatically convert plain-text MCQs to HTML
+                if (exam.getQuestions() != null) {
+                    for (Question q : exam.getQuestions()) {
+                        processQuestionForHtmlConversion(q);
+                    }
+                }
+
                 updateUIFromExam();
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void processQuestionForHtmlConversion(Question question) {
+        // Check if it's an MCQ and the text is likely plain text (no <li> tags)
+        if ("MCQ".equals(question.getType()) && question.getText() != null && !question.getText().trim().isEmpty() && !question.getText().contains("<li>")) {
+            String plainText = question.getText();
+            // Split by newline, also handling surrounding whitespace
+            String[] lines = plainText.split("\\s*\\n\\s*"); 
+            StringBuilder html = new StringBuilder("<ol>");
+            for (String line : lines) {
+                if (!line.trim().isEmpty()) {
+                    html.append("<li>").append(line.trim()).append("</li>");
+                }
+            }
+            html.append("</ol>");
+            question.setText(html.toString());
+        }
+    
+        if (question.getSubQuestions() != null) {
+            for (Question subQ : question.getSubQuestions()) {
+                processQuestionForHtmlConversion(subQ);
+            }
         }
     }
 
