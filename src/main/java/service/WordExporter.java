@@ -206,6 +206,11 @@ public class WordExporter {
 
     private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions) {
         XWPFParagraph questionTitle = document.createParagraph();
+        // Fix for NullPointerException: Ensure the paragraph properties object exists.
+        if (questionTitle.getCTP().getPPr() == null) {
+            questionTitle.getCTP().addNewPPr();
+        }
+        questionTitle.setKeepNext(true);  // Keeps the title with the next paragraph
         XWPFRun questionTitleRun = questionTitle.createRun();
         
         String titlePrefix;
