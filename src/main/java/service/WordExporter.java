@@ -3,6 +3,7 @@ package service;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -210,6 +211,7 @@ public class WordExporter {
         if (questionTitle.getCTP().getPPr() == null) {
             questionTitle.getCTP().addNewPPr();
         }
+        questionTitle.getCTP().getPPr().addNewKeepLines().setVal(true); // Prevents the title itself from splitting
         questionTitle.setKeepNext(true);  // Keeps the title with the next paragraph
         XWPFRun questionTitleRun = questionTitle.createRun();
         
@@ -239,8 +241,16 @@ public class WordExporter {
         questionTitleRun.setText(titlePrefix + titleText + pointsText);
         questionTitleRun.setBold(true);
 
+        List<String> correctOptions = null;
+        if (withSolutions && "MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+            correctOptions = Arrays.stream(question.getMusterloesung().toUpperCase().split("[,\\s]+"))
+                                 .map(String::trim)
+                                 .filter(s -> !s.isEmpty())
+                                 .collect(Collectors.toList());
+        }
+
         if (question.getText() != null && !question.getText().isEmpty()) {
-            appendHtml(document, question, withSolutions);
+            appendHtml(document, question, withSolutions, correctOptions);
         }
 
         if (withSolutions) {
@@ -269,11 +279,11 @@ public class WordExporter {
         }
     }
 
-    private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions) {
+    private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions) {
         Document parsedHtml = Jsoup.parse(question.getText());
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
-        processNode(parsedHtml.body(), paragraph, document, question, withSolutions, false, false, false, false, null, null);
+        processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null);
     }
 
     private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color) {
@@ -288,7 +298,7 @@ public class WordExporter {
         }
     }
 
-    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
+    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
             if (!text.trim().isEmpty() || text.equals(" ")) {
@@ -331,21 +341,30 @@ public class WordExporter {
                     Document innerDoc = Jsoup.parse(element.html());
                     Element body = innerDoc.body();
 
-                    // First option is usually direct text within the body
+                    // Process the first option (direct text within the body)
                     String firstOptionText = body.ownText().trim();
                     if (!firstOptionText.isEmpty()) {
                         XWPFParagraph optionParagraph = document.createParagraph();
                         XWPFRun checkboxRun = optionParagraph.createRun();
-                        checkboxRun.setText("☐ "); // Unchecked box
+                        
+                        String optionLetter = extractOptionLetter(firstOptionText);
+                        boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
+                        checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
+
                         appendStyledText(optionParagraph, firstOptionText, newBold, newItalic, newUnderline, newStrikethrough, newColor);
                     }
 
-                    // Subsequent options are in <div> tags
+                    // Process subsequent options in <div> tags
                     for (Element div : body.select("div")) {
                         XWPFParagraph optionParagraph = document.createParagraph();
                         XWPFRun checkboxRun = optionParagraph.createRun();
-                        checkboxRun.setText("☐ "); // Unchecked box
-                        appendStyledText(optionParagraph, div.text().trim(), newBold, newItalic, newUnderline, newStrikethrough, newColor);
+
+                        String optionText = div.text().trim();
+                        String optionLetter = extractOptionLetter(optionText);
+                        boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
+                        checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
+
+                        appendStyledText(optionParagraph, optionText, newBold, newItalic, newUnderline, newStrikethrough, newColor);
                     }
 
                     // Skip further processing of children for this <li> as we've handled them
@@ -366,7 +385,7 @@ public class WordExporter {
             // Recursive call for child nodes (only if not an MCQ <li> handled above)
             if (!("MCQ".equals(question.getType()) && tagName.equals("li"))) {
                 for (Node childNode : element.childNodes()) {
-                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
+                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, correctOptions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
                 }
             }
 
@@ -376,5 +395,18 @@ public class WordExporter {
             }
         }
         return paragraph;
+    }
+
+    // Helper method to extract the option letter (e.g., "A", "B") from the option text
+    private static String extractOptionLetter(String optionText) {
+        if (optionText == null || optionText.isEmpty()) {
+            return "";
+        }
+        // Regex to find patterns like "A)", "B.", "C " at the beginning of the string
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("^\\s*([A-Z])\\s*[). ]").matcher(optionText);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "";
     }
 }
