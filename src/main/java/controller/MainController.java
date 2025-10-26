@@ -145,10 +145,10 @@ public class MainController {
 
         exam = new Exam("", "", "", "", "", "", "");
 
-        questionTypeField.getItems().addAll("Offene Frage", "MCQ");
+        questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext");
 
         questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if ("MCQ".equals(newVal)) {
+            if ("MCQ".equals(newVal) || "Lückentext".equals(newVal)) {
                 answerLinesField.setDisable(true);
                 answerLinesField.getValueFactory().setValue(0);
             } else {

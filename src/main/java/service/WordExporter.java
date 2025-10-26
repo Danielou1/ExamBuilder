@@ -249,14 +249,15 @@ public class WordExporter {
                                  .collect(Collectors.toList());
         }
 
-        if (question.getText() != null && !question.getText().isEmpty()) {
+        if ("Lückentext".equals(question.getType()) && withSolutions) {
+            handleLueckentextSolution(document, question);
+        } else if (question.getText() != null && !question.getText().isEmpty()) {
             appendHtml(document, question, withSolutions, correctOptions);
         }
 
         if (withSolutions) {
-            // For non-MCQ questions, print the musterloesung text field.
-            // For MCQs, the solution is handled by checking boxes within appendHtml.
-            if (!"MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+            // For non-MCQ and non-Lückentext questions, print the musterloesung text field.
+            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
                 XWPFParagraph solutionParagraph = document.createParagraph();
                 XWPFRun solutionRun = solutionParagraph.createRun();
                 solutionRun.setText("\nLösung: " + question.getMusterloesung());
@@ -264,10 +265,13 @@ public class WordExporter {
                 solutionRun.setItalic(true);
             }
         } else {
-            for (int i = 0; i < question.getAnswerLines(); i++) {
-                XWPFParagraph answerLine = document.createParagraph();
-                XWPFRun answerLineRun = answerLine.createRun();
-                answerLineRun.setText("__________________________________________________________________________________");
+            // Only add answer lines for non-MCQ and non-Lückentext questions
+            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType())) {
+                for (int i = 0; i < question.getAnswerLines(); i++) {
+                    XWPFParagraph answerLine = document.createParagraph();
+                    XWPFRun answerLineRun = answerLine.createRun();
+                    answerLineRun.setText("__________________________________________________________________________________");
+                }
             }
         }
 
@@ -279,6 +283,34 @@ public class WordExporter {
         }
     }
 
+    private static void handleLueckentextSolution(XWPFDocument document, Question question) {
+        String htmlText = question.getText();
+        String musterloesung = question.getMusterloesung();
+
+        if (musterloesung == null || musterloesung.trim().isEmpty()) {
+            appendHtml(document, question, false, null); // Show blanks
+            XWPFParagraph p = document.createParagraph();
+            XWPFRun run = p.createRun();
+            run.setText("FEHLER: Für diesen Lückentext wurde keine Musterlösung angegeben.");
+            run.setColor("FF0000");
+            run.setItalic(true);
+            return;
+        }
+
+        String[] solutions = musterloesung.split(";");
+        String filledText = htmlText;
+
+        for (String solution : solutions) {
+            // Replace the first occurrence of ___ with a styled solution
+            filledText = filledText.replaceFirst("___", "<font color=\"0000FF\"><b>" + solution.trim() + "</b></font>");
+        }
+
+        // Now parse the modified HTML and append it
+        Document parsedHtml = Jsoup.parse(filledText);
+        XWPFParagraph paragraph = document.createParagraph();
+        processNode(parsedHtml.body(), paragraph, document, question, true, null, false, false, false, false, null, null);
+
+    }
     private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions) {
         Document parsedHtml = Jsoup.parse(question.getText());
         // Start with a new paragraph for the HTML content
