@@ -1,33 +1,33 @@
 package service;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
+
+import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFFooter;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.apache.poi.xwpf.usermodel.XWPFFooter;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
-import org.apache.poi.wp.usermodel.HeaderFooterType;
-
-import model.Exam;
-import model.Question;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
+
+import model.Exam;
+import model.Question;
 
 public class WordExporter {
 
@@ -241,6 +241,18 @@ public class WordExporter {
         questionTitleRun.setText(titlePrefix + titleText + pointsText);
         questionTitleRun.setBold(true);
 
+        // Handle question image
+        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
+            try {
+                byte[] imageBytes = Base64.decodeBase64(question.getImageBase64());
+                XWPFParagraph imageParagraph = document.createParagraph();
+                XWPFRun imageRun = imageParagraph.createRun();
+                imageRun.addPicture(new ByteArrayInputStream(imageBytes), XWPFDocument.PICTURE_TYPE_PNG, "question_image.png", Units.toEMU(400), Units.toEMU(300));
+            } catch (IOException | InvalidFormatException e) {
+                e.printStackTrace();
+            }
+        }
+
         List<String> correctOptions = null;
         if (withSolutions && "MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
             correctOptions = Arrays.stream(question.getMusterloesung().toUpperCase().split("[,\\s]+"))
@@ -263,6 +275,18 @@ public class WordExporter {
                 solutionRun.setText("\nLösung: " + question.getMusterloesung());
                 solutionRun.setColor("0000FF"); // Blue color for the solution
                 solutionRun.setItalic(true);
+            }
+
+            // Handle solution image
+            if (withSolutions && question.getMusterloesungImageBase64() != null && !question.getMusterloesungImageBase64().isEmpty()) {
+                try {
+                    byte[] imageBytes = Base64.decodeBase64(question.getMusterloesungImageBase64());
+                    XWPFParagraph imageParagraph = document.createParagraph();
+                    XWPFRun imageRun = imageParagraph.createRun();
+                    imageRun.addPicture(new ByteArrayInputStream(imageBytes), XWPFDocument.PICTURE_TYPE_PNG, "solution_image.png", Units.toEMU(400), Units.toEMU(300));
+                } catch (IOException | InvalidFormatException e) {
+                    e.printStackTrace();
+                }
             }
         } else {
             // Only add answer lines for non-MCQ and non-Lückentext questions
@@ -298,6 +322,7 @@ public class WordExporter {
         }
 
         String[] solutions = musterloesung.split(";");
+     
         String filledText = htmlText;
 
         for (String solution : solutions) {

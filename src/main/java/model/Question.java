@@ -22,6 +22,8 @@ public class Question {
     private int answerLines;
     private String musterloesung = "";
     private String imageBase64;
+    private String musterloesungImageBase64;
+
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
@@ -151,5 +153,13 @@ public class Question {
 
     public void setImageBase64(String imageBase64) {
         this.imageBase64 = imageBase64;
+    }
+
+    public String getMusterloesungImageBase64() {
+        return musterloesungImageBase64;
+    }
+
+    public void setMusterloesungImageBase64(String musterloesungImageBase64) {
+        this.musterloesungImageBase64 = musterloesungImageBase64;
     }
 }

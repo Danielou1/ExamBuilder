@@ -87,6 +87,10 @@ public class MainController {
     private Spinner<Integer> answerLinesField;
     @FXML
     private ImageView questionImageView;
+    @FXML
+    private Button addSolutionImageButton;
+    @FXML
+    private ImageView musterloesungImageView;
 
     @FXML
     private MenuItem addQuestionMenuItem;
@@ -116,6 +120,7 @@ public class MainController {
     private ContextMenu tableContextMenu;
     private List<String> germanUniversities;
     private String newQuestionImageBase64 = null;
+    private String newQuestionSolutionImageBase64 = null;
     private TreeItem<Question> parentForSubQuestion = null;
     private Stage hinweiseDialogStage;
     private HinweiseDialogController hinweiseDialogController;
@@ -148,11 +153,32 @@ public class MainController {
         questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext");
 
         questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
+            // Disable answer lines for types that don't need them
             if ("MCQ".equals(newVal) || "Lückentext".equals(newVal)) {
                 answerLinesField.setDisable(true);
                 answerLinesField.getValueFactory().setValue(0);
             } else {
                 answerLinesField.setDisable(false);
+            }
+
+            // Update UI prompts and placeholders based on the selected question type
+            switch (newVal != null ? newVal : "") {
+                case "MCQ":
+                    questionTitleField.setPromptText("Geben Sie hier die vollständige Frage für den MCQ ein.");
+                    questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Geben Sie hier die Antwortmöglichkeiten als Liste ein (z.B. A, B, C).</i></p>");
+                    musterloesungField.setPromptText("Korrekte Buchstaben trennen (z.B. A, C)");
+                    break;
+                case "Lückentext":
+                    questionTitleField.setPromptText("Geben Sie hier den Titel der Aufgabe ein (optional).");
+                    questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Schreiben Sie hier den Textkörper und verwenden Sie \'___\' für jede Lücke.</i></p>");
+                    musterloesungField.setPromptText("Antworten mit Semikolon trennen (z.B. Antwort1; Antwort2)");
+                    break;
+                case "Offene Frage":
+                default:
+                    questionTitleField.setPromptText("Geben Sie hier den Titel der Aufgabe ein (optional).");
+                    questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Geben Sie hier den Aufgabentext oder weitere Anweisungen ein.</i></p>");
+                    musterloesungField.setPromptText("Geben Sie hier die textuelle Musterlösung ein.");
+                    break;
             }
         });
 
@@ -216,6 +242,17 @@ public class MainController {
         questionImageView.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.SECONDARY && questionImageView.getImage() != null) {
                 imageContextMenu.show(questionImageView, event.getScreenX(), event.getScreenY());
+            }
+        });
+
+        ContextMenu solutionImageContextMenu = new ContextMenu();
+        MenuItem removeSolutionItem = new MenuItem("Lösungsbild entfernen");
+        removeSolutionItem.setOnAction(event -> removeSolutionImage());
+        solutionImageContextMenu.getItems().add(removeSolutionItem);
+
+        musterloesungImageView.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.SECONDARY && musterloesungImageView.getImage() != null) {
+                solutionImageContextMenu.show(musterloesungImageView, event.getScreenX(), event.getScreenY());
             }
         });
     }
@@ -489,6 +526,13 @@ public class MainController {
         } else {
             questionImageView.setImage(null);
         }
+
+        if (question.getMusterloesungImageBase64() != null && !question.getMusterloesungImageBase64().isEmpty()) {
+            byte[] imageBytes = Base64.getDecoder().decode(question.getMusterloesungImageBase64());
+            musterloesungImageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
+        } else {
+            musterloesungImageView.setImage(null);
+        }
     }
 
     private void refreshTreeTableView() {
@@ -619,6 +663,10 @@ public class MainController {
             if (!answerLinesField.isDisable()) {
                 questionToUpdate.setAnswerLines(answerLinesField.getValue());
             }
+            // Save the solution image base64 from the temporary field to the question object
+            if (newQuestionSolutionImageBase64 != null) {
+                questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
+            }
             refreshTreeTableView();
             clearQuestionFields();
             setEditMode(false);
@@ -704,6 +752,57 @@ public class MainController {
         questionImageView.setImage(null);
     }
 
+    @FXML
+    private void addSolutionImage() {
+        boolean isEditing = !editPane.isDisable();
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null && !isEditing) {
+             System.out.println("Please select or create a question first.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Lösungsbild auswählen");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif", "*.bmp")
+        );
+        File selectedFile = fileChooser.showOpenDialog(mainPane.getScene().getWindow());
+
+        if (selectedFile != null) {
+            try {
+                byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
+                String base64String = Base64.getEncoder().encodeToString(fileContent);
+                
+                boolean isNewQuestionMode = isEditing && selectedItem == null;
+
+                if (isNewQuestionMode) {
+                    newQuestionSolutionImageBase64 = base64String;
+                } else if (selectedItem != null) {
+                    selectedItem.getValue().setMusterloesungImageBase64(base64String);
+                }
+
+                musterloesungImageView.setImage(new Image(new ByteArrayInputStream(fileContent)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @FXML
+    private void removeSolutionImage() {
+        boolean isEditing = !editPane.isDisable();
+        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        boolean isNewQuestionMode = isEditing && selectedItem == null;
+
+        if (isNewQuestionMode) {
+            newQuestionSolutionImageBase64 = null;
+        } else if (selectedItem != null) {
+            selectedItem.getValue().setMusterloesungImageBase64(null);
+        }
+        musterloesungImageView.setImage(null);
+    }
+
     private boolean isPointsInvalid() {
         try {
             Integer.parseInt(questionPointsField.getText());
@@ -731,6 +830,9 @@ public class MainController {
         
         if (newQuestionImageBase64 != null) {
             newQuestion.setImageBase64(newQuestionImageBase64);
+        }
+        if (newQuestionSolutionImageBase64 != null) {
+            newQuestion.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
         }
 
         return newQuestion;
@@ -987,6 +1089,7 @@ public class MainController {
             question.setText(html.toString());
         }
     
+
         if (question.getSubQuestions() != null) {
             for (Question subQ : question.getSubQuestions()) {
                 processQuestionForHtmlConversion(subQ);
@@ -1023,7 +1126,9 @@ public class MainController {
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
         questionImageView.setImage(null);
+        musterloesungImageView.setImage(null);
         newQuestionImageBase64 = null;
+        newQuestionSolutionImageBase64 = null;
         parentForSubQuestion = null;
     }
 
@@ -1042,6 +1147,7 @@ public class MainController {
         copiedQuestion.setId(originalQuestion.getId());
         copiedQuestion.setSelected(originalQuestion.getSelected());
         copiedQuestion.setImageBase64(originalQuestion.getImageBase64()); // Copy image data
+        copiedQuestion.setMusterloesungImageBase64(originalQuestion.getMusterloesungImageBase64()); // Copy solution image data
 
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {

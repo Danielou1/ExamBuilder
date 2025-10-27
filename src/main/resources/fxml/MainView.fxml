@@ -106,7 +106,14 @@
                         <Label text="Frage bearbeiten" />
                         <TextArea fx:id="questionTitleField" prefHeight="50" promptText="Titel" wrapText="true" />
                                                                         <HTMLEditor fx:id="questionTextField" prefHeight="200.0" />
-                        <TextArea fx:id="musterloesungField" prefHeight="100" promptText="Musterlösung" wrapText="true" />
+                        <Label text="Musterlösung"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <TextArea fx:id="musterloesungField" prefHeight="100" wrapText="true" />
+                                <Button fx:id="addSolutionImageButton" onAction="#addSolutionImage" text="Lösungsbild hinzufügen" />
+                            </VBox>
+                            <ImageView fx:id="musterloesungImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
+                        </HBox>
                         <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
                         <TextField fx:id="questionPointsField" promptText="Punkte" />
                         <ComboBox fx:id="questionTypeField" promptText="Typ" />
