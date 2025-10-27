@@ -150,11 +150,11 @@ public class MainController {
 
         exam = new Exam("", "", "", "", "", "", "");
 
-        questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext");
+        questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext", "Richtig/Falsch");
 
         questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
             // Disable answer lines for types that don't need them
-            if ("MCQ".equals(newVal) || "Lückentext".equals(newVal)) {
+            if ("MCQ".equals(newVal) || "Lückentext".equals(newVal) || "Richtig/Falsch".equals(newVal)) {
                 answerLinesField.setDisable(true);
                 answerLinesField.getValueFactory().setValue(0);
             } else {
@@ -172,6 +172,11 @@ public class MainController {
                     questionTitleField.setPromptText("Geben Sie hier den Titel der Aufgabe ein (optional).");
                     questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Schreiben Sie hier den Textkörper und verwenden Sie \'___\' für jede Lücke.</i></p>");
                     musterloesungField.setPromptText("Antworten mit Semikolon trennen (z.B. Antwort1; Antwort2)");
+                    break;
+                case "Richtig/Falsch":
+                    questionTitleField.setPromptText("Geben Sie hier die Aussage ein, die bewertet werden soll.");
+                    questionTextField.setHtmlText("");
+                    musterloesungField.setPromptText("Geben Sie 'Richtig' oder 'Falsch' als Lösung ein.");
                     break;
                 case "Offene Frage":
                 default:

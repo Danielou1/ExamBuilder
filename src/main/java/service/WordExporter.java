@@ -263,6 +263,8 @@ public class WordExporter {
 
         if ("Lückentext".equals(question.getType()) && withSolutions) {
             handleLueckentextSolution(document, question);
+        } else if ("Richtig/Falsch".equals(question.getType())) {
+            handleRichtigFalsch(document, question, withSolutions);
         } else if (question.getText() != null && !question.getText().isEmpty()) {
             appendHtml(document, question, withSolutions, correctOptions);
         }
@@ -452,6 +454,30 @@ public class WordExporter {
             }
         }
         return paragraph;
+    }
+
+    private static void handleRichtigFalsch(XWPFDocument document, Question question, boolean withSolutions) {
+        XWPFTable table = document.createTable(1, 2);
+        table.setWidth("100%");
+        table.getCTTbl().getTblPr().unsetTblBorders();
+
+        XWPFTableRow row = table.getRow(0);
+        row.getCell(0).setText(question.getTitle());
+
+        XWPFParagraph checkboxParagraph = row.getCell(1).getParagraphs().get(0);
+        checkboxParagraph.setAlignment(ParagraphAlignment.RIGHT);
+
+        String musterloesung = question.getMusterloesung();
+        boolean isRichtigCorrect = withSolutions && "Richtig".equalsIgnoreCase(musterloesung);
+        boolean isFalschCorrect = withSolutions && "Falsch".equalsIgnoreCase(musterloesung);
+
+        XWPFRun richtigRun = checkboxParagraph.createRun();
+        richtigRun.setText((isRichtigCorrect ? "☑" : "☐") + " Richtig");
+
+        checkboxParagraph.createRun().addTab();
+
+        XWPFRun falschRun = checkboxParagraph.createRun();
+        falschRun.setText((isFalschCorrect ? "☑" : "☐") + " Falsch");
     }
 
     // Helper method to extract the option letter (e.g., "A", "B") from the option text
