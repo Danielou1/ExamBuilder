@@ -673,7 +673,7 @@ public class MainController {
                 questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
             }
             refreshTreeTableView();
-            clearQuestionFields();
+            populateQuestionDetails(questionToUpdate); // Re-populate with updated details
             setEditMode(false);
         } else {
             System.out.println("Please select a question to update.");

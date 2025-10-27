@@ -1,8 +1,8 @@
 package service;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.util.Units;
-
 import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -266,7 +265,7 @@ public class WordExporter {
         } else if ("Richtig/Falsch".equals(question.getType())) {
             handleRichtigFalsch(document, question, withSolutions);
         } else if (question.getText() != null && !question.getText().isEmpty()) {
-            appendHtml(document, question, withSolutions, correctOptions);
+            appendHtml(document, question, withSolutions, correctOptions, null);
         }
 
         if (withSolutions) {
@@ -314,7 +313,7 @@ public class WordExporter {
         String musterloesung = question.getMusterloesung();
 
         if (musterloesung == null || musterloesung.trim().isEmpty()) {
-            appendHtml(document, question, false, null); // Show blanks
+            appendHtml(document, question, false, null, null); // Show blanks, preserving teacher's underscores
             XWPFParagraph p = document.createParagraph();
             XWPFRun run = p.createRun();
             run.setText("FEHLER: Für diesen Lückentext wurde keine Musterlösung angegeben.");
@@ -323,23 +322,38 @@ public class WordExporter {
             return;
         }
 
-        String[] solutions = musterloesung.split(";");
-     
-        String filledText = htmlText;
+        String[] solutions = musterloesung.split("\\s*;\\s*");
+        int solutionIndex = 0;
+        String placeholderRegex = "_{3,}"; // A blank is 3 or more underscores
 
-        for (String solution : solutions) {
-            // Replace the first occurrence of ___ with a styled solution
-            filledText = filledText.replaceFirst("___", "<font color=\"0000FF\"><b>" + solution.trim() + "</b></font>");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(placeholderRegex);
+        java.util.regex.Matcher matcher = pattern.matcher(htmlText);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String replacement;
+            if (solutionIndex < solutions.length) {
+                String solution = solutions[solutionIndex].trim();
+                replacement = " <font color=\"0000FF\"><b>" + solution + "</b></font> ";
+                solutionIndex++;
+            } else {
+                // If there are more blanks than solutions, fill the rest with empty styled blanks.
+                replacement = " <font color=\"0000FF\"><b></b></font> ";
+            }
+            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(replacement));
         }
+        matcher.appendTail(sb);
+        String filledText = sb.toString();
 
         // Now parse the modified HTML and append it
-        Document parsedHtml = Jsoup.parse(filledText);
-        XWPFParagraph paragraph = document.createParagraph();
-        processNode(parsedHtml.body(), paragraph, document, question, true, null, false, false, false, false, null, null);
+        appendHtml(document, question, true, null, filledText);
 
     }
-    private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions) {
-        Document parsedHtml = Jsoup.parse(question.getText());
+    private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, String htmlContent) {
+        String contentToParse = (htmlContent != null && !htmlContent.isEmpty()) ? htmlContent : question.getText();
+        // For Lückentext in student exams, we now preserve the underscores as typed by the teacher.
+        // The fixed placeholder '___' is no longer enforced or replaced with a fixed-length line.
+        Document parsedHtml = Jsoup.parse(contentToParse);
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
         processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null);

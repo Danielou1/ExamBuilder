@@ -100,6 +100,7 @@
                     </padding>
                     <HBox spacing="10">
                         <Button fx:id="newQuestionButton" onAction="#newQuestion" text="Neue Frage" />
+                        <ComboBox fx:id="questionTypeField" promptText="Frage Typ" />
                         <Button fx:id="addImageButton" onAction="#addImage" text="Bild hinzufügen" />
                     </HBox>
                     <VBox fx:id="editPane" spacing="10">
@@ -116,7 +117,6 @@
                         </HBox>
                         <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
                         <TextField fx:id="questionPointsField" promptText="Punkte" />
-                        <ComboBox fx:id="questionTypeField" promptText="Typ" />
                         <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
                         <MenuButton fx:id="actionsMenuButton" text="Aktionen">
                             <items>
