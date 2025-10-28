@@ -240,6 +240,11 @@ public class WordExporter {
         questionTitleRun.setText(titlePrefix + titleText + pointsText);
         questionTitleRun.setBold(true);
 
+        // Reduce space after the question title for MCQ type questions
+        if ("MCQ".equals(question.getType())) {
+            questionTitle.setSpacingAfter(0);
+        }
+
         // Handle question image
         if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
             try {
@@ -357,6 +362,15 @@ public class WordExporter {
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
         processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null);
+
+        // For MCQs, processNode creates new paragraphs for each option, leaving this one empty.
+        // This empty paragraph causes a large vertical gap, so we remove it.
+        if ("MCQ".equals(question.getType()) && paragraph.getRuns().isEmpty()) {
+            int pos = document.getPosOfParagraph(paragraph);
+            if (pos != -1) {
+                document.removeBodyElement(pos);
+            }
+        }
     }
 
     private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color) {
@@ -418,6 +432,8 @@ public class WordExporter {
                     String firstOptionText = body.ownText().trim();
                     if (!firstOptionText.isEmpty()) {
                         XWPFParagraph optionParagraph = document.createParagraph();
+                        optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
+                        optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
                         XWPFRun checkboxRun = optionParagraph.createRun();
                         
                         String optionLetter = extractOptionLetter(firstOptionText);
@@ -430,6 +446,8 @@ public class WordExporter {
                     // Process subsequent options in <div> tags
                     for (Element div : body.select("div")) {
                         XWPFParagraph optionParagraph = document.createParagraph();
+                        optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
+                        optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
                         XWPFRun checkboxRun = optionParagraph.createRun();
 
                         String optionText = div.text().trim();
