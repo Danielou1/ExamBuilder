@@ -38,6 +38,9 @@ ExamBuilder is a modern desktop application designed for educators to streamline
 *   **Enhanced HTML Editor Data Binding:** Changes made in the rich text editor are now automatically saved to the question model when the editor loses focus, ensuring all modifications are preserved during export.
 *   **Accurate Word Formatting:** Resolved issues with bold, italic, and underline styles not being correctly applied in the generated Word documents.
 *   **Improved MCQ Detection:** Refined the detection logic for multiple-choice options in Word export to prevent unintended checkbox insertions within regular text.
+*   **Reduced Spacing in Word Export (MCQ):** Significantly reduced excessive vertical spacing between MCQ question titles and options, and between individual options, in the generated Word documents for a cleaner layout.
+*   **Fixed Lückentext UI Issue:** Resolved a bug where the text in the HTML editor for 'Lückentext' questions would disappear after saving, ensuring content persistence.
+*   **Resolved Unsaved Changes Dialog Loop:** Fixed an issue causing the 'Unsaved Changes' confirmation dialog to reappear in an infinite loop under certain conditions.
 *   **PDF Export Deprecation:** Please note that PDF export is no longer supported; only Word export is available.
 *   **UI Language:** The entire application user interface is in German.
 
