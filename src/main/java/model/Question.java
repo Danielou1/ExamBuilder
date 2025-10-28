@@ -42,6 +42,28 @@ public class Question {
         this.subQuestions = new ArrayList<>();
     }
 
+    public Question(Question other) {
+        this.id = other.id; // Keep the same ID for comparison
+        this.title = other.title;
+        this.text = other.text;
+        this.points = other.points;
+        this.type = other.type;
+        this.answerLines = other.answerLines;
+        this.musterloesung = other.musterloesung;
+        this.imageBase64 = other.imageBase64;
+        this.musterloesungImageBase64 = other.musterloesungImageBase64;
+        this.selected.set(other.selected.get()); // Copy the boolean property value
+        // Deep copy subQuestions if they exist
+        if (other.subQuestions != null) {
+            this.subQuestions = new ArrayList<>();
+            for (Question subQ : other.subQuestions) {
+                this.subQuestions.add(new Question(subQ)); // Recursive copy
+            }
+        } else {
+            this.subQuestions = new ArrayList<>();
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

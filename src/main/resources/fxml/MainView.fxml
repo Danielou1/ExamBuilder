@@ -123,7 +123,7 @@
                                 <MenuItem fx:id="addQuestionMenuItem" text="Frage hinzufügen" onAction="#addQuestion" />
                                 <MenuItem fx:id="addSubQuestionMenuItem" text="Sub-Frage hinzufügen" onAction="#addSubQuestion" />
                                 <MenuItem fx:id="editQuestionMenuItem" text="Frage bearbeiten" onAction="#editQuestion" />
-                                <MenuItem fx:id="updateQuestionMenuItem" text="Änderungen speichern" onAction="#updateQuestion" />
+                                <MenuItem fx:id="updateQuestionMenuItem" text="Änderungen speichern" onAction="#updateQuestionAndReturnSuccess" />
                                 <MenuItem fx:id="deleteQuestionMenuItem" text="Frage löschen" onAction="#deleteQuestion" />
                             </items>
                         </MenuButton>

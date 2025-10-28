@@ -1,30 +1,5 @@
 package controller;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.concurrent.Task;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTreeTableCell;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseButton;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import model.Exam;
-import model.Question;
-import service.WordExporter;
-import utils.LoadingIndicator;
-import utils.Rephraser;
-import org.controlsfx.control.textfield.TextFields;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -34,11 +9,59 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
+import org.controlsfx.control.textfield.TextFields;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableRow;
+import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.CheckBoxTreeTableCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.web.HTMLEditor;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import model.Exam;
+import model.Question;
+import service.WordExporter;
+import utils.LoadingIndicator;
+import utils.Rephraser;
 
 public class MainController {
 
@@ -124,6 +147,13 @@ public class MainController {
     private TreeItem<Question> parentForSubQuestion = null;
     private Stage hinweiseDialogStage;
     private HinweiseDialogController hinweiseDialogController;
+    private Question originalQuestionState;
+    private boolean isRevertingSelection = false;
+
+    // ButtonTypes for unsaved changes dialog
+    private final ButtonType saveButton = new ButtonType("Änderungen speichern");
+    private final ButtonType continueButton = new ButtonType("Ohne Speichern fortfahren");
+    private final ButtonType cancelButton = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
 
     @FXML
     public void initialize() {
@@ -188,12 +218,52 @@ public class MainController {
         });
 
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            // This listener is now only for populating the edit pane when a direct selection is made.
+            if (isRevertingSelection) {
+                return; // Avoid re-entrancy
+            }
+
             if (newValue != null) {
+                // If there's an old value (meaning we're switching from one question to another)
+                // and the edit pane is active (meaning we were editing something)
+                if (oldValue != null && !editPane.isDisable()) {
+                    // Check for unsaved changes on the *oldValue* (the question we were just editing)
+                    if (areChangesMade()) {
+                        Optional<ButtonType> result = showUnsavedChangesConfirmation();
+
+                        if (result.isPresent()) {
+                            if (result.get() == saveButton) {
+                                if (!updateQuestionAndReturnSuccess()) {
+                                    // Save failed, revert selection and stay on oldValue
+                                    isRevertingSelection = true;
+                                    questionsTable.getSelectionModel().select(oldValue);
+                                    isRevertingSelection = false;
+                                    return;
+                                }
+                                // Save successful, proceed to newValue
+                            } else if (result.get() == continueButton) {
+                                // Proceed to newValue, changes to oldValue are discarded
+                            } else if (result.get() == cancelButton) {
+                                // User canceled, revert selection and stay on oldValue
+                                isRevertingSelection = true;
+                                questionsTable.getSelectionModel().select(oldValue);
+                                isRevertingSelection = false;
+                                return;
+                            }
+                        } else {
+                            // Dialog closed unexpectedly, revert selection and stay on oldValue
+                            isRevertingSelection = true;
+                            questionsTable.getSelectionModel().select(oldValue);
+                            isRevertingSelection = false;
+                            return;
+                        }
+                    }
+                }
+                // If we reach here, it means either no changes were made, or changes were saved/discarded.
+                // Now, populate the UI with the details of the *newValue*.
                 parentForSubQuestion = null; // A new selection always resets the sub-question context
                 populateQuestionDetails(newValue.getValue());
             } else {
-                // Don't clear fields if we are in the middle of creating a sub-question
+                // newValue is null, clear fields if not creating a sub-question
                 if (parentForSubQuestion == null) {
                     clearQuestionFields();
                 }
@@ -372,7 +442,7 @@ public class MainController {
         MenuItem editItem = new MenuItem("Frage bearbeiten");
         editItem.setOnAction(e -> editQuestion());
         MenuItem saveItem = new MenuItem("Änderungen speichern");
-        saveItem.setOnAction(e -> updateQuestion());
+        saveItem.setOnAction(e -> updateQuestionAndReturnSuccess());
         MenuItem deleteItem = new MenuItem("Frage löschen");
         deleteItem.setOnAction(e -> deleteQuestion());
         MenuItem addSubItem = new MenuItem("Sub-Frage hinzufügen");
@@ -502,9 +572,18 @@ public class MainController {
 
     @FXML
     private void newQuestion() {
+        if (areChangesMade()) { // Check for unsaved changes on the *currently edited* question
+            Optional<ButtonType> result = showUnsavedChangesConfirmation();
+            if (result.isPresent() && result.get() == cancelButton) {
+                return; // User canceled, do not proceed with new question
+            }
+            // If user chose save (and it succeeded) or continue, proceed.
+        }
         parentForSubQuestion = null;
         questionsTable.getSelectionModel().clearSelection();
         setEditMode(true);
+        clearQuestionFields(); // Clear fields after handling unsaved changes
+        originalQuestionState = null; // No question loaded, so no original state
     }
 
     @FXML
@@ -518,6 +597,7 @@ public class MainController {
     }
 
     private void populateQuestionDetails(Question question) {
+        this.originalQuestionState = new Question(question); // Store a deep copy for change detection
         questionTitleField.setText(question.getTitle());
         questionTextField.setHtmlText(question.getText());
         musterloesungField.setText(question.getMusterloesung());
@@ -630,8 +710,7 @@ public class MainController {
         }
     }
 
-    @FXML
-    private void updateQuestion() {
+    public boolean updateQuestionAndReturnSuccess() {
         if (questionPointsField.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Punktzahl fehlt");
@@ -647,36 +726,55 @@ public class MainController {
             if (result.isPresent() && result.get() == continueButton) {
                 questionPointsField.setText("0");
             } else {
-                return;
+                return false; // User chose not to proceed with 0 points
             }
         }
 
         if (isPointsInvalid()) {
-            return;
+            return false; // Points are invalid, cannot save
         }
 
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            Question questionToUpdate = selectedItem.getValue();
-            questionToUpdate.setTitle(questionTitleField.getText());
-            questionToUpdate.setText(questionTextField.getHtmlText());
-            questionToUpdate.setMusterloesung(musterloesungField.getText());
-            if (questionToUpdate.getSubQuestions() == null || questionToUpdate.getSubQuestions().isEmpty()) {
-                questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
+            try {
+                Question questionToUpdate = selectedItem.getValue();
+                questionToUpdate.setTitle(questionTitleField.getText());
+                
+                String questionText = questionTextField.getHtmlText();
+                if ("MCQ".equals(questionToUpdate.getType())) {
+                    questionText = normalizeMcqHtml(questionText);
+                }
+                questionToUpdate.setText(questionText);
+                questionToUpdate.setMusterloesung(musterloesungField.getText());
+                if (questionToUpdate.getSubQuestions() == null || questionToUpdate.getSubQuestions().isEmpty()) {
+                    questionToUpdate.setPoints(Integer.parseInt(questionPointsField.getText()));
+                }
+                questionToUpdate.setType(questionTypeField.getValue());
+                if (!answerLinesField.isDisable()) {
+                    questionToUpdate.setAnswerLines(answerLinesField.getValue());
+                }
+                // Save the solution image base64 from the temporary field to the question object
+                if (newQuestionSolutionImageBase64 != null) {
+                    questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
+                }
+                refreshTreeTableView();
+                this.originalQuestionState = new Question(questionToUpdate); // Update original state after successful save
+                populateQuestionDetails(questionToUpdate); // Re-populate with updated details
+                setEditMode(false);
+                return true; // Save successful
+            } catch (Exception e) {
+                // Log the exception or show an error to the user
+                e.printStackTrace();
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Fehler beim Speichern");
+                errorAlert.setHeaderText("Die Änderungen konnten nicht gespeichert werden.");
+                errorAlert.setContentText("Ein unerwarteter Fehler ist aufgetreten: " + e.getMessage());
+                errorAlert.showAndWait();
+                return false; // Save failed
             }
-            questionToUpdate.setType(questionTypeField.getValue());
-            if (!answerLinesField.isDisable()) {
-                questionToUpdate.setAnswerLines(answerLinesField.getValue());
-            }
-            // Save the solution image base64 from the temporary field to the question object
-            if (newQuestionSolutionImageBase64 != null) {
-                questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
-            }
-            refreshTreeTableView();
-            populateQuestionDetails(questionToUpdate); // Re-populate with updated details
-            setEditMode(false);
         } else {
             System.out.println("Please select a question to update.");
+            return false; // No question selected
         }
     }
 
@@ -821,11 +919,14 @@ public class MainController {
     private Question createQuestionFromInput() {
         String title = questionTitleField.getText();
         String text = questionTextField.getHtmlText();
+        String type = questionTypeField.getValue();
+        if ("MCQ".equals(type)) {
+            text = normalizeMcqHtml(text);
+        }
         int points = 0;
         if (!questionPointsField.getText().isEmpty()) {
             points = Integer.parseInt(questionPointsField.getText());
         }
-        String type = questionTypeField.getValue();
         int answerLines = 0;
         if (!answerLinesField.isDisable()) {
             answerLines = answerLinesField.getValue();
@@ -1072,6 +1173,10 @@ public class MainController {
                 }
 
                 updateUIFromExam();
+                // After import, clear and disable edit pane, reset originalQuestionState
+                clearQuestionFields();
+                setEditMode(false);
+                originalQuestionState = null;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -1164,5 +1269,86 @@ public class MainController {
             copiedQuestion.setSubQuestions(shuffledSubQuestions);
         }
         return copiedQuestion;
+    }
+
+    private boolean areChangesMade() {
+        if (originalQuestionState == null) {
+            // No question loaded, so no changes to track
+            return false;
+        }
+
+        // Safely get current points from UI
+        int currentPoints = 0;
+        try {
+            currentPoints = Integer.parseInt(questionPointsField.getText().isEmpty() ? "0" : questionPointsField.getText());
+        } catch (NumberFormatException e) {
+            // If points field is invalid, consider it a change to prevent data loss
+            return true;
+        }
+
+        // Compare current UI state with originalQuestionState
+        boolean titleChanged = !originalQuestionState.getTitle().equals(questionTitleField.getText());
+        boolean textChanged = !originalQuestionState.getText().equals(questionTextField.getHtmlText());
+        boolean musterloesungChanged = !originalQuestionState.getMusterloesung().equals(musterloesungField.getText());
+        boolean pointsChanged = originalQuestionState.getPoints() != currentPoints; // Use safely parsed points
+        boolean typeChanged = !originalQuestionState.getType().equals(questionTypeField.getValue());
+        boolean answerLinesChanged = originalQuestionState.getAnswerLines() != answerLinesField.getValue();
+        boolean imageChanged = !Objects.equals(originalQuestionState.getImageBase64(), newQuestionImageBase64); // newQuestionImageBase64 holds current image
+        boolean solutionImageChanged = !Objects.equals(originalQuestionState.getMusterloesungImageBase64(), newQuestionSolutionImageBase64); // newQuestionSolutionImageBase64 holds current solution image
+
+        return titleChanged || textChanged || musterloesungChanged || pointsChanged || typeChanged || answerLinesChanged || imageChanged || solutionImageChanged;
+    }
+
+    private Optional<ButtonType> showUnsavedChangesConfirmation() {
+        if (!areChangesMade()) {
+            return Optional.empty(); // No changes, no dialog needed
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Ungespeicherte Änderungen");
+        alert.setHeaderText("Sie haben ungespeicherte Änderungen an der aktuellen Frage.");
+        alert.setContentText("Möchten Sie Ihre Änderungen speichern, bevor Sie fortfahren?");
+
+        ButtonType saveButton = new ButtonType("Änderungen speichern");
+        ButtonType continueButton = new ButtonType("Ohne Speichern fortfahren");
+        ButtonType cancelButton = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(saveButton, continueButton, cancelButton);
+
+        return alert.showAndWait();
+    }
+
+    private String normalizeMcqHtml(String htmlText) {
+        if (htmlText == null || htmlText.trim().isEmpty()) {
+            return "";
+        }
+
+        Document doc = Jsoup.parse(htmlText);
+        StringBuilder cleanHtml = new StringBuilder("<ol>");
+
+        // Find all elements that might contain options (p, div, li)
+        for (Element element : doc.select("p, div, li")) {
+            String text = element.text().trim();
+            // Matches "A) Option", "B. Option", "C Option"
+            if (text.matches("^[A-Z][). ]\\s*.*")) {
+                cleanHtml.append("<li>").append(text).append("</li>");
+            }
+        }
+        cleanHtml.append("</ol>");
+
+        // If no options were found in list format, try to convert plain text lines
+        if (cleanHtml.toString().equals("<ol></ol>")) {
+            String plainText = doc.body().text(); // Get all text content
+            String[] lines = plainText.split("\\s*\\n\\s*");
+            cleanHtml = new StringBuilder("<ol>");
+            for (String line : lines) {
+                if (line.matches("^[A-Z][). ]\\s*.*")) {
+                    cleanHtml.append("<li>").append(line.trim()).append("</li>");
+                }
+            }
+            cleanHtml.append("</ol>");
+        }
+
+        return cleanHtml.toString();
     }
 }
