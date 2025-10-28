@@ -434,6 +434,7 @@ public class WordExporter {
                         XWPFParagraph optionParagraph = document.createParagraph();
                         optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
                         optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
+                        optionParagraph.setSpacingBetween(1.0); // Set single line spacing
                         XWPFRun checkboxRun = optionParagraph.createRun();
                         
                         String optionLetter = extractOptionLetter(firstOptionText);
@@ -448,6 +449,7 @@ public class WordExporter {
                         XWPFParagraph optionParagraph = document.createParagraph();
                         optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
                         optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
+                        optionParagraph.setSpacingBetween(1.0); // Set single line spacing
                         XWPFRun checkboxRun = optionParagraph.createRun();
 
                         String optionText = div.text().trim();
