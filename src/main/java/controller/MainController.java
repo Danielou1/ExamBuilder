@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -149,6 +150,8 @@ public class MainController {
     private HinweiseDialogController hinweiseDialogController;
     private Question originalQuestionState;
     private boolean isRevertingSelection = false;
+    private boolean isPopulatingUI = false;
+    private ChangeListener<String> questionTypeChangeListener;
 
     // ButtonTypes for unsaved changes dialog
     private final ButtonType saveButton = new ButtonType("Änderungen speichern");
@@ -182,7 +185,10 @@ public class MainController {
 
         questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext", "Richtig/Falsch");
 
-        questionTypeField.valueProperty().addListener((obs, oldVal, newVal) -> {
+        questionTypeChangeListener = (obs, oldVal, newVal) -> {
+            if (isPopulatingUI) {
+                return; // Skip listener logic if UI is being populated
+            }
             // Disable answer lines for types that don't need them
             if ("MCQ".equals(newVal) || "Lückentext".equals(newVal) || "Richtig/Falsch".equals(newVal)) {
                 answerLinesField.setDisable(true);
@@ -200,12 +206,18 @@ public class MainController {
                     break;
                 case "Lückentext":
                     questionTitleField.setPromptText("Geben Sie hier den Titel der Aufgabe ein (optional).");
-                    questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Schreiben Sie hier den Textkörper und verwenden Sie \'___\' für jede Lücke.</i></p>");
+                    // Only set placeholder if the HTMLEditor is empty
+                    if (questionTextField.getHtmlText().isEmpty() || questionTextField.getHtmlText().equals("<html dir=\"ltr\"><head></head><body contenteditable=\"true\"></body></html>")) {
+                        questionTextField.setHtmlText("<p style=\"color:grey;\"><i>Schreiben Sie hier den Textkörper und verwenden Sie \'___\' für jede Lücke.</i></p>");
+                    }
                     musterloesungField.setPromptText("Antworten mit Semikolon trennen (z.B. Antwort1; Antwort2)");
                     break;
                 case "Richtig/Falsch":
                     questionTitleField.setPromptText("Geben Sie hier die Aussage ein, die bewertet werden soll.");
-                    questionTextField.setHtmlText("");
+                    // Only clear if the HTMLEditor is empty or contains a placeholder
+                    if (questionTextField.getHtmlText().isEmpty() || questionTextField.getHtmlText().contains("<i>Geben Sie hier den Aufgabentext")) {
+                        questionTextField.setHtmlText("");
+                    }
                     musterloesungField.setPromptText("Geben Sie 'Richtig' oder 'Falsch' als Lösung ein.");
                     break;
                 case "Offene Frage":
@@ -215,7 +227,8 @@ public class MainController {
                     musterloesungField.setPromptText("Geben Sie hier die textuelle Musterlösung ein.");
                     break;
             }
-        });
+        };
+        questionTypeField.valueProperty().addListener(questionTypeChangeListener);
 
         questionsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (isRevertingSelection) {
@@ -597,6 +610,12 @@ public class MainController {
     }
 
     private void populateQuestionDetails(Question question) {
+        // Temporarily remove listener to prevent unwanted side effects during UI population
+        if (questionTypeChangeListener != null) {
+            questionTypeField.valueProperty().removeListener(questionTypeChangeListener);
+        }
+
+        isPopulatingUI = true; // Set flag (still good practice)
         this.originalQuestionState = new Question(question); // Store a deep copy for change detection
         questionTitleField.setText(question.getTitle());
         questionTextField.setHtmlText(question.getText());
@@ -617,6 +636,12 @@ public class MainController {
             musterloesungImageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
         } else {
             musterloesungImageView.setImage(null);
+        }
+        isPopulatingUI = false; // Clear flag
+
+        // Re-add listener
+        if (questionTypeChangeListener != null) {
+            questionTypeField.valueProperty().addListener(questionTypeChangeListener);
         }
     }
 
