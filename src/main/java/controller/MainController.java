@@ -732,6 +732,7 @@ public class MainController {
             parentForSubQuestion = selectedItem;
             questionsTable.getSelectionModel().clearSelection();
             setEditMode(true);
+            clearQuestionFields(); // Clear fields for new sub-question
         }
     }
 
