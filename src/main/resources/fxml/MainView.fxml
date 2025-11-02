@@ -77,8 +77,9 @@
         <VBox>
             <TreeTableView fx:id="questionsTable" VBox.vgrow="ALWAYS">
                 <columns>
+                    <TreeTableColumn fx:id="questionNumberColumn" prefWidth="100.0" text="Nr." />
                     <TreeTableColumn fx:id="selectedColumn" prefWidth="75.0" text="Ausgewählt" />
-                    <TreeTableColumn fx:id="titleColumn" prefWidth="150.0" text="Titel" />
+                    <TreeTableColumn fx:id="titleColumn" prefWidth="300.0" text="Titel" />
                     <TreeTableColumn fx:id="typeColumn" prefWidth="100.0" text="Typ" />
                     <TreeTableColumn fx:id="pointsColumn" prefWidth="75.0" text="Punkte" />
                 </columns>

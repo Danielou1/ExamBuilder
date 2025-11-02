@@ -1,5 +1,4 @@
 package controller;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +47,9 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.TreeTableCell;
+import javafx.scene.control.CheckBox;
+import javafx.scene.layout.HBox;
 import javafx.scene.control.cell.CheckBoxTreeTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -86,6 +88,8 @@ public class MainController {
 
     @FXML
     private TreeTableView<Question> questionsTable;
+    @FXML
+    private TreeTableColumn<Question, String> questionNumberColumn;
     @FXML
     private TreeTableColumn<Question, Boolean> selectedColumn;
     @FXML
@@ -165,9 +169,11 @@ public class MainController {
         loadUniversities();
         TextFields.bindAutoCompletion(hochschuleField, germanUniversities);
 
-        selectedColumn.setEditable(false);
+        selectedColumn.setEditable(true); // Set to true for CheckBoxTreeTableCell to work
         selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
         selectedColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(selectedColumn));
+
+        questionNumberColumn.setCellValueFactory(param -> new SimpleStringProperty(getQuestionNumber(param.getValue())));
 
         setupRowFactory();
         setupContextMenu();
@@ -683,6 +689,19 @@ public class MainController {
                 parentItem.getChildren().add(subItem);
                 populateSubQuestions(subItem, subQ);
             }
+        }
+    }
+
+    private String getQuestionNumber(TreeItem<Question> item) {
+        if (item == null || item.getParent() == null || item.getParent() == questionsTable.getRoot()) {
+            // Top-level question
+            return String.valueOf(questionsTable.getRoot().getChildren().indexOf(item) + 1);
+        } else {
+            // Sub-question
+            String parentNumber = getQuestionNumber(item.getParent());
+            int subIndex = item.getParent().getChildren().indexOf(item);
+            char subLetter = (char) ('a' + subIndex);
+            return parentNumber + "." + subLetter;
         }
     }
 
@@ -1377,4 +1396,5 @@ public class MainController {
 
         return cleanHtml.toString();
     }
+
 }
