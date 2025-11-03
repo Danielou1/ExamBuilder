@@ -18,12 +18,14 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
 
 import model.Exam;
 import model.Question;
@@ -89,29 +91,39 @@ public class WordExporter {
     }
 
     private static void createCoverPage(XWPFDocument document, Exam exam) {
-        XWPFParagraph title = document.createParagraph();
-        title.setAlignment(ParagraphAlignment.CENTER);
-        XWPFRun titleRun = title.createRun();
-        titleRun.setText(exam.getTitle());
-        titleRun.setBold(true);
-        titleRun.setFontSize(20);
-
+        // Create a 1x1 table to frame the meta information
         XWPFTable metaTable = document.createTable(1, 1);
         metaTable.setWidth("100%");
-        XWPFTableRow metaRow = metaTable.getRow(0);
-        XWPFParagraph metaParagraph = metaRow.getCell(0).getParagraphs().get(0);
-        metaParagraph.setAlignment(ParagraphAlignment.CENTER);
-        XWPFRun metaRun = metaParagraph.createRun();
-        metaRun.setText(exam.getHochschule() + " | " + "Fachbereich: " + exam.getFachbereich());
-        metaRun.setBold(true);
-        metaRun.addBreak();
-        metaRun.setText("Modul: " + exam.getModule() + " | " + "Semester: " + exam.getSemester());
-        metaRun.setBold(true);
+        // Ensure borders are visible
+        metaTable.setTopBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        metaTable.setBottomBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        metaTable.setLeftBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        metaTable.setRightBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
 
-        document.createParagraph();
+        XWPFTableCell metaCell = metaTable.getRow(0).getCell(0);
+        setCellAlignment(metaCell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+
+        // First paragraph for Hochschule and Fachbereich
+        XWPFParagraph metaParagraph1 = metaCell.getParagraphs().get(0);
+        metaParagraph1.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun metaRun1 = metaParagraph1.createRun();
+        metaRun1.setText(exam.getHochschule() + " | " + exam.getFachbereich());
+        metaRun1.setBold(true);
+        metaRun1.setFontSize(12);
+
+        // Second paragraph for Modul, Semester, and Title
+        XWPFParagraph metaParagraph2 = metaCell.addParagraph();
+        metaParagraph2.setAlignment(ParagraphAlignment.CENTER);
+        XWPFRun metaRun2 = metaParagraph2.createRun();
+        metaRun2.setText(exam.getTitle() + " - " + exam.getModule() + " | "  + exam.getSemester() );
+        metaRun2.setBold(true);
+        metaRun2.setFontSize(12);
+
+        document.createParagraph(); // Keep a paragraph for spacing
 
         XWPFTable specificInstructionTable = document.createTable(1, 1);
         specificInstructionTable.setWidth("100%");
+        setCellAlignment(specificInstructionTable.getRow(0).getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER);
         XWPFTableRow instructionTableRow = specificInstructionTable.getRow(0);
         XWPFParagraph instructionTableParagraph = instructionTableRow.getCell(0).getParagraphs().get(0);
         instructionTableParagraph.setAlignment(ParagraphAlignment.CENTER);
@@ -137,20 +149,59 @@ public class WordExporter {
             }
         }
 
-        XWPFParagraph studentInfo = document.createParagraph();
-        studentInfo.setSpacingBefore(200);
-        XWPFRun studentInfoRun = studentInfo.createRun();
-        studentInfoRun.setFontSize(10);
-        studentInfoRun.setBold(true);
-        studentInfoRun.setText("\nAbschnitt: Von dem/der Studierenden auszufüllen");
-        studentInfoRun.addBreak();
-        studentInfoRun.setText("Name: ______________________________________________");
-        studentInfoRun.addBreak();
-        studentInfoRun.setText("Vorname: ______________________________________");
-        studentInfoRun.addBreak();
-        studentInfoRun.setText("Matrikelnummer: ________________");
-        studentInfoRun.addBreak();
-        studentInfoRun.setText("Unterschrift: ___________________");
+        XWPFParagraph studentInfoHeader = document.createParagraph();
+        studentInfoHeader.setSpacingBefore(200);
+        XWPFRun studentInfoHeaderRun = studentInfoHeader.createRun();
+        studentInfoHeaderRun.setFontSize(10);
+        studentInfoHeaderRun.setBold(true);
+        studentInfoHeaderRun.setText("\nAbschnitt: Von dem/der Studierenden auszufüllen");
+
+        XWPFTable studentInfoTable = document.createTable(4, 2); 
+        studentInfoTable.setWidth("100%");
+
+        // Add borders to the table
+        studentInfoTable.setTopBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        studentInfoTable.setBottomBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        studentInfoTable.setLeftBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        studentInfoTable.setRightBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        studentInfoTable.setInsideHBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+        studentInfoTable.setInsideVBorder(XWPFTable.XWPFBorderType.SINGLE, 1, 0, "000000");
+
+        // Row 1: Name: | (empty for input)
+        XWPFTableRow row1 = studentInfoTable.getRow(0);
+        row1.getCell(0).setWidth("33%");
+        row1.getCell(1).setWidth("67%");
+        setCellAlignment(row1.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row1.getCell(0).setText("Name:");
+        setCellAlignment(row1.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row1.getCell(1).setText(""); 
+
+        // Row 2: Vorname: | (empty for input)
+        XWPFTableRow row2 = studentInfoTable.getRow(1);
+        row2.getCell(0).setWidth("33%");
+        row2.getCell(1).setWidth("67%");
+        setCellAlignment(row2.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row2.getCell(0).setText("Vorname:");
+        setCellAlignment(row2.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row2.getCell(1).setText("");
+
+        // Row 3: Matrikelnummer: | (empty for input)
+        XWPFTableRow row3 = studentInfoTable.getRow(2);
+        row3.getCell(0).setWidth("33%");
+        row3.getCell(1).setWidth("67%");
+        setCellAlignment(row3.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row3.getCell(0).setText("Matrikelnummer:");
+        setCellAlignment(row3.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row3.getCell(1).setText("");
+
+        // Row 4: Unterschrift: | (empty for input)
+        XWPFTableRow row4 = studentInfoTable.getRow(3);
+        row4.getCell(0).setWidth("33%");
+        row4.getCell(1).setWidth("67%");
+        setCellAlignment(row4.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row4.getCell(0).setText("Unterschrift:");
+        setCellAlignment(row4.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
+        row4.getCell(1).setText("");
 
         XWPFParagraph gradingInfo = document.createParagraph();
         gradingInfo.setSpacingBefore(200);
@@ -165,29 +216,37 @@ public class WordExporter {
 
         XWPFTableRow headerRow = gradingTable.getRow(0);
         for (int i = 0; i < numQuestions; i++) {
-            XWPFRun run = headerRow.getCell(i).getParagraphs().get(0).createRun();
+            XWPFTableCell cell = headerRow.getCell(i);
+            setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+            XWPFRun run = cell.getParagraphs().get(0).createRun();
             run.setText("A" + (i + 1));
             run.setBold(true);
         }
-        XWPFRun totalHeaderRun = headerRow.getCell(numQuestions).getParagraphs().get(0).createRun();
+        XWPFTableCell totalHeaderCell = headerRow.getCell(numQuestions);
+        setCellAlignment(totalHeaderCell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+        XWPFRun totalHeaderRun = totalHeaderCell.getParagraphs().get(0).createRun();
         totalHeaderRun.setText("Gesamt");
         totalHeaderRun.setBold(true);
 
         XWPFTableRow maxPointsRow = gradingTable.getRow(1);
         for (int i = 0; i < numQuestions; i++) {
-            XWPFRun run = maxPointsRow.getCell(i).getParagraphs().get(0).createRun();
+            XWPFTableCell cell = maxPointsRow.getCell(i);
+            setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+            XWPFRun run = cell.getParagraphs().get(0).createRun();
             run.setText(String.valueOf(exam.getQuestions().get(i).getPoints()));
             run.setBold(true);
         }
-        XWPFRun totalMaxPointsRun = maxPointsRow.getCell(numQuestions).getParagraphs().get(0).createRun();
+        XWPFTableCell totalMaxPointsCell = maxPointsRow.getCell(numQuestions);
+        setCellAlignment(totalMaxPointsCell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+        XWPFRun totalMaxPointsRun = totalMaxPointsCell.getParagraphs().get(0).createRun();
         totalMaxPointsRun.setText(String.valueOf(exam.getTotalPoints()));
         totalMaxPointsRun.setBold(true);
 
         XWPFTableRow achievedPointsRow = gradingTable.getRow(2);
         for (int i = 0; i <= numQuestions; i++) {
-            XWPFRun run = achievedPointsRow.getCell(i).getParagraphs().get(0).createRun();
-            run.setText("______");
-            run.setBold(true);
+            XWPFTableCell cell = achievedPointsRow.getCell(i);
+            setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+            cell.setText("");
         }
     }
 
@@ -301,11 +360,14 @@ public class WordExporter {
             }
         } else {
             // Only add answer lines for non-MCQ and non-Lückentext questions
-            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType())) {
+            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getAnswerLines() > 0) {
+                XWPFTable answerTable = document.createTable(question.getAnswerLines(), 1);
+                answerTable.setWidth("100%");
                 for (int i = 0; i < question.getAnswerLines(); i++) {
-                    XWPFParagraph answerLine = document.createParagraph();
-                    XWPFRun answerLineRun = answerLine.createRun();
-                    answerLineRun.setText("__________________________________________________________________________________");
+                    XWPFTableRow row = answerTable.getRow(i);
+                    XWPFTableCell cell = row.getCell(0);
+                    setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+                    cell.setText(""); // Empty cell to create a line
                 }
             }
         }
@@ -515,9 +577,13 @@ public class WordExporter {
         table.getCTTbl().getTblPr().unsetTblBorders();
 
         XWPFTableRow row = table.getRow(0);
-        row.getCell(0).setText(question.getTitle());
+        XWPFTableCell cell1 = row.getCell(0);
+        setCellAlignment(cell1, ParagraphAlignment.LEFT, STVerticalJc.CENTER);
+        cell1.setText(question.getTitle());
 
-        XWPFParagraph checkboxParagraph = row.getCell(1).getParagraphs().get(0);
+        XWPFTableCell cell2 = row.getCell(1);
+        setCellAlignment(cell2, ParagraphAlignment.RIGHT, STVerticalJc.CENTER);
+        XWPFParagraph checkboxParagraph = cell2.getParagraphs().get(0);
         checkboxParagraph.setAlignment(ParagraphAlignment.RIGHT);
 
         String musterloesung = question.getMusterloesung();
@@ -544,5 +610,12 @@ public class WordExporter {
             return matcher.group(1);
         }
         return "";
+    }
+
+    private static void setCellAlignment(XWPFTableCell cell, ParagraphAlignment horizontal, STVerticalJc.Enum vertical) {
+        cell.getCTTc().addNewTcPr().addNewVAlign().setVal(vertical);
+        for (XWPFParagraph p : cell.getParagraphs()) {
+            p.setAlignment(horizontal);
+        }
     }
 }
