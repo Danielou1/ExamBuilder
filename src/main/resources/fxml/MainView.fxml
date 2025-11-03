@@ -79,6 +79,7 @@
                 <columns>
                     <TreeTableColumn fx:id="questionNumberColumn" prefWidth="100.0" text="Nr." />
                     <TreeTableColumn fx:id="selectedColumn" prefWidth="75.0" text="Ausgewählt" />
+                    <TreeTableColumn fx:id="startOnNewPageColumn" prefWidth="75.0" text="Neue Seite" />
                     <TreeTableColumn fx:id="titleColumn" prefWidth="300.0" text="Titel" />
                     <TreeTableColumn fx:id="typeColumn" prefWidth="100.0" text="Typ" />
                     <TreeTableColumn fx:id="pointsColumn" prefWidth="75.0" text="Punkte" />

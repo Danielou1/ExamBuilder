@@ -98,6 +98,8 @@ public class MainController {
     private TreeTableColumn<Question, String> typeColumn;
     @FXML
     private TreeTableColumn<Question, String> pointsColumn;
+    @FXML
+    private TreeTableColumn<Question, Boolean> startOnNewPageColumn;
 
     @FXML
     private VBox editPane;
@@ -172,6 +174,10 @@ public class MainController {
         selectedColumn.setEditable(true); // Set to true for CheckBoxTreeTableCell to work
         selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
         selectedColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(selectedColumn));
+
+        startOnNewPageColumn.setEditable(true);
+        startOnNewPageColumn.setCellValueFactory(param -> param.getValue().getValue().startOnNewPageProperty());
+        startOnNewPageColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(startOnNewPageColumn));
 
         questionNumberColumn.setCellValueFactory(param -> new SimpleStringProperty(getQuestionNumber(param.getValue())));
 
@@ -798,6 +804,7 @@ public class MainController {
                 if (!answerLinesField.isDisable()) {
                     questionToUpdate.setAnswerLines(answerLinesField.getValue());
                 }
+                questionToUpdate.setStartOnNewPage(selectedItem.getValue().isStartOnNewPage()); // Save the state of the checkbox
                 // Save the solution image base64 from the temporary field to the question object
                 if (newQuestionSolutionImageBase64 != null) {
                     questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
@@ -978,6 +985,7 @@ public class MainController {
         }
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
+        newQuestion.setStartOnNewPage(false); // Default to false when creating a new question
         
         if (newQuestionImageBase64 != null) {
             newQuestion.setImageBase64(newQuestionImageBase64);
@@ -1023,6 +1031,7 @@ public class MainController {
                 copy.setSelected(q.getSelected());
                 copy.setId(q.getId());
                 copy.setImageBase64(q.getImageBase64()); // Copy image data
+                copy.setStartOnNewPage(q.isStartOnNewPage()); // Copy startOnNewPage data
 
                 if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
                     copy.setSubQuestions(filterSelected(q.getSubQuestions()));
@@ -1303,6 +1312,7 @@ public class MainController {
         copiedQuestion.setSelected(originalQuestion.getSelected());
         copiedQuestion.setImageBase64(originalQuestion.getImageBase64()); // Copy image data
         copiedQuestion.setMusterloesungImageBase64(originalQuestion.getMusterloesungImageBase64()); // Copy solution image data
+        copiedQuestion.setStartOnNewPage(originalQuestion.isStartOnNewPage()); // Copy startOnNewPage data
 
 
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {

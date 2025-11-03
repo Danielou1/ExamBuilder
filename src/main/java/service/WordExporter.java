@@ -194,12 +194,17 @@ public class WordExporter {
     private static void createQuestionsPage(XWPFDocument document, Exam exam, boolean withSolutions) {
         for (int i = 0; i < exam.getQuestions().size(); i++) {
             Question q = exam.getQuestions().get(i);
+
+            // If the checkbox for a main question is ticked, add an extra page break to create a blank page.
+            if (q.isStartOnNewPage()) {
+                document.createParagraph().setPageBreak(true);
+            }
+
             writeQuestion(document, q, String.valueOf(i + 1), withSolutions);
 
+            // Always add a page break after a main question, unless it's the last one.
             if (i < exam.getQuestions().size() - 1) {
-                XWPFParagraph continueMessage = document.createParagraph();
-                continueMessage.setAlignment(ParagraphAlignment.CENTER);
-                continueMessage.setPageBreak(true);
+                document.createParagraph().setPageBreak(true);
             }
         }
     }
@@ -308,6 +313,20 @@ public class WordExporter {
         if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {
             for (int i = 0; i < question.getSubQuestions().size(); i++) {
                 Question subQuestion = question.getSubQuestions().get(i);
+
+                // Insert page break if the sub-question is marked to start on a new page
+                if (subQuestion.isStartOnNewPage()) {
+                    // Add continuation message to the previous page
+                    XWPFParagraph continueMessage = document.createParagraph();
+                    continueMessage.setAlignment(ParagraphAlignment.RIGHT);
+                    XWPFRun continueRun = continueMessage.createRun();
+                    continueRun.setText("Die Aufgabe folgt auf der nächsten Seite bzw. Rückseite.");
+                    continueRun.setItalic(true);
+                    continueRun.setFontSize(9);
+                    
+                    // Insert page break
+                    document.createParagraph().setPageBreak(true);
+                }
                 writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions);
             }
         }

@@ -23,13 +23,14 @@ public class Question {
     private String musterloesung = "";
     private String imageBase64;
     private String musterloesungImageBase64;
-
+    private final BooleanProperty startOnNewPage = new SimpleBooleanProperty(false); // New field for page break
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
     public Question() {
         this.id = UUID.randomUUID();
         this.subQuestions = new ArrayList<>();
+        this.startOnNewPage.set(false); // Initialize new field
     }
 
     public Question(String title, String text, int points, String type, int answerLines) {
@@ -40,6 +41,7 @@ public class Question {
         this.type = type;
         this.answerLines = answerLines;
         this.subQuestions = new ArrayList<>();
+        this.startOnNewPage.set(false); // Initialize new field
     }
 
     public Question(Question other) {
@@ -53,6 +55,7 @@ public class Question {
         this.imageBase64 = other.imageBase64;
         this.musterloesungImageBase64 = other.musterloesungImageBase64;
         this.selected.set(other.selected.get()); // Copy the boolean property value
+        this.startOnNewPage.set(other.startOnNewPage.get()); // Copy new field
         // Deep copy subQuestions if they exist
         if (other.subQuestions != null) {
             this.subQuestions = new ArrayList<>();
@@ -183,5 +186,19 @@ public class Question {
 
     public void setMusterloesungImageBase64(String musterloesungImageBase64) {
         this.musterloesungImageBase64 = musterloesungImageBase64;
+    }
+
+    // --- New field getter/setter ---
+    @JsonIgnore
+    public boolean isStartOnNewPage() {
+        return startOnNewPage.get();
+    }
+
+    public BooleanProperty startOnNewPageProperty() {
+        return startOnNewPage;
+    }
+
+    public void setStartOnNewPage(boolean startOnNewPage) {
+        this.startOnNewPage.set(startOnNewPage);
     }
 }
