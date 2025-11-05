@@ -19,11 +19,16 @@ class ExamTest {
         assertEquals("Hochschule", exam.getHochschule());
         assertEquals("Hilfsmittel", exam.getHilfsmittel());
         assertTrue(exam.getQuestions().isEmpty());
+        // New assertions for default values
+        assertNull(exam.getAllgemeineHinweise());
+        assertEquals(0, exam.getBearbeitungszeit());
     }
 
     @Test
     void testCopyConstructor() {
         Exam original = new Exam("Title", "Author", "Module", "Semester", "Fachbereich", "Hochschule", "Hilfsmittel");
+        original.setAllgemeineHinweise("Some general instructions.");
+        original.setBearbeitungszeit(120);
         Question q1 = new Question("Q1", "Text1", 10, "Type1", 5);
         original.addQuestion(q1);
 
@@ -31,8 +36,13 @@ class ExamTest {
 
         assertEquals(original.getTitle(), copy.getTitle());
         assertEquals(original.getAuthor(), copy.getAuthor());
+        assertEquals(original.getAllgemeineHinweise(), copy.getAllgemeineHinweise());
+        assertEquals(original.getBearbeitungszeit(), copy.getBearbeitungszeit());
         assertEquals(original.getQuestions().size(), copy.getQuestions().size());
-        assertEquals(original.getQuestions().get(0), copy.getQuestions().get(0));
+        // Deep copy check for questions (important for mutable objects)
+        assertNotSame(original.getQuestions(), copy.getQuestions()); // Ensure it's a new list
+        assertEquals(original.getQuestions().get(0), copy.getQuestions().get(0)); // Ensure content is same
+        assertNotSame(original.getQuestions().get(0), copy.getQuestions().get(0)); // Ensure it's a new Question object
     }
 
     @Test
@@ -45,6 +55,8 @@ class ExamTest {
         exam.setFachbereich("New Fachbereich");
         exam.setHochschule("New Hochschule");
         exam.setHilfsmittel("New Hilfsmittel");
+        exam.setAllgemeineHinweise("Updated general instructions.");
+        exam.setBearbeitungszeit(180);
 
         assertEquals("New Title", exam.getTitle());
         assertEquals("New Author", exam.getAuthor());
@@ -53,6 +65,8 @@ class ExamTest {
         assertEquals("New Fachbereich", exam.getFachbereich());
         assertEquals("New Hochschule", exam.getHochschule());
         assertEquals("New Hilfsmittel", exam.getHilfsmittel());
+        assertEquals("Updated general instructions.", exam.getAllgemeineHinweise());
+        assertEquals(180, exam.getBearbeitungszeit());
     }
 
     @Test

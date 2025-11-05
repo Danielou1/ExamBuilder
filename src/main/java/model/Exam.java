@@ -41,7 +41,10 @@ public class Exam {
         this.hilfsmittel = other.hilfsmittel;
         this.allgemeineHinweise = other.allgemeineHinweise;
         this.bearbeitungszeit = other.bearbeitungszeit;
-        this.questions = new ArrayList<>(other.questions);
+        this.questions = new ArrayList<>();
+        for (Question q : other.questions) {
+            this.questions.add(new Question(q)); // Deep copy of Question objects
+        }
     }
 
     // Getter und Setter
