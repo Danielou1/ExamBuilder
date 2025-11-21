@@ -80,6 +80,7 @@
                     <TreeTableColumn fx:id="questionNumberColumn" prefWidth="100.0" text="Nr." />
                     <TreeTableColumn fx:id="selectedColumn" prefWidth="75.0" text="Ausgewählt" />
                     <TreeTableColumn fx:id="startOnNewPageColumn" prefWidth="75.0" text="Neue Seite" />
+                    <TreeTableColumn fx:id="justifyColumn" prefWidth="75.0" text="Blocksatz" />
                     <TreeTableColumn fx:id="titleColumn" prefWidth="300.0" text="Titel" />
                     <TreeTableColumn fx:id="typeColumn" prefWidth="100.0" text="Typ" />
                     <TreeTableColumn fx:id="pointsColumn" prefWidth="75.0" text="Punkte" />
@@ -104,6 +105,7 @@
                         <Button fx:id="newQuestionButton" onAction="#newQuestion" text="Neue Frage" />
                         <ComboBox fx:id="questionTypeField" promptText="Frage Typ" />
                         <Button fx:id="addImageButton" onAction="#addImage" text="Bild hinzufügen" />
+                        <Button fx:id="formatCodeButton" text="Code" />
                     </HBox>
                     <VBox fx:id="editPane" spacing="10">
                         <Label text="Frage bearbeiten" />

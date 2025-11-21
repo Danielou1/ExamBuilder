@@ -73,6 +73,8 @@ public class MainController {
     @FXML
     private Button addImageButton;
     @FXML
+    private Button formatCodeButton;
+    @FXML
     private Button hinweiseButton;
 
     @FXML
@@ -100,6 +102,9 @@ public class MainController {
     private TreeTableColumn<Question, String> pointsColumn;
     @FXML
     private TreeTableColumn<Question, Boolean> startOnNewPageColumn;
+
+    @FXML
+    private TreeTableColumn<Question, Boolean> justifyColumn;
 
     @FXML
     private VBox editPane;
@@ -178,6 +183,10 @@ public class MainController {
         startOnNewPageColumn.setEditable(true);
         startOnNewPageColumn.setCellValueFactory(param -> param.getValue().getValue().startOnNewPageProperty());
         startOnNewPageColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(startOnNewPageColumn));
+
+        justifyColumn.setEditable(true);
+        justifyColumn.setCellValueFactory(param -> param.getValue().getValue().justifyProperty());
+        justifyColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(justifyColumn));
 
         questionNumberColumn.setCellValueFactory(param -> new SimpleStringProperty(getQuestionNumber(param.getValue())));
 
@@ -311,6 +320,19 @@ public class MainController {
                     mainPane.getStylesheets().remove(getClass().getResource("/styles/dark-theme.css").toExternalForm());
                     mainPane.getStylesheets().add(getClass().getResource("/styles/light-theme.css").toExternalForm());
                     themeToggleButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.MOON_ALT));
+                }
+            });
+        }
+
+        if (formatCodeButton != null) {
+            formatCodeButton.setOnAction(event -> {
+                // The HTMLEditor does not expose its WebEngine, so we have to look it up.
+                // This is a bit of a hack, but it's a common workaround.
+                javafx.scene.web.WebView webView = (javafx.scene.web.WebView) questionTextField.lookup(".web-view");
+                if (webView != null) {
+                    javafx.scene.web.WebEngine engine = webView.getEngine();
+                    String jsCode = "document.execCommand('insertHTML', false, '<code>' + window.getSelection().toString() + '</code>');";
+                    engine.executeScript(jsCode);
                 }
             });
         }
@@ -805,6 +827,7 @@ public class MainController {
                     questionToUpdate.setAnswerLines(answerLinesField.getValue());
                 }
                 questionToUpdate.setStartOnNewPage(selectedItem.getValue().isStartOnNewPage()); // Save the state of the checkbox
+                questionToUpdate.setJustify(selectedItem.getValue().isJustify()); // Save the state of the justify checkbox
                 // Save the solution image base64 from the temporary field to the question object
                 if (newQuestionSolutionImageBase64 != null) {
                     questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
@@ -986,6 +1009,7 @@ public class MainController {
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
         newQuestion.setStartOnNewPage(false); // Default to false when creating a new question
+        newQuestion.setJustify(false); // Default to false when creating a new question
         
         if (newQuestionImageBase64 != null) {
             newQuestion.setImageBase64(newQuestionImageBase64);
@@ -1026,13 +1050,10 @@ public class MainController {
         List<Question> selected = new ArrayList<>();
         for (Question q : questions) {
             if (q.isSelected()) {
-                Question copy = new Question(q.getTitle(), q.getText(), q.getPoints(), q.getType(), q.getAnswerLines());
-                copy.setMusterloesung(q.getMusterloesung());
-                copy.setSelected(q.getSelected());
-                copy.setId(q.getId());
-                copy.setImageBase64(q.getImageBase64()); // Copy image data
-                copy.setStartOnNewPage(q.isStartOnNewPage()); // Copy startOnNewPage data
+                Question copy = new Question(q); // Use copy constructor for a deep copy
 
+                // Recursively filter sub-questions. The copy constructor already copied them,
+                // but we need to replace the list with the filtered version.
                 if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
                     copy.setSubQuestions(filterSelected(q.getSubQuestions()));
                 }
@@ -1297,31 +1318,33 @@ public class MainController {
     }
 
     private Question createVariedQuestionRecursive(Question originalQuestion) {
+        // First, create a proper deep copy to preserve all properties
+        Question copiedQuestion = new Question(originalQuestion);
+
+        // Now, modify the parts that need to change
         String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
         String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
+        copiedQuestion.setTitle(rephrasedTitle);
+        copiedQuestion.setText(rephrasedText);
 
-        Question copiedQuestion = new Question(
-                rephrasedTitle,
-                rephrasedText,
-                originalQuestion.getPoints(),
-                originalQuestion.getType(),
-                originalQuestion.getAnswerLines()
-        );
-        copiedQuestion.setMusterloesung(originalQuestion.getMusterloesung());
-        copiedQuestion.setId(originalQuestion.getId());
-        copiedQuestion.setSelected(originalQuestion.getSelected());
-        copiedQuestion.setImageBase64(originalQuestion.getImageBase64()); // Copy image data
-        copiedQuestion.setMusterloesungImageBase64(originalQuestion.getMusterloesungImageBase64()); // Copy solution image data
-        copiedQuestion.setStartOnNewPage(originalQuestion.isStartOnNewPage()); // Copy startOnNewPage data
-
-
+        // Then, handle sub-questions recursively
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
-            List<Question> shuffledSubQuestions = new ArrayList<>();
+            List<Question> processedSubQuestions = new ArrayList<>();
+            boolean containsPageBreak = false;
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                shuffledSubQuestions.add(createVariedQuestionRecursive(originalSubQuestion));
+                // Recursively process each sub-question to get the rephrased version
+                processedSubQuestions.add(createVariedQuestionRecursive(originalSubQuestion));
+                if (originalSubQuestion.isStartOnNewPage()) {
+                    containsPageBreak = true;
+                }
             }
-            Collections.shuffle(shuffledSubQuestions);
-            copiedQuestion.setSubQuestions(shuffledSubQuestions);
+
+            // Only shuffle if the layout is not fixed by a page break
+            if (!containsPageBreak) {
+                Collections.shuffle(processedSubQuestions);
+            }
+
+            copiedQuestion.setSubQuestions(processedSubQuestions);
         }
         return copiedQuestion;
     }

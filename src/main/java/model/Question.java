@@ -24,6 +24,7 @@ public class Question {
     private String imageBase64;
     private String musterloesungImageBase64;
     private final BooleanProperty startOnNewPage = new SimpleBooleanProperty(false); // New field for page break
+    private final BooleanProperty justify = new SimpleBooleanProperty(false); // New field for justification
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
@@ -31,6 +32,7 @@ public class Question {
         this.id = UUID.randomUUID();
         this.subQuestions = new ArrayList<>();
         this.startOnNewPage.set(false); // Initialize new field
+        this.justify.set(false); // Initialize new field
     }
 
     public Question(String title, String text, int points, String type, int answerLines) {
@@ -42,6 +44,7 @@ public class Question {
         this.answerLines = answerLines;
         this.subQuestions = new ArrayList<>();
         this.startOnNewPage.set(false); // Initialize new field
+        this.justify.set(false); // Initialize new field
     }
 
     public Question(Question other) {
@@ -56,6 +59,7 @@ public class Question {
         this.musterloesungImageBase64 = other.musterloesungImageBase64;
         this.selected.set(other.selected.get()); // Copy the boolean property value
         this.startOnNewPage.set(other.startOnNewPage.get()); // Copy new field
+        this.justify.set(other.justify.get()); // Copy new field
         // Deep copy subQuestions if they exist
         if (other.subQuestions != null) {
             this.subQuestions = new ArrayList<>();
@@ -200,5 +204,18 @@ public class Question {
 
     public void setStartOnNewPage(boolean startOnNewPage) {
         this.startOnNewPage.set(startOnNewPage);
+    }
+
+    @JsonIgnore
+    public boolean isJustify() {
+        return justify.get();
+    }
+
+    public BooleanProperty justifyProperty() {
+        return justify;
+    }
+
+    public void setJustify(boolean justify) {
+        this.justify.set(justify);
     }
 }

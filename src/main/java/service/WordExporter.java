@@ -26,6 +26,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STShd;
 
 import model.Exam;
 import model.Question;
@@ -33,14 +34,11 @@ import model.Question;
 public class WordExporter {
 
     private static final String STANDARD_HINWEISE = "\nHinweise:\n" +
-            "\u2022 Erg\u00e4nzen Sie bitte auf diesem Deckblatt die untenstehenden Angaben und unterschreiben Sie in dem vorgesehenen Feld (Unterschrift).\n" +
-            "\u2022 Der Klausurbogen enth\u00e4lt ein Zusatzblatt. Weitere Zusatzbl\u00e4tter erhalten Sie bei Bedarf von der Aufsicht. Tragen Sie auf eventuell genutzten weiteren Zusatzbl\u00e4ttern sofort Ihren Nachnamen, die Matrikelnummer und die Aufgabenummer ein.\n" +
+            "\u2022 Erg\u00e4nzen Sie bitte auf diesem Deckblatt die untenstehenden Angaben und unterschreiben Sie. Der Klausurbogen enth\u00e4lt ein Zusatzblatt; weitere erhalten Sie bei Bedarf von der Aufsicht. Tragen Sie auf allen Zusatzbl\u00e4ttern sofort Ihren Nachnamen, Matrikelnummer und die Aufgabenummer ein.\n" +
             "\u2022 Verwenden Sie einen dokumentenechten Schreibstift (d. h. kein Bleistift). Verwenden Sie keinen Stift mit roter oder gr\u00fcner Farbe.\n" +
-            "\u2022 Trennen Sie den Klausurbogen nicht auf. Nehmen Sie den Klausurbogen nicht mit nach Hause.\n" +
-            "\u2022 Elektronische und nicht elektronische Hilfsmittel sind nicht zugelassen, mit Ausnahme eines Taschenrechners (kein Smartphone!). Schalten Sie alle mitgebrachten elektronischen Ger\u00e4te \u2013 auch Fitnessarmb\u00e4nder, MP3-Player, etc. \u2013 aus (bzw. komplett lautlos) und legen Sie diese  au\u00dfer Reichweite (z. B. in Ihren Rucksack).\n" +
-            "\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten.\n" +
-            "\u2022 Notieren Sie die Antworten direkt in den Klausurbogen. Der daf\u00fcr vorgesehene Platz ist bei durchschnittlicher Handschriftgr\u00f6\u00dfe ausreichend.\n" +
-            "\u2022 Sie k\u00f6nnen die Klausur jederzeit abgeben. Aus Respekt gegen\u00fcber Ihren Mitstudierenden verlassen Sie bitte 10 Minuten vor dem Ende der Bearbeitungszeit den Klausurraum nicht mehr, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n" +
+            "\u2022 Trennen Sie den Klausurbogen nicht auf und nehmen Sie ihn nicht mit nach Hause. Notieren Sie die Antworten direkt in den Klausurbogen; der daf\u00fcr vorgesehene Platz ist bei durchschnittlicher Handschriftgr\u00f6\u00dfe ausreichend.\n" +
+            "\u2022 Elektronische und nicht elektronische Hilfsmittel sind nicht zugelassen, mit Ausnahme eines Taschenrechners (kein Smartphone!). Schalten Sie alle mitgebrachten elektronischen Ger\u00e4te \u2013 auch Fitnessarmb\u00e4nder, MP3-Player, etc. \u2013 aus (bzw. komplett lautlos) und legen Sie diese au\u00dfer Reichweite (z. B. in Ihren Rucksack).\n" +
+            "\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten. Sie k\u00f6nnen die Klausur jederzeit abgeben, jedoch bitten wir Sie aus Respekt gegen\u00fcber Ihren Mitstudierenden, den Raum in den letzten 10 Minuten vor dem Ende der Bearbeitungszeit nicht mehr zu verlassen, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n" +
             "\nViel Erfolg!";
 
     public static String getStandardHinweise() {
@@ -131,22 +129,20 @@ public class WordExporter {
         instructionTableRun.setText("\nBitte lesen Sie die folgenden Hinweise aufmerksam durch!");
         instructionTableRun.setBold(true);
 
-        XWPFParagraph instructions = document.createParagraph();
-        XWPFRun instructionsRun = instructions.createRun();
-        
         String instructionsContent = exam.getAllgemeineHinweise();
         if (instructionsContent == null || instructionsContent.isEmpty()) {
             instructionsContent = getStandardHinweise();
         }
 
         String[] lines = instructionsContent.split("\n");
-        for (int i = 0; i < lines.length; i++) {
-            instructionsRun.setText(lines[i]);
-            instructionsRun.setBold(true);
-            instructionsRun.setFontSize(10);
-            if (i < lines.length - 1) {
-                instructionsRun.addBreak();
-            }
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+            XWPFParagraph instructionParagraph = document.createParagraph();
+            instructionParagraph.setAlignment(ParagraphAlignment.BOTH);
+            XWPFRun instructionRun = instructionParagraph.createRun();
+            instructionRun.setText(line);
+            instructionRun.setBold(true);
+            instructionRun.setFontSize(10);
         }
 
         XWPFParagraph studentInfoHeader = document.createParagraph();
@@ -259,7 +255,7 @@ public class WordExporter {
                 document.createParagraph().setPageBreak(true);
             }
 
-            writeQuestion(document, q, String.valueOf(i + 1), withSolutions);
+            writeQuestion(document, q, String.valueOf(i + 1), withSolutions, false);
 
             // Always add a page break after a main question, unless it's the last one.
             if (i < exam.getQuestions().size() - 1) {
@@ -268,8 +264,11 @@ public class WordExporter {
         }
     }
 
-    private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions) {
+    private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions, boolean isSubQuestion) {
         XWPFParagraph questionTitle = document.createParagraph();
+        if (question.isJustify()) {
+            questionTitle.setAlignment(ParagraphAlignment.BOTH);
+        }
         // Fix for NullPointerException: Ensure the paragraph properties object exists.
         if (questionTitle.getCTP().getPPr() == null) {
             questionTitle.getCTP().addNewPPr();
@@ -389,7 +388,7 @@ public class WordExporter {
                     // Insert page break
                     document.createParagraph().setPageBreak(true);
                 }
-                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions);
+                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions, true);
             }
         }
     }
@@ -442,7 +441,7 @@ public class WordExporter {
         Document parsedHtml = Jsoup.parse(contentToParse);
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
-        processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null);
+        processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null, null);
 
         // For MCQs, processNode creates new paragraphs for each option, leaving this one empty.
         // This empty paragraph causes a large vertical gap, so we remove it.
@@ -454,7 +453,7 @@ public class WordExporter {
         }
     }
 
-    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color) {
+    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String fontFamily) {
         XWPFRun run = paragraph.createRun();
         run.setText(text);
         run.setBold(bold);
@@ -464,13 +463,16 @@ public class WordExporter {
         if (color != null) {
             run.setColor(color);
         }
+        if (fontFamily != null) {
+            run.setFontFamily(fontFamily);
+        }
     }
 
-    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle) {
+    private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle, String fontFamily) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
             if (!text.trim().isEmpty() || text.equals(" ")) {
-                 appendStyledText(paragraph, text, bold, italic, underline, strikethrough, color);
+                 appendStyledText(paragraph, text, bold, italic, underline, strikethrough, color, fontFamily);
             }
         } else if (node instanceof Element) {
             Element element = (Element) node;
@@ -484,15 +486,22 @@ public class WordExporter {
             boolean newStrikethrough = strikethrough || tagName.equals("strike") || style.contains("text-decoration: line-through");
             String newColor = color;
             String newListStyle = listStyle;
+            String newFontFamily = fontFamily;
 
             if (tagName.equals("font") && element.hasAttr("color")) {
                 newColor = element.attr("color").replace("#", "");
             }
+             if (tagName.equals("code") || tagName.equals("pre")) {
+                newFontFamily = "Courier New";
+            }
 
             // Handle block-level elements
-            if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol")) {
+            if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol") || tagName.equals("pre")) {
                 if (!paragraph.getRuns().isEmpty() || paragraph.getCTP().getPPr() != null) {
                     paragraph = document.createParagraph();
+                }
+                if (tagName.equals("pre")) {
+                    setParagraphShading(paragraph, "F0F0F0");
                 }
             }
             
@@ -522,7 +531,7 @@ public class WordExporter {
                         boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
                         checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
 
-                        appendStyledText(optionParagraph, firstOptionText, newBold, newItalic, newUnderline, newStrikethrough, newColor);
+                        appendStyledText(optionParagraph, firstOptionText, newBold, newItalic, newUnderline, newStrikethrough, newColor, newFontFamily);
                     }
 
                     // Process subsequent options in <div> tags
@@ -538,7 +547,7 @@ public class WordExporter {
                         boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
                         checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
 
-                        appendStyledText(optionParagraph, optionText, newBold, newItalic, newUnderline, newStrikethrough, newColor);
+                        appendStyledText(optionParagraph, optionText, newBold, newItalic, newUnderline, newStrikethrough, newColor, newFontFamily);
                     }
 
                     // Skip further processing of children for this <li> as we've handled them
@@ -559,7 +568,7 @@ public class WordExporter {
             // Recursive call for child nodes (only if not an MCQ <li> handled above)
             if (!("MCQ".equals(question.getType()) && tagName.equals("li"))) {
                 for (Node childNode : element.childNodes()) {
-                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, correctOptions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle);
+                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, correctOptions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle, newFontFamily);
                 }
             }
 
@@ -610,6 +619,19 @@ public class WordExporter {
             return matcher.group(1);
         }
         return "";
+    }
+
+    private static void setParagraphShading(XWPFParagraph paragraph, String rgb) {
+        if (paragraph.getCTP().getPPr() == null) {
+            paragraph.getCTP().addNewPPr();
+        }
+        if (paragraph.getCTP().getPPr().getShd() != null) {
+            paragraph.getCTP().getPPr().unsetShd();
+        }
+        paragraph.getCTP().getPPr().addNewShd();
+        paragraph.getCTP().getPPr().getShd().setVal(STShd.CLEAR); // Use CLEAR for solid fill
+        paragraph.getCTP().getPPr().getShd().setColor("auto"); // "auto" means the color is determined by the fill attribute
+        paragraph.getCTP().getPPr().getShd().setFill(rgb); // Set the RGB color
     }
 
     private static void setCellAlignment(XWPFTableCell cell, ParagraphAlignment horizontal, STVerticalJc.Enum vertical) {
