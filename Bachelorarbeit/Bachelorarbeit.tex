@@ -1,0 +1,144 @@
+% Thesis Title: Konzeption, Design und Implementierung einer Softwarelösung
+% zur automatisierten Erstellung und Verwaltung von Prüfungen: Der ExamBuilder
+\documentclass[
+BCOR=8.25mm,         % Bindekorrektur
+DIV=11,              % Satzspiegel
+openany,
+parskip=half,        % Abstand zwischen Absätzen
+bibliography=totoc,  % Literaturverzeichnis im Inhaltsverzeichnis
+headsepline=on,      % Trennlinie Kolumnentitel
+]{scrbook}
+
+% Préambule
+\usepackage[a4paper, top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage[ngerman]{babel} % Deutsche typogr. Regeln + Trenntabelle
+\usepackage[T1]{fontenc}             % TeX Font-Codierung
+\usepackage{lmodern}                 % Latin Modern font
+\usepackage[utf8]{inputenc}          % Font-Codierung der Eingabedatei
+\usepackage[babel]{csquotes}         % Anführungszeichen
+\usepackage{graphicx} % Graphiken
+\usepackage{here}  % Neu eingefügt
+\usepackage{caption}                 % Bildunterschrift
+\usepackage{wrapfig}
+\usepackage{tabularx}   % Für flexible Spaltenbreiten
+\usepackage{booktabs}   % Für \toprule, \midrule, \bottomrule
+\usepackage{float}      % Für [H] Platzierung
+\usepackage{minted}
+% Konfiguration für minted für ein schöneres Aussehen
+\setminted{
+frame=lines,         % Rahmen um den Code
+framesep=2mm,        % Abstand des Rahmens
+baselinestretch=1.2, % Zeilenabstand
+fontsize=\small,     % Kleinere Schriftgröße
+linenos              % Zeilennummern
+}
+\usepackage{amsmath}	               % Mathematik
+\usepackage[pdftex]{hyperref}
+\usepackage{xurl} % Erlaubt URL-Umbrüche
+\usepackage{pdfpages} % Paket zum Einbinden von PDF-Dateien
+\hypersetup{
+bookmarksopen=true,
+bookmarksopenlevel=3,
+colorlinks,
+citecolor=blue,
+linkcolor=blue,
+}
+\usepackage{scrhack}  % Unterdrückt Fehlermeldung von listings
+\usepackage{microtype}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% Clear all headers and footers
+\fancyhf{}
+
+% Header: chapitre courant à gauche, rien à droite
+\fancyhead[L]{\nouppercase{\leftmark}}   % Chapitre courant
+\fancyhead[R]{}
+
+% Footer: logo + nom + page
+\fancyfoot[C]{
+\includegraphics[width=6cm]{img/mni-logo.pdf}%
+\hspace{0.4cm}%
+Danielou Mounsande Sandamoun\hspace{0.7cm} \thepage%
+}
+
+% Ligne de séparation für header und footer
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Configuration du Stil für die Bibliographie
+\usepackage[
+backend=biber,       % Verwende Biber als Backend
+backref,             % Rückverweise von Literatur ins Dokument
+style=numeric,       % Numerischer Zitierstil
+sorting=none,         % Sortierung nach Name, Jahr, Titel
+isbn=false           % ISBN in der Bibliographie ausblenden
+]{biblatex}
+
+% Lade die Citavi-Bibliothek
+\addbibresource{references.bib} % Name der .bib-Datei
+
+%% Numérotation des sections und Tiefe des Inhalts
+\setcounter{tocdepth}{3}             % 3 Stufen im Inhaltsverzeichnis
+\setcounter{secnumdepth}{3} 	     % 3 Stufen in Abschnittnummerierung
+
+% ----------------------------------------------------------------------------
+\begin{document}
+
+%% Titelseite
+\begin{titlepage}
+\centering
+\includegraphics[width=0.9\textwidth]{img/mni-logo.pdf}\[2cm]
+
+\textbf{\huge\sffamily Bachelorarbeit}\[2cm]
+\Large \textbf{\textit{Konzeption, Design und Implementierung einer Softwarelösung zur automatisierten Erstellung und Verwaltung von Prüfungen: Der ExamBuilder}}\[1.5cm]
+\Large zur Erlangung des akademischen Grades
+Bachelor of Science (B.Sc.)
+\vspace{1cm}
+
+Vorgelegt dem\[1cm]
+Fachbereich Mathematik, Naturwissenschaften und Informatik
+der Technischen Hochschule Mittelhessen\[1.5cm]
+\textbf{Danielou Mounsande Sandamoun}\[1.3cm]
+
+im Dezember 2025
+
+\vspace{5cm}
+\hspace*{-7cm}
+\begin{tabular}{ll}
+Referent der Arbeit: & \textbf{Prof. Dr. Steffen Vaupel}\[0.5cm]
+Korreferent: & \textbf{Prof. Dr. Thorsten Weyer}
+\end{tabular}
+\vspace{2cm}
+
+\vspace*{\fill}
+\end{titlepage}
+\cleardoubleemptypage
+
+%% Inhaltsverzeichnis
+\tableofcontents
+
+\mainmatter
+\pagestyle{fancy}
+
+% --- Kapitel einfügen ---
+\input{chapters/01_einleitung.tex}
+\input{chapters/02_grundlagen.tex}
+\input{chapters/03_anforderungsanalyse.tex}
+\input{chapters/04_konzeption_entwurf.tex}
+\input{chapters/05_implementierung.tex}
+\input{chapters/06_evaluation.tex}
+\input{chapters/07_zusammenfassung_ausblick.tex}
+
+\backmatter 
+
+\input{chapters/08_anhang.tex} % Einbinden des Anhangs
+
+%% Abbildungsverzeichnis
+\listoffigures
+
+%% Literatur
+\printbibliography
+
+\end{document}
