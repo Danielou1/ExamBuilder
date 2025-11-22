@@ -14,6 +14,7 @@ import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFFooter;
+import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -55,6 +56,14 @@ public class WordExporter {
 
     private static void exportDoc(Exam exam, String filePath, boolean withSolutions) {
         try (XWPFDocument document = new XWPFDocument()) {
+            document.getDocument().getBody().addNewSectPr().addNewTitlePg();
+            
+            // Create a blank header for the first page
+            document.createHeader(HeaderFooterType.FIRST);
+
+            // Create the default header for all other pages
+            createDefaultHeader(document);
+
             createCoverPage(document, exam);
             document.createParagraph().setPageBreak(true);
             createQuestionsPage(document, exam, withSolutions);
@@ -67,6 +76,35 @@ public class WordExporter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void createDefaultHeader(XWPFDocument document) {
+        XWPFHeader header = document.createHeader(HeaderFooterType.DEFAULT);
+        XWPFTable table = header.createTable(1, 4);
+        table.setWidth("100%");
+        table.getCTTbl().getTblPr().unsetTblBorders();
+
+        XWPFTableRow row = table.getRow(0);
+
+        // Name field
+        XWPFTableCell nameLabelCell = row.getCell(0);
+        nameLabelCell.setText("Name: ");
+        nameLabelCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.LEFT);
+
+        XWPFTableCell nameValueCell = row.getCell(1);
+        XWPFRun nameRun = nameValueCell.getParagraphs().get(0).createRun();
+        nameRun.setText(" ".repeat(30)); // Add spaces to be underlined
+        nameRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
+
+        // Matrikelnummer field
+        XWPFTableCell matrikelLabelCell = row.getCell(2);
+        matrikelLabelCell.setText("Matrikelnummer: ");
+        matrikelLabelCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.LEFT);
+
+        XWPFTableCell matrikelValueCell = row.getCell(3);
+        XWPFRun matrikelRun = matrikelValueCell.getParagraphs().get(0).createRun();
+        matrikelRun.setText(" ".repeat(20)); // Add spaces to be underlined
+        matrikelRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
     }
 
     private static void createPageNumbering(XWPFDocument document) {
