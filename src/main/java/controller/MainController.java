@@ -333,12 +333,19 @@ public class MainController {
 
         if (formatCodeButton != null) {
             formatCodeButton.setOnAction(event -> {
-                // The HTMLEditor does not expose its WebEngine, so we have to look it up.
-                // This is a bit of a hack, but it's a common workaround.
                 javafx.scene.web.WebView webView = (javafx.scene.web.WebView) questionTextField.lookup(".web-view");
                 if (webView != null) {
                     javafx.scene.web.WebEngine engine = webView.getEngine();
-                    String jsCode = "document.execCommand('insertHTML', false, '<pre><code>' + window.getSelection().toString() + '</code></pre>');";
+                    String jsCode = "var sel = window.getSelection(); " +
+                                    "if (sel.rangeCount > 0) { " +
+                                    "  var range = sel.getRangeAt(0); " +
+                                    "  var documentFragment = range.cloneContents(); " +
+                                    "  var dummyDiv = document.createElement('div'); " +
+                                    "  dummyDiv.appendChild(documentFragment); " +
+                                    "  var plainText = dummyDiv.innerText; " +
+                                    "  var escapedText = plainText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); " +
+                                    "  document.execCommand('insertHTML', false, '<pre><code>' + escapedText + '</code></pre>'); " +
+                                    "}";
                     engine.executeScript(jsCode);
                 }
             });
@@ -1344,7 +1351,6 @@ public class MainController {
         musterloesungImageView.setImage(null);
         newQuestionImageBase64 = null;
         newQuestionSolutionImageBase64 = null;
-        parentForSubQuestion = null;
     }
 
     private Question createVariedQuestionRecursive(Question originalQuestion) {

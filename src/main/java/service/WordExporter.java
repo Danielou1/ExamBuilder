@@ -528,22 +528,23 @@ public class WordExporter {
             if (tagName.equals("font") && element.hasAttr("color")) {
                 newColor = element.attr("color").replace("#", "");
             }
-             if (tagName.equals("code")) { 
+             if (tagName.equals("code") || tagName.equals("pre")) {
                 newFontFamily = "Courier New";
             }
 
             if (tagName.equals("pre")) {
-                XWPFParagraph codeParagraph = document.createParagraph();
-                setParagraphShading(codeParagraph, "F0F0F0");
                 String preText = element.wholeText();
                 String[] lines = preText.split("\r?\n");
                 for (int i = 0; i < lines.length; i++) {
+                    String line = lines[i];
+                    if (line.isEmpty() && i == lines.length - 1) {
+                        continue; // Skip trailing empty line
+                    }
+                    XWPFParagraph codeParagraph = document.createParagraph();
+                    setParagraphShading(codeParagraph, "F0F0F0");
                     XWPFRun codeRun = codeParagraph.createRun();
                     codeRun.setFontFamily("Courier New");
-                    codeRun.setText(lines[i]);
-                    if (i < lines.length - 1) {
-                        codeRun.addBreak();
-                    }
+                    codeRun.setText(line);
                 }
                 return document.createParagraph();
             }
