@@ -338,7 +338,7 @@ public class MainController {
                 javafx.scene.web.WebView webView = (javafx.scene.web.WebView) questionTextField.lookup(".web-view");
                 if (webView != null) {
                     javafx.scene.web.WebEngine engine = webView.getEngine();
-                    String jsCode = "document.execCommand('insertHTML', false, '<code>' + window.getSelection().toString() + '</code>');";
+                    String jsCode = "document.execCommand('insertHTML', false, '<pre><code>' + window.getSelection().toString() + '</code></pre>');";
                     engine.executeScript(jsCode);
                 }
             });

@@ -517,10 +517,9 @@ public class WordExporter {
             String tagName = element.tagName().toLowerCase();
             String style = element.attr("style").toLowerCase();
 
-            // Determine styles from tags and CSS
             boolean newBold = bold || tagName.equals("b") || tagName.equals("strong") || style.contains("font-weight: bold");
             boolean newItalic = italic || tagName.equals("i") || tagName.equals("em") || style.contains("font-style: italic");
-            boolean newUnderline = underline || tagName.equals("u") || tagName.equals("em") || style.contains("text-decoration: underline");
+            boolean newUnderline = underline || tagName.equals("u") || style.contains("text-decoration: underline");
             boolean newStrikethrough = strikethrough || tagName.equals("strike") || style.contains("text-decoration: line-through");
             String newColor = color;
             String newListStyle = listStyle;
@@ -529,17 +528,28 @@ public class WordExporter {
             if (tagName.equals("font") && element.hasAttr("color")) {
                 newColor = element.attr("color").replace("#", "");
             }
-             if (tagName.equals("code") || tagName.equals("pre")) {
+             if (tagName.equals("code")) { // Courier New for code, but pre handles the block
                 newFontFamily = "Courier New";
             }
 
-            // Handle block-level elements
-            if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol") || tagName.equals("pre")) {
+            if (tagName.equals("pre")) {
+                String preText = element.wholeText();
+                String[] lines = preText.split("\n");
+
+                for (String line : lines) {
+                    XWPFParagraph codeParagraph = document.createParagraph();
+                    setParagraphShading(codeParagraph, "F0F0F0"); 
+                    
+                    XWPFRun codeRun = codeParagraph.createRun();
+                    codeRun.setFontFamily("Courier New");
+                    codeRun.setText(line);
+                }
+                return document.createParagraph(); 
+            }
+            
+            if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol")) {
                 if (!paragraph.getRuns().isEmpty() || paragraph.getCTP().getPPr() != null) {
                     paragraph = document.createParagraph();
-                }
-                if (tagName.equals("pre")) {
-                    setParagraphShading(paragraph, "F0F0F0");
                 }
             }
             
@@ -550,67 +560,51 @@ public class WordExporter {
             }
 
             if (tagName.equals("li")) {
-                // Special handling for MCQ list items due to HTMLEditor's output format
                 if ("MCQ".equals(question.getType())) {
-                    // Parse the inner HTML of the <li> to find individual options (text + <div>s)
                     Document innerDoc = Jsoup.parse(element.html());
                     Element body = innerDoc.body();
-
-                    // Process the first option (direct text within the body)
                     String firstOptionText = body.ownText().trim();
                     if (!firstOptionText.isEmpty()) {
                         XWPFParagraph optionParagraph = document.createParagraph();
-                        optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
-                        optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
-                        optionParagraph.setSpacingBetween(1.0); // Set single line spacing
+                        optionParagraph.setSpacingAfter(0);
+                        optionParagraph.setSpacingBefore(0);
+                        optionParagraph.setSpacingBetween(1.0);
                         XWPFRun checkboxRun = optionParagraph.createRun();
                         
                         String optionLetter = extractOptionLetter(firstOptionText);
                         boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
                         checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
-
                         appendStyledText(optionParagraph, firstOptionText, newBold, newItalic, newUnderline, newStrikethrough, newColor, newFontFamily);
                     }
-
-                    // Process subsequent options in <div> tags
                     for (Element div : body.select("div")) {
                         XWPFParagraph optionParagraph = document.createParagraph();
-                        optionParagraph.setSpacingAfter(0); // Reduce space after paragraph
-                        optionParagraph.setSpacingBefore(0); // Reduce space before paragraph
-                        optionParagraph.setSpacingBetween(1.0); // Set single line spacing
+                        optionParagraph.setSpacingAfter(0);
+                        optionParagraph.setSpacingBefore(0);
+                        optionParagraph.setSpacingBetween(1.0);
                         XWPFRun checkboxRun = optionParagraph.createRun();
-
                         String optionText = div.text().trim();
                         String optionLetter = extractOptionLetter(optionText);
                         boolean isCorrect = withSolutions && correctOptions != null && correctOptions.contains(optionLetter);
                         checkboxRun.setText(isCorrect ? "☑ " : "☐ ");
-
                         appendStyledText(optionParagraph, optionText, newBold, newItalic, newUnderline, newStrikethrough, newColor, newFontFamily);
                     }
-
-                    // Skip further processing of children for this <li> as we've handled them
                     return paragraph; 
                 } else {
-                    // Original list item handling for non-MCQ lists
                     if (!paragraph.getRuns().isEmpty()) {
                          paragraph = document.createParagraph();
                     }
                     if ("bullet".equals(listStyle)) {
-                        paragraph.setNumID(java.math.BigInteger.ONE); // Simple bullet point
+                        paragraph.setNumID(java.math.BigInteger.ONE);
                     } else if ("number".equals(listStyle)) {
-                        paragraph.setNumID(java.math.BigInteger.valueOf(2)); // Simple numbering
+                        paragraph.setNumID(java.math.BigInteger.valueOf(2));
                     }
                 }
             }
 
-            // Recursive call for child nodes (only if not an MCQ <li> handled above)
-            if (!("MCQ".equals(question.getType()) && tagName.equals("li"))) {
-                for (Node childNode : element.childNodes()) {
-                    paragraph = processNode(childNode, paragraph, document, question, withSolutions, correctOptions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle, newFontFamily);
-                }
+            for (Node childNode : element.childNodes()) {
+                paragraph = processNode(childNode, paragraph, document, question, withSolutions, correctOptions, newBold, newItalic, newUnderline, newStrikethrough, newColor, newListStyle, newFontFamily);
             }
 
-            // Handle line breaks
             if (tagName.equals("br")) {
                 paragraph.createRun().addBreak();
             }
