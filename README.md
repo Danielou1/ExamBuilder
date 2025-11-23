@@ -35,6 +35,7 @@ ExamBuilder is a modern desktop application designed for educators to streamline
 
 ## Recent Updates
 
+*   **New Exam with Save Prompt:** Added a "New Exam" feature in the File menu. Loading an exam from JSON or making any modification now correctly flags the session as having unsaved changes, ensuring the user is prompted to save their work before creating a new exam or importing another file.
 *   **Enhanced HTML Editor Data Binding:** Changes made in the rich text editor are now automatically saved to the question model when the editor loses focus, ensuring all modifications are preserved during export.
 *   **Accurate Word Formatting:** Resolved issues with bold, italic, and underline styles not being correctly applied in the generated Word documents.
 *   **Improved MCQ Detection:** Refined the detection logic for multiple-choice options in Word export to prevent unintended checkbox insertions within regular text.

@@ -1,4 +1,5 @@
 package controller;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -163,6 +164,7 @@ public class MainController {
     private boolean isRevertingSelection = false;
     private boolean isPopulatingUI = false;
     private ChangeListener<String> questionTypeChangeListener;
+    private boolean isDirty = false;
 
     // ButtonTypes for unsaved changes dialog
     private final ButtonType saveButton = new ButtonType("Änderungen speichern");
@@ -176,9 +178,17 @@ public class MainController {
         loadUniversities();
         TextFields.bindAutoCompletion(hochschuleField, germanUniversities);
 
+        setupChangeListeners();
+
         selectedColumn.setEditable(true); // Set to true for CheckBoxTreeTableCell to work
-        selectedColumn.setCellValueFactory(param -> param.getValue().getValue().selectedProperty());
+        selectedColumn.setCellValueFactory(param -> {
+            if (param.getValue() != null && param.getValue().getValue() != null) {
+                return param.getValue().getValue().selectedProperty();
+            }
+            return null;
+        });
         selectedColumn.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(selectedColumn));
+
 
         startOnNewPageColumn.setEditable(true);
         startOnNewPageColumn.setCellValueFactory(param -> param.getValue().getValue().startOnNewPageProperty());
@@ -198,11 +208,7 @@ public class MainController {
         typeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getValue().getType()));
         pointsColumn.setCellValueFactory(param -> new SimpleStringProperty(Integer.toString(param.getValue().getValue().getPoints())));
 
-        TreeItem<Question> root = new TreeItem<>(new Question("Examen", "", 0, "", 0));
-        questionsTable.setRoot(root);
-        questionsTable.setShowRoot(false);
-
-        exam = new Exam("", "", "", "", "", "", "");
+        resetExam(); // Start with a fresh, clean exam
 
         questionTypeField.getItems().addAll("Offene Frage", "MCQ", "Lückentext", "Richtig/Falsch");
 
@@ -210,6 +216,7 @@ public class MainController {
             if (isPopulatingUI) {
                 return; // Skip listener logic if UI is being populated
             }
+            isDirty = true;
             // Disable answer lines for types that don't need them
             if ("MCQ".equals(newVal) || "Lückentext".equals(newVal) || "Richtig/Falsch".equals(newVal)) {
                 answerLinesField.setDisable(true);
@@ -349,10 +356,27 @@ public class MainController {
                     Question questionToUpdate = selectedItem.getValue();
                     if (questionToUpdate.getText() == null || !questionToUpdate.getText().equals(questionTextField.getHtmlText())) {
                         questionToUpdate.setText(questionTextField.getHtmlText());
+                        isDirty = true;
                     }
                 }
             }
         });
+    }
+
+    private void setupChangeListeners() {
+        ChangeListener<String> dirtyStringListener = (obs, old, nao) -> isDirty = true;
+        ChangeListener<Number> dirtyNumberListener = (obs, old, nao) -> isDirty = true;
+
+        examTitleField.textProperty().addListener(dirtyStringListener);
+        moduleField.textProperty().addListener(dirtyStringListener);
+        semesterField.textProperty().addListener(dirtyStringListener);
+        fachbereichField.textProperty().addListener(dirtyStringListener);
+        hochschuleField.textProperty().addListener(dirtyStringListener);
+
+        questionTitleField.textProperty().addListener(dirtyStringListener);
+        musterloesungField.textProperty().addListener(dirtyStringListener);
+        questionPointsField.textProperty().addListener(dirtyStringListener);
+        answerLinesField.valueProperty().addListener(dirtyNumberListener);
     }
 
     private void setupImageContextMenu() {
@@ -467,6 +491,11 @@ public class MainController {
                     super.updateItem(item, empty);
                     getStyleClass().remove("deselected-row");
                     if (item != null && !empty) {
+                        ChangeListener<Boolean> dirtyListener = (obs, was, is) -> isDirty = true;
+                        item.selectedProperty().addListener(dirtyListener);
+                        item.startOnNewPageProperty().addListener(dirtyListener);
+                        item.justifyProperty().addListener(dirtyListener);
+
                         item.selectedProperty().addListener((obs, wasSelected, isNowSelected) -> {
                             if (isNowSelected) {
                                 getStyleClass().remove("deselected-row");
@@ -541,6 +570,8 @@ public class MainController {
         if (hinweiseDialogStage != null) {
             hinweiseDialogController.setData(this.exam);
             hinweiseDialogStage.showAndWait();
+            // After the dialog is closed, we assume changes might have been made.
+            isDirty = true;
         } else {
             System.err.println("Hinweise Dialog could not be created.");
         }
@@ -624,33 +655,36 @@ public class MainController {
             if (result.isPresent() && result.get() == cancelButton) {
                 return; // User canceled, do not proceed with new question
             }
-            // If user chose save (and it succeeded) or continue, proceed.
+             if (result.isPresent() && result.get() == saveButton) {
+                if (!updateQuestionAndReturnSuccess()) {
+                    return; 
+                }
+            }
         }
         parentForSubQuestion = null;
         questionsTable.getSelectionModel().clearSelection();
         setEditMode(true);
-        clearQuestionFields(); // Clear fields after handling unsaved changes
-        originalQuestionState = null; // No question loaded, so no original state
+        clearQuestionFields(); 
+        originalQuestionState = null; 
     }
 
     @FXML
     private void editQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
-            parentForSubQuestion = null; // Editing a question is not creating a sub-question
+            parentForSubQuestion = null; 
             populateQuestionDetails(selectedItem.getValue());
             setEditMode(true);
         }
     }
 
     private void populateQuestionDetails(Question question) {
-        // Temporarily remove listener to prevent unwanted side effects during UI population
         if (questionTypeChangeListener != null) {
             questionTypeField.valueProperty().removeListener(questionTypeChangeListener);
         }
 
-        isPopulatingUI = true; // Set flag (still good practice)
-        this.originalQuestionState = new Question(question); // Store a deep copy for change detection
+        isPopulatingUI = true; 
+        this.originalQuestionState = new Question(question); 
         questionTitleField.setText(question.getTitle());
         questionTextField.setHtmlText(question.getText());
         musterloesungField.setText(question.getMusterloesung());
@@ -658,22 +692,23 @@ public class MainController {
         questionTypeField.setValue(question.getType());
         answerLinesField.getValueFactory().setValue(question.getAnswerLines());
 
-        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
-            byte[] imageBytes = Base64.getDecoder().decode(question.getImageBase64());
+        newQuestionImageBase64 = question.getImageBase64();
+        if (newQuestionImageBase64 != null && !newQuestionImageBase64.isEmpty()) {
+            byte[] imageBytes = Base64.getDecoder().decode(newQuestionImageBase64);
             questionImageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
         } else {
             questionImageView.setImage(null);
         }
 
-        if (question.getMusterloesungImageBase64() != null && !question.getMusterloesungImageBase64().isEmpty()) {
-            byte[] imageBytes = Base64.getDecoder().decode(question.getMusterloesungImageBase64());
+        newQuestionSolutionImageBase64 = question.getMusterloesungImageBase64();
+        if (newQuestionSolutionImageBase64 != null && !newQuestionSolutionImageBase64.isEmpty()) {
+            byte[] imageBytes = Base64.getDecoder().decode(newQuestionSolutionImageBase64);
             musterloesungImageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
         } else {
             musterloesungImageView.setImage(null);
         }
         isPopulatingUI = false; // Clear flag
 
-        // Re-add listener
         if (questionTypeChangeListener != null) {
             questionTypeField.valueProperty().addListener(questionTypeChangeListener);
         }
@@ -690,6 +725,7 @@ public class MainController {
             root.getChildren().add(questionItem);
         }
         questionsTable.setRoot(root);
+        questionsTable.setShowRoot(false); // Ensure root is not visible
 
         if (selectedQuestion != null) {
             findAndSelectQuestion(questionsTable.getRoot(), selectedQuestion);
@@ -722,10 +758,8 @@ public class MainController {
 
     private String getQuestionNumber(TreeItem<Question> item) {
         if (item == null || item.getParent() == null || item.getParent() == questionsTable.getRoot()) {
-            // Top-level question
             return String.valueOf(questionsTable.getRoot().getChildren().indexOf(item) + 1);
         } else {
-            // Sub-question
             String parentNumber = getQuestionNumber(item.getParent());
             int subIndex = item.getParent().getChildren().indexOf(item);
             char subLetter = (char) ('a' + subIndex);
@@ -741,13 +775,13 @@ public class MainController {
             alert.setHeaderText("Die Punktzahl für diese Frage fehlt.");
             alert.setContentText("Möchten Sie mit 0 Punkten fortfahren oder die Punktzahl manuell eingeben?");
 
-            ButtonType continueButton = new ButtonType("Fortfahren mit 0 Punkten");
+            ButtonType continueBtn = new ButtonType("Fortfahren mit 0 Punkten");
             ButtonType modifyButton = new ButtonType("Manuell eingeben", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-            alert.getButtonTypes().setAll(continueButton, modifyButton);
+            alert.getButtonTypes().setAll(continueBtn, modifyButton);
 
             Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == continueButton) {
+            if (result.isPresent() && result.get() == continueBtn) {
                 questionPointsField.setText("0");
             } else {
                 return;
@@ -762,11 +796,12 @@ public class MainController {
 
         if (parentForSubQuestion != null) {
             parentForSubQuestion.getValue().addSubQuestion(newQuestion);
-            parentForSubQuestion = null; // Reset context after use
+            parentForSubQuestion = null; 
         } else {
             exam.addQuestion(newQuestion);
         }
 
+        isDirty = true;
         refreshTreeTableView();
         clearQuestionFields();
         setEditMode(false);
@@ -779,7 +814,7 @@ public class MainController {
             parentForSubQuestion = selectedItem;
             questionsTable.getSelectionModel().clearSelection();
             setEditMode(true);
-            clearQuestionFields(); // Clear fields for new sub-question
+            clearQuestionFields();
         }
     }
 
@@ -790,21 +825,21 @@ public class MainController {
             alert.setHeaderText("Die Punktzahl für diese Frage fehlt.");
             alert.setContentText("Möchten Sie mit 0 Punkten fortfahren oder die Punktzahl manuell eingeben?");
 
-            ButtonType continueButton = new ButtonType("Fortfahren mit 0 Punkten");
+            ButtonType continueBtn = new ButtonType("Fortfahren mit 0 Punkten");
             ButtonType modifyButton = new ButtonType("Manuell eingeben", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-            alert.getButtonTypes().setAll(continueButton, modifyButton);
+            alert.getButtonTypes().setAll(continueBtn, modifyButton);
 
             Optional<ButtonType> result = alert.showAndWait();
-            if (result.isPresent() && result.get() == continueButton) {
+            if (result.isPresent() && result.get() == continueBtn) {
                 questionPointsField.setText("0");
             } else {
-                return false; // User chose not to proceed with 0 points
+                return false; 
             }
         }
 
         if (isPointsInvalid()) {
-            return false; // Points are invalid, cannot save
+            return false;
         }
 
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
@@ -826,30 +861,32 @@ public class MainController {
                 if (!answerLinesField.isDisable()) {
                     questionToUpdate.setAnswerLines(answerLinesField.getValue());
                 }
-                questionToUpdate.setStartOnNewPage(selectedItem.getValue().isStartOnNewPage()); // Save the state of the checkbox
-                questionToUpdate.setJustify(selectedItem.getValue().isJustify()); // Save the state of the justify checkbox
-                // Save the solution image base64 from the temporary field to the question object
+                questionToUpdate.setStartOnNewPage(selectedItem.getValue().isStartOnNewPage()); 
+                questionToUpdate.setJustify(selectedItem.getValue().isJustify()); 
+                if (newQuestionImageBase64 != null) {
+                    questionToUpdate.setImageBase64(newQuestionImageBase64);
+                }
                 if (newQuestionSolutionImageBase64 != null) {
                     questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
                 }
+                isDirty = true;
                 refreshTreeTableView();
-                this.originalQuestionState = new Question(questionToUpdate); // Update original state after successful save
-                populateQuestionDetails(questionToUpdate); // Re-populate with updated details
+                this.originalQuestionState = new Question(questionToUpdate);
+                populateQuestionDetails(questionToUpdate); 
                 setEditMode(false);
-                return true; // Save successful
+                return true; 
             } catch (Exception e) {
-                // Log the exception or show an error to the user
                 e.printStackTrace();
                 Alert errorAlert = new Alert(Alert.AlertType.ERROR);
                 errorAlert.setTitle("Fehler beim Speichern");
                 errorAlert.setHeaderText("Die Änderungen konnten nicht gespeichert werden.");
                 errorAlert.setContentText("Ein unerwarteter Fehler ist aufgetreten: " + e.getMessage());
                 errorAlert.showAndWait();
-                return false; // Save failed
+                return false; 
             }
         } else {
             System.out.println("Please select a question to update.");
-            return false; // No question selected
+            return false;
         }
     }
 
@@ -870,6 +907,7 @@ public class MainController {
                     } else {
                         exam.getQuestions().remove(selectedItem.getValue());
                     }
+                    isDirty = true;
                     refreshTreeTableView();
                     setEditMode(false);
                 }
@@ -900,16 +938,9 @@ public class MainController {
             try {
                 byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
                 String base64String = Base64.getEncoder().encodeToString(fileContent);
-                
-                boolean isNewQuestionMode = isEditing && selectedItem == null;
-
-                if (isNewQuestionMode) {
-                    newQuestionImageBase64 = base64String;
-                } else if (selectedItem != null) {
-                    selectedItem.getValue().setImageBase64(base64String);
-                }
-
+                newQuestionImageBase64 = base64String;
                 questionImageView.setImage(new Image(new ByteArrayInputStream(fileContent)));
+                isDirty = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -918,28 +949,13 @@ public class MainController {
 
     @FXML
     private void removeImage() {
-        boolean isEditing = !editPane.isDisable();
-        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
-        boolean isNewQuestionMode = isEditing && selectedItem == null;
-
-        if (isNewQuestionMode) {
-            newQuestionImageBase64 = null;
-        } else if (selectedItem != null) {
-            selectedItem.getValue().setImageBase64(null);
-        }
+        newQuestionImageBase64 = null;
         questionImageView.setImage(null);
+        isDirty = true;
     }
 
     @FXML
     private void addSolutionImage() {
-        boolean isEditing = !editPane.isDisable();
-        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
-
-        if (selectedItem == null && !isEditing) {
-             System.out.println("Please select or create a question first.");
-            return;
-        }
-
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Lösungsbild auswählen");
         fileChooser.getExtensionFilters().addAll(
@@ -951,16 +967,9 @@ public class MainController {
             try {
                 byte[] fileContent = Files.readAllBytes(selectedFile.toPath());
                 String base64String = Base64.getEncoder().encodeToString(fileContent);
-                
-                boolean isNewQuestionMode = isEditing && selectedItem == null;
-
-                if (isNewQuestionMode) {
-                    newQuestionSolutionImageBase64 = base64String;
-                } else if (selectedItem != null) {
-                    selectedItem.getValue().setMusterloesungImageBase64(base64String);
-                }
-
+                newQuestionSolutionImageBase64 = base64String;
                 musterloesungImageView.setImage(new Image(new ByteArrayInputStream(fileContent)));
+                isDirty = true;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -969,16 +978,9 @@ public class MainController {
 
     @FXML
     private void removeSolutionImage() {
-        boolean isEditing = !editPane.isDisable();
-        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
-        boolean isNewQuestionMode = isEditing && selectedItem == null;
-
-        if (isNewQuestionMode) {
-            newQuestionSolutionImageBase64 = null;
-        } else if (selectedItem != null) {
-            selectedItem.getValue().setMusterloesungImageBase64(null);
-        }
+        newQuestionSolutionImageBase64 = null;
         musterloesungImageView.setImage(null);
+        isDirty = true;
     }
 
     private boolean isPointsInvalid() {
@@ -1008,8 +1010,8 @@ public class MainController {
         }
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
-        newQuestion.setStartOnNewPage(false); // Default to false when creating a new question
-        newQuestion.setJustify(false); // Default to false when creating a new question
+        newQuestion.setStartOnNewPage(false); 
+        newQuestion.setJustify(false); 
         
         if (newQuestionImageBase64 != null) {
             newQuestion.setImageBase64(newQuestionImageBase64);
@@ -1050,10 +1052,8 @@ public class MainController {
         List<Question> selected = new ArrayList<>();
         for (Question q : questions) {
             if (q.isSelected()) {
-                Question copy = new Question(q); // Use copy constructor for a deep copy
+                Question copy = new Question(q);
 
-                // Recursively filter sub-questions. The copy constructor already copied them,
-                // but we need to replace the list with the filtered version.
                 if (q.getSubQuestions() != null && !q.getSubQuestions().isEmpty()) {
                     copy.setSubQuestions(filterSelected(q.getSubQuestions()));
                 }
@@ -1131,6 +1131,10 @@ public class MainController {
 
     @FXML
     private void saveExamToJson() {
+        saveExamToJsonWithResult();
+    }
+
+    private boolean saveExamToJsonWithResult() {
         updateExamMetadata();
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -1143,10 +1147,15 @@ public class MainController {
             File file = fileChooser.showSaveDialog(stage);
             if (file != null) {
                 mapper.writeValue(file, exam);
+                isDirty = false;
                 System.out.println("Exam saved to JSON: " + file.getAbsolutePath());
+                return true;
+            } else {
+                return false; 
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -1229,6 +1238,31 @@ public class MainController {
 
     @FXML
     private void importExamFromJson() {
+        if (isDirty) {
+            ButtonType saveBtn = new ButtonType("Ja, speichern", ButtonBar.ButtonData.YES);
+            ButtonType discardBtn = new ButtonType("Nein, verwerfen", ButtonBar.ButtonData.NO);
+            ButtonType cancelBtn = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Ungespeicherte Änderungen");
+            alert.setHeaderText("Möchten Sie die aktuellen Änderungen speichern, bevor Sie importieren?");
+            alert.getButtonTypes().setAll(saveBtn, discardBtn, cancelBtn);
+
+            Optional<ButtonType> result = alert.showAndWait();
+
+            if (result.isPresent()) {
+                if (result.get() == saveBtn) {
+                    if (!saveExamToJsonWithResult()) {
+                        return; 
+                    }
+                } else if (result.get() == cancelBtn) {
+                    return; 
+                }
+            } else {
+                return;
+            }
+        }
+
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Open Exam JSON File");
@@ -1240,7 +1274,6 @@ public class MainController {
                 mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 exam = mapper.readValue(file, Exam.class);
 
-                // Automatically convert plain-text MCQs to HTML
                 if (exam.getQuestions() != null) {
                     for (Question q : exam.getQuestions()) {
                         processQuestionForHtmlConversion(q);
@@ -1248,10 +1281,10 @@ public class MainController {
                 }
 
                 updateUIFromExam();
-                // After import, clear and disable edit pane, reset originalQuestionState
                 clearQuestionFields();
                 setEditMode(false);
                 originalQuestionState = null;
+                isDirty = true;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -1259,10 +1292,8 @@ public class MainController {
     }
 
     private void processQuestionForHtmlConversion(Question question) {
-        // Check if it's an MCQ and the text is likely plain text (no <li> tags)
         if ("MCQ".equals(question.getType()) && question.getText() != null && !question.getText().trim().isEmpty() && !question.getText().contains("<li>")) {
             String plainText = question.getText();
-            // Split by newline, also handling surrounding whitespace
             String[] lines = plainText.split("\\s*\\n\\s*"); 
             StringBuilder html = new StringBuilder("<ol>");
             for (String line : lines) {
@@ -1274,7 +1305,6 @@ public class MainController {
             question.setText(html.toString());
         }
     
-
         if (question.getSubQuestions() != null) {
             for (Question subQ : question.getSubQuestions()) {
                 processQuestionForHtmlConversion(subQ);
@@ -1318,28 +1348,23 @@ public class MainController {
     }
 
     private Question createVariedQuestionRecursive(Question originalQuestion) {
-        // First, create a proper deep copy to preserve all properties
         Question copiedQuestion = new Question(originalQuestion);
 
-        // Now, modify the parts that need to change
         String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
         String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
         copiedQuestion.setTitle(rephrasedTitle);
         copiedQuestion.setText(rephrasedText);
 
-        // Then, handle sub-questions recursively
         if (originalQuestion.getSubQuestions() != null && !originalQuestion.getSubQuestions().isEmpty()) {
             List<Question> processedSubQuestions = new ArrayList<>();
             boolean containsPageBreak = false;
             for (Question originalSubQuestion : originalQuestion.getSubQuestions()) {
-                // Recursively process each sub-question to get the rephrased version
                 processedSubQuestions.add(createVariedQuestionRecursive(originalSubQuestion));
                 if (originalSubQuestion.isStartOnNewPage()) {
                     containsPageBreak = true;
                 }
             }
 
-            // Only shuffle if the layout is not fixed by a page break
             if (!containsPageBreak) {
                 Collections.shuffle(processedSubQuestions);
             }
@@ -1351,35 +1376,34 @@ public class MainController {
 
     private boolean areChangesMade() {
         if (originalQuestionState == null) {
-            // No question loaded, so no changes to track
-            return false;
+            return !questionTitleField.getText().isEmpty() ||
+                   !questionTextField.getHtmlText().isEmpty() ||
+                   !musterloesungField.getText().isEmpty() ||
+                   !questionPointsField.getText().isEmpty();
         }
 
-        // Safely get current points from UI
         int currentPoints = 0;
         try {
             currentPoints = Integer.parseInt(questionPointsField.getText().isEmpty() ? "0" : questionPointsField.getText());
         } catch (NumberFormatException e) {
-            // If points field is invalid, consider it a change to prevent data loss
             return true;
         }
 
-        // Compare current UI state with originalQuestionState
-        boolean titleChanged = !originalQuestionState.getTitle().equals(questionTitleField.getText());
-        boolean textChanged = !originalQuestionState.getText().equals(questionTextField.getHtmlText());
-        boolean musterloesungChanged = !originalQuestionState.getMusterloesung().equals(musterloesungField.getText());
-        boolean pointsChanged = originalQuestionState.getPoints() != currentPoints; // Use safely parsed points
-        boolean typeChanged = !originalQuestionState.getType().equals(questionTypeField.getValue());
+        boolean titleChanged = !Objects.equals(originalQuestionState.getTitle(), questionTitleField.getText());
+        boolean textChanged = !Objects.equals(originalQuestionState.getText(), questionTextField.getHtmlText());
+        boolean musterloesungChanged = !Objects.equals(originalQuestionState.getMusterloesung(), musterloesungField.getText());
+        boolean pointsChanged = originalQuestionState.getPoints() != currentPoints;
+        boolean typeChanged = !Objects.equals(originalQuestionState.getType(), questionTypeField.getValue());
         boolean answerLinesChanged = originalQuestionState.getAnswerLines() != answerLinesField.getValue();
-        boolean imageChanged = !Objects.equals(originalQuestionState.getImageBase64(), newQuestionImageBase64); // newQuestionImageBase64 holds current image
-        boolean solutionImageChanged = !Objects.equals(originalQuestionState.getMusterloesungImageBase64(), newQuestionSolutionImageBase64); // newQuestionSolutionImageBase64 holds current solution image
+        boolean imageChanged = !Objects.equals(originalQuestionState.getImageBase64(), newQuestionImageBase64);
+        boolean solutionImageChanged = !Objects.equals(originalQuestionState.getMusterloesungImageBase64(), newQuestionSolutionImageBase64);
 
         return titleChanged || textChanged || musterloesungChanged || pointsChanged || typeChanged || answerLinesChanged || imageChanged || solutionImageChanged;
     }
 
     private Optional<ButtonType> showUnsavedChangesConfirmation() {
         if (!areChangesMade()) {
-            return Optional.empty(); // No changes, no dialog needed
+            return Optional.empty(); 
         }
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1387,14 +1411,22 @@ public class MainController {
         alert.setHeaderText("Sie haben ungespeicherte Änderungen an der aktuellen Frage.");
         alert.setContentText("Möchten Sie Ihre Änderungen speichern, bevor Sie fortfahren?");
 
-        ButtonType saveButton = new ButtonType("Änderungen speichern");
-        ButtonType continueButton = new ButtonType("Ohne Speichern fortfahren");
-        ButtonType cancelButton = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(saveButton, continueButton, cancelButton);
+
+        return alert.showAndWait();
+    }
+
+    private Optional<ButtonType> showUnsavedExamChangesConfirmation() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Ungespeicherte Änderungen an der Prüfung");
+        alert.setHeaderText("Es gibt ungespeicherte Änderungen an der gesamten Prüfung.");
+        alert.setContentText("Möchten Sie Ihre Änderungen speichern, bevor Sie fortfahren?");
 
         alert.getButtonTypes().setAll(saveButton, continueButton, cancelButton);
 
         return alert.showAndWait();
     }
+
 
     private String normalizeMcqHtml(String htmlText) {
         if (htmlText == null || htmlText.trim().isEmpty()) {
@@ -1404,19 +1436,16 @@ public class MainController {
         Document doc = Jsoup.parse(htmlText);
         StringBuilder cleanHtml = new StringBuilder("<ol>");
 
-        // Find all elements that might contain options (p, div, li)
         for (Element element : doc.select("p, div, li")) {
             String text = element.text().trim();
-            // Matches "A) Option", "B. Option", "C Option"
             if (text.matches("^[A-Z][). ]\\s*.*")) {
                 cleanHtml.append("<li>").append(text).append("</li>");
             }
         }
         cleanHtml.append("</ol>");
 
-        // If no options were found in list format, try to convert plain text lines
         if (cleanHtml.toString().equals("<ol></ol>")) {
-            String plainText = doc.body().text(); // Get all text content
+            String plainText = doc.body().text();
             String[] lines = plainText.split("\\s*\\n\\s*");
             cleanHtml = new StringBuilder("<ol>");
             for (String line : lines) {
@@ -1430,4 +1459,42 @@ public class MainController {
         return cleanHtml.toString();
     }
 
+    @FXML
+    private void newExam() {
+        if (isDirty) {
+            ButtonType saveBtn = new ButtonType("Ja, speichern", ButtonBar.ButtonData.YES);
+            ButtonType discardBtn = new ButtonType("Nein, verwerfen", ButtonBar.ButtonData.NO);
+            ButtonType cancelBtn = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Ungespeicherte Änderungen");
+            alert.setHeaderText("Möchten Sie die aktuellen Änderungen speichern, bevor Sie eine neue Prüfung erstellen?");
+            alert.getButtonTypes().setAll(saveBtn, discardBtn, cancelBtn);
+
+            Optional<ButtonType> result = alert.showAndWait();
+            
+            if (result.isPresent()) {
+                if (result.get() == saveBtn) {
+                    boolean savedSuccessfully = saveExamToJsonWithResult();
+                    if (savedSuccessfully) {
+                        resetExam();
+                    }
+                } else if (result.get() == discardBtn) {
+                    resetExam();
+                } 
+            }
+        } else {
+            resetExam();
+        }
+    }
+
+    private void resetExam() {
+        exam = new Exam("", "", "", "", "", "", "");
+        updateUIFromExam();
+        clearQuestionFields();
+        setEditMode(false);
+        originalQuestionState = null;
+        isDirty = false;
+        updateTotalPoints();
+    }
 }
