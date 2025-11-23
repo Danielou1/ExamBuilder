@@ -528,23 +528,24 @@ public class WordExporter {
             if (tagName.equals("font") && element.hasAttr("color")) {
                 newColor = element.attr("color").replace("#", "");
             }
-             if (tagName.equals("code")) { // Courier New for code, but pre handles the block
+             if (tagName.equals("code")) { 
                 newFontFamily = "Courier New";
             }
 
             if (tagName.equals("pre")) {
+                XWPFParagraph codeParagraph = document.createParagraph();
+                setParagraphShading(codeParagraph, "F0F0F0");
                 String preText = element.wholeText();
-                String[] lines = preText.split("\n");
-
-                for (String line : lines) {
-                    XWPFParagraph codeParagraph = document.createParagraph();
-                    setParagraphShading(codeParagraph, "F0F0F0"); 
-                    
+                String[] lines = preText.split("\r?\n");
+                for (int i = 0; i < lines.length; i++) {
                     XWPFRun codeRun = codeParagraph.createRun();
                     codeRun.setFontFamily("Courier New");
-                    codeRun.setText(line);
+                    codeRun.setText(lines[i]);
+                    if (i < lines.length - 1) {
+                        codeRun.addBreak();
+                    }
                 }
-                return document.createParagraph(); 
+                return document.createParagraph();
             }
             
             if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol")) {
