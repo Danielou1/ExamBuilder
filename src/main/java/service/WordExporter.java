@@ -18,16 +18,16 @@ import org.apache.poi.xwpf.usermodel.XWPFHeader;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STFldCharType;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STShd;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
 
 import model.Exam;
 import model.Question;
@@ -86,25 +86,29 @@ public class WordExporter {
 
         XWPFTableRow row = table.getRow(0);
 
-        // Name field
-        XWPFTableCell nameLabelCell = row.getCell(0);
-        nameLabelCell.setText("Name: ");
-        nameLabelCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.LEFT);
-
-        XWPFTableCell nameValueCell = row.getCell(1);
-        XWPFRun nameRun = nameValueCell.getParagraphs().get(0).createRun();
-        nameRun.setText(" ".repeat(30)); // Add spaces to be underlined
-        nameRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
-
         // Matrikelnummer field
-        XWPFTableCell matrikelLabelCell = row.getCell(2);
+        XWPFTableCell matrikelLabelCell = row.getCell(0);
         matrikelLabelCell.setText("Matrikelnummer: ");
         matrikelLabelCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.LEFT);
 
-        XWPFTableCell matrikelValueCell = row.getCell(3);
+        XWPFTableCell matrikelValueCell = row.getCell(1);
+        // Apply shading to the cell
+        matrikelValueCell.getCTTc().addNewTcPr().addNewShd().setFill("F0F0F0");
         XWPFRun matrikelRun = matrikelValueCell.getParagraphs().get(0).createRun();
         matrikelRun.setText(" ".repeat(20)); // Add spaces to be underlined
         matrikelRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
+
+        // Name field
+        XWPFTableCell nameLabelCell = row.getCell(2);
+        nameLabelCell.setText("Name: ");
+        nameLabelCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.LEFT);
+
+        XWPFTableCell nameValueCell = row.getCell(3);
+        // Apply shading to the cell
+        nameValueCell.getCTTc().addNewTcPr().addNewShd().setFill("F0F0F0");
+        XWPFRun nameRun = nameValueCell.getParagraphs().get(0).createRun();
+        nameRun.setText(" ".repeat(30)); // Add spaces to be underlined
+        nameRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
     }
 
     private static void createPageNumbering(XWPFDocument document) {
@@ -206,7 +210,7 @@ public class WordExporter {
         row1.getCell(0).setWidth("33%");
         row1.getCell(1).setWidth("67%");
         setCellAlignment(row1.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
-        row1.getCell(0).setText("Name:");
+        row1.getCell(0).setText("Name");
         setCellAlignment(row1.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
         row1.getCell(1).setText(""); 
 
@@ -215,7 +219,7 @@ public class WordExporter {
         row2.getCell(0).setWidth("33%");
         row2.getCell(1).setWidth("67%");
         setCellAlignment(row2.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
-        row2.getCell(0).setText("Vorname:");
+        row2.getCell(0).setText("Vorname");
         setCellAlignment(row2.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
         row2.getCell(1).setText("");
 
@@ -224,7 +228,7 @@ public class WordExporter {
         row3.getCell(0).setWidth("33%");
         row3.getCell(1).setWidth("67%");
         setCellAlignment(row3.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
-        row3.getCell(0).setText("Matrikelnummer:");
+        row3.getCell(0).setText("Matrikelnummer");
         setCellAlignment(row3.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
         row3.getCell(1).setText("");
 
@@ -233,7 +237,7 @@ public class WordExporter {
         row4.getCell(0).setWidth("33%");
         row4.getCell(1).setWidth("67%");
         setCellAlignment(row4.getCell(0), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
-        row4.getCell(0).setText("Unterschrift:");
+        row4.getCell(0).setText("Unterschrift");
         setCellAlignment(row4.getCell(1), ParagraphAlignment.CENTER, STVerticalJc.CENTER); 
         row4.getCell(1).setText("");
 
@@ -479,6 +483,9 @@ public class WordExporter {
         Document parsedHtml = Jsoup.parse(contentToParse);
         // Start with a new paragraph for the HTML content
         XWPFParagraph paragraph = document.createParagraph();
+        if ("Lückentext".equals(question.getType())) {
+            paragraph.setAlignment(ParagraphAlignment.BOTH);
+        }
         processNode(parsedHtml.body(), paragraph, document, question, withSolutions, correctOptions, false, false, false, false, null, null, null);
 
         // For MCQs, processNode creates new paragraphs for each option, leaving this one empty.
@@ -552,6 +559,9 @@ public class WordExporter {
             if (tagName.equals("p") || tagName.equals("div") || tagName.equals("ul") || tagName.equals("ol")) {
                 if (!paragraph.getRuns().isEmpty() || paragraph.getCTP().getPPr() != null) {
                     paragraph = document.createParagraph();
+                    if ("Lückentext".equals(question.getType())) {
+                        paragraph.setAlignment(ParagraphAlignment.BOTH);
+                    }
                 }
             }
             

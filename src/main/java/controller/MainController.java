@@ -344,7 +344,7 @@ public class MainController {
                                     "  dummyDiv.appendChild(documentFragment); " +
                                     "  var plainText = dummyDiv.innerText; " +
                                     "  var escapedText = plainText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); " +
-                                    "  document.execCommand('insertHTML', false, '<pre><code>' + escapedText + '</code></pre>'); " +
+                                    "  document.execCommand('insertHTML', false, '<pre style=\"margin: 0;\"><code>' + escapedText + '</code></pre>'); " +
                                     "}";
                     engine.executeScript(jsCode);
                 }
