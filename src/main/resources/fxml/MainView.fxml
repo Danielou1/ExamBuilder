@@ -122,7 +122,11 @@
                         </HBox>
                         <ImageView fx:id="questionImageView" fitHeight="100.0" fitWidth="150.0" pickOnBounds="true" preserveRatio="true" />
                         <TextField fx:id="questionPointsField" promptText="Punkte" />
-                        <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Antwortzeilen:" />
+                            <Spinner fx:id="answerLinesField" min="0" max="20" initialValue="0" editable="true"/>
+                            <CheckBox fx:id="largeAnswerBoxCheckBox" text="Großer Antwortkasten" />
+                        </HBox>
                         <MenuButton fx:id="actionsMenuButton" text="Aktionen">
                             <items>
                                 <MenuItem fx:id="addQuestionMenuItem" text="Frage hinzufügen" onAction="#addQuestion" />

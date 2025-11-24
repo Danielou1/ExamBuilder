@@ -25,6 +25,7 @@ public class Question {
     private String musterloesungImageBase64;
     private final BooleanProperty startOnNewPage = new SimpleBooleanProperty(false); // New field for page break
     private final BooleanProperty justify = new SimpleBooleanProperty(false); // New field for justification
+    private final BooleanProperty largeAnswerBox = new SimpleBooleanProperty(false); // New field for large answer box
 
     private final BooleanProperty selected = new SimpleBooleanProperty(true);
 
@@ -33,6 +34,7 @@ public class Question {
         this.subQuestions = new ArrayList<>();
         this.startOnNewPage.set(false); // Initialize new field
         this.justify.set(false); // Initialize new field
+        this.largeAnswerBox.set(false);
     }
 
     public Question(String title, String text, int points, String type, int answerLines) {
@@ -45,6 +47,7 @@ public class Question {
         this.subQuestions = new ArrayList<>();
         this.startOnNewPage.set(false); // Initialize new field
         this.justify.set(false); // Initialize new field
+        this.largeAnswerBox.set(false);
     }
 
     public Question(Question other) {
@@ -60,6 +63,7 @@ public class Question {
         this.selected.set(other.selected.get()); // Copy the boolean property value
         this.startOnNewPage.set(other.startOnNewPage.get()); // Copy new field
         this.justify.set(other.justify.get()); // Copy new field
+        this.largeAnswerBox.set(other.largeAnswerBox.get());
         // Deep copy subQuestions if they exist
         if (other.subQuestions != null) {
             this.subQuestions = new ArrayList<>();
@@ -217,5 +221,18 @@ public class Question {
 
     public void setJustify(boolean justify) {
         this.justify.set(justify);
+    }
+
+    @JsonIgnore
+    public boolean isLargeAnswerBox() {
+        return largeAnswerBox.get();
+    }
+
+    public BooleanProperty largeAnswerBoxProperty() {
+        return largeAnswerBox;
+    }
+
+    public void setLargeAnswerBox(boolean largeAnswerBox) {
+        this.largeAnswerBox.set(largeAnswerBox);
     }
 }

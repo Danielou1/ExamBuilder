@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -292,15 +294,11 @@ public class WordExporter {
         for (int i = 0; i < exam.getQuestions().size(); i++) {
             Question q = exam.getQuestions().get(i);
 
-            // If the checkbox for a main question is ticked, add an extra page break to create a blank page.
-            if (q.isStartOnNewPage()) {
-                document.createParagraph().setPageBreak(true);
-            }
-
             writeQuestion(document, q, String.valueOf(i + 1), withSolutions, false);
 
-            // Always add a page break after a main question, unless it's the last one.
-            if (i < exam.getQuestions().size() - 1) {
+            // A page break is only inserted if the user explicitly checked 'startOnNewPage' for that question.
+            // The break is inserted AFTER the question, separating it from the next one.
+            if (q.isStartOnNewPage()) {
                 document.createParagraph().setPageBreak(true);
             }
         }
@@ -355,8 +353,7 @@ public class WordExporter {
             try {
                 byte[] imageBytes = Base64.decodeBase64(question.getImageBase64());
                 XWPFParagraph imageParagraph = document.createParagraph();
-                XWPFRun imageRun = imageParagraph.createRun();
-                imageRun.addPicture(new ByteArrayInputStream(imageBytes), XWPFDocument.PICTURE_TYPE_PNG, "question_image.png", Units.toEMU(400), Units.toEMU(300));
+                addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "question_image.png");
             } catch (IOException | InvalidFormatException e) {
                 e.printStackTrace();
             }
@@ -393,22 +390,29 @@ public class WordExporter {
                 try {
                     byte[] imageBytes = Base64.decodeBase64(question.getMusterloesungImageBase64());
                     XWPFParagraph imageParagraph = document.createParagraph();
-                    XWPFRun imageRun = imageParagraph.createRun();
-                    imageRun.addPicture(new ByteArrayInputStream(imageBytes), XWPFDocument.PICTURE_TYPE_PNG, "solution_image.png", Units.toEMU(400), Units.toEMU(300));
+                    addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "solution_image.png");
                 } catch (IOException | InvalidFormatException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            // Only add answer lines for non-MCQ and non-Lückentext questions
+            // Logic for creating the answer area
             if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getAnswerLines() > 0) {
                 XWPFTable answerTable = document.createTable(question.getAnswerLines(), 1);
                 answerTable.setWidth("100%");
+
+                if (question.isLargeAnswerBox()) {
+                    // For a large answer box, remove the inner horizontal lines
+                    answerTable.setInsideHBorder(XWPFTable.XWPFBorderType.NONE, 0, 0, "FFFFFF");
+                }
+
+                // Create the rows and cells as before; the number of lines still determines the height
                 for (int i = 0; i < question.getAnswerLines(); i++) {
                     XWPFTableRow row = answerTable.getRow(i);
                     XWPFTableCell cell = row.getCell(0);
                     setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
-                    cell.setText(""); // Empty cell to create a line
+                    // Add a paragraph with a single space to ensure cell height is respected
+                    cell.setText(" ");
                 }
             }
         }
@@ -416,8 +420,11 @@ public class WordExporter {
         if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {
             for (int i = 0; i < question.getSubQuestions().size(); i++) {
                 Question subQuestion = question.getSubQuestions().get(i);
+                
+                // Write the sub-question first.
+                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions, true);
 
-                // Insert page break if the sub-question is marked to start on a new page
+                // Insert page break AFTER the question if the sub-question is marked to start on a new page
                 if (subQuestion.isStartOnNewPage()) {
                     // Add continuation message to the previous page
                     XWPFParagraph continueMessage = document.createParagraph();
@@ -430,7 +437,6 @@ public class WordExporter {
                     // Insert page break
                     document.createParagraph().setPageBreak(true);
                 }
-                writeQuestion(document, subQuestion, questionNumber + "." + (char)('a' + i), withSolutions, true);
             }
         }
     }
@@ -683,5 +689,25 @@ public class WordExporter {
         for (XWPFParagraph p : cell.getParagraphs()) {
             p.setAlignment(horizontal);
         }
+    }
+
+    private static void addScaledPicture(XWPFParagraph paragraph, byte[] imageBytes, int type, String filename) throws InvalidFormatException, IOException {
+        final int MAX_WIDTH_POINTS = 400; // Max width in points (1/72 of an inch)
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+        BufferedImage bimg = ImageIO.read(bis);
+        double width = bimg.getWidth();
+        double height = bimg.getHeight();
+
+        double scale = 1.0;
+        if (width > MAX_WIDTH_POINTS) {
+            scale = MAX_WIDTH_POINTS / width;
+        }
+
+        long finalWidthEMU = (long) (width * scale * Units.EMU_PER_POINT);
+        long finalHeightEMU = (long) (height * scale * Units.EMU_PER_POINT);
+
+        XWPFRun imageRun = paragraph.createRun();
+        imageRun.addPicture(new ByteArrayInputStream(imageBytes), type, filename, (int)finalWidthEMU, (int)finalHeightEMU);
     }
 }

@@ -122,6 +122,8 @@ public class MainController {
     @FXML
     private Spinner<Integer> answerLinesField;
     @FXML
+    private CheckBox largeAnswerBoxCheckBox;
+    @FXML
     private ImageView questionImageView;
     @FXML
     private Button addSolutionImageButton;
@@ -698,6 +700,7 @@ public class MainController {
         questionPointsField.setText(String.valueOf(question.getPoints()));
         questionTypeField.setValue(question.getType());
         answerLinesField.getValueFactory().setValue(question.getAnswerLines());
+        largeAnswerBoxCheckBox.setSelected(question.isLargeAnswerBox());
 
         newQuestionImageBase64 = question.getImageBase64();
         if (newQuestionImageBase64 != null && !newQuestionImageBase64.isEmpty()) {
@@ -869,7 +872,8 @@ public class MainController {
                     questionToUpdate.setAnswerLines(answerLinesField.getValue());
                 }
                 questionToUpdate.setStartOnNewPage(selectedItem.getValue().isStartOnNewPage()); 
-                questionToUpdate.setJustify(selectedItem.getValue().isJustify()); 
+                questionToUpdate.setJustify(selectedItem.getValue().isJustify());
+                questionToUpdate.setLargeAnswerBox(largeAnswerBoxCheckBox.isSelected());
                 if (newQuestionImageBase64 != null) {
                     questionToUpdate.setImageBase64(newQuestionImageBase64);
                 }
@@ -1018,7 +1022,8 @@ public class MainController {
         Question newQuestion = new Question(title, text, points, type, answerLines);
         newQuestion.setMusterloesung(musterloesungField.getText());
         newQuestion.setStartOnNewPage(false); 
-        newQuestion.setJustify(false); 
+        newQuestion.setJustify("Lückentext".equals(type));
+        newQuestion.setLargeAnswerBox(largeAnswerBoxCheckBox.isSelected());
         
         if (newQuestionImageBase64 != null) {
             newQuestion.setImageBase64(newQuestionImageBase64);
@@ -1347,6 +1352,7 @@ public class MainController {
         questionPointsField.clear();
         questionTypeField.setValue(null);
         answerLinesField.getValueFactory().setValue(0);
+        largeAnswerBoxCheckBox.setSelected(false);
         questionImageView.setImage(null);
         musterloesungImageView.setImage(null);
         newQuestionImageBase64 = null;
