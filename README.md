@@ -2,71 +2,77 @@
 
 [![Java CI with Maven](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml/badge.svg)](https://github.com/Danielou1/ExamBuilder/actions/workflows/build.yml)
 
-## Conception, Design and Implementation of a Software Solution for the Automated Creation and Administration of Exams
+## Conception and Implementation of a Software Solution for the Automated Creation and Administration of Exams
 
-ExamBuilder is a modern desktop application designed for educators to streamline the creation, management, and distribution of exams. With an intuitive user interface, it allows for the creation of complex exams, which can be saved, loaded, and exported into multiple standard formats.
+ExamBuilder is a modern desktop application designed for educators to streamline the creation, management, and export of exams. Developed in JavaFX as a bachelor thesis project, it focuses on solving the practical challenges teachers face by providing a robust alternative to traditional word processors.
 
-## Screenshots
+---
 
-| Main Window | Instructions Dialog (Link) |
-| :---: | :---: |
-| ![Main Window (PDF)](img/exam.pdf) | [Instructions Dialog (PDF)](img/hinweise.pdf) |
+### Screenshots
 
-## Key Features
+*Add screenshots of your application here to visually showcase its interface.*
 
-*   **Exam Project Management:** Create, save, and load entire exam projects in JSON format.
-*   **Advanced Question Management:** Add, edit, and delete complex questions with nested sub-questions.
-*   **Image Support:** Add images to questions, which are displayed in the UI and embedded in the final Word document.
-*   **Supported Question Types:**
-    *   Multiple Choice Questions (MCQ)
-    *   Open-Ended Questions
-*   **Customizable Instructions:** A dedicated dialog allows for configuring the exam duration and allowed aids (calculator, notes, etc.) by modifying a standard text template.
-*   **Selective Export:** A dedicated "Selection Mode" allows for precisely choosing which questions to include in the final document.
-*   **Flexible Export Options:**
-    *   **Export to `.docx`:** Generates a professional exam in Microsoft Word format.
-    *   **Export Answer Key:** Generates a separate document with the solutions.
-    *   **Export Varied Version:** Generates a version of the exam where question text is rephrased (using a local synonym dictionary) and the order of sub-questions is shuffled.
-*   **Modern User Interface:**
-    *   Switch between Light and Dark themes.
-    *   Responsive layout that adapts to different screen sizes using a scrollable editing pane.
-    *   Icons (via FontAwesomeFX) and tooltips for a better user experience.
-    *   Autocomplete field for German university names.
-    *   Right-click context menus for quick access to actions.
+**Main Window:**
+![Main Window Screenshot](Bachelorarbeit/img/screenshot_main.png)
 
-## Recent Updates
+**Question Editor:**
+![Question Editor Screenshot](Bachelorarbeit/img/screenshot_editor.png)
 
-*   **New Exam with Save Prompt:** Added a "New Exam" feature in the File menu. Loading an exam from JSON or making any modification now correctly flags the session as having unsaved changes, ensuring the user is prompted to save their work before creating a new exam or importing another file.
-*   **Enhanced HTML Editor Data Binding:** Changes made in the rich text editor are now automatically saved to the question model when the editor loses focus, ensuring all modifications are preserved during export.
-*   **Accurate Word Formatting:** Resolved issues with bold, italic, and underline styles not being correctly applied in the generated Word documents.
-*   **Improved MCQ Detection:** Refined the detection logic for multiple-choice options in Word export to prevent unintended checkbox insertions within regular text.
-*   **Reduced Spacing in Word Export (MCQ):** Significantly reduced excessive vertical spacing between MCQ question titles and options, and between individual options, in the generated Word documents for a cleaner layout.
-*   **Robust Lückentext UI Update:** Implemented a more robust mechanism to prevent 'Lückentext' content from being overwritten by placeholder text during UI updates, ensuring user input persistence.
-*   **Clear Fields for Sub-Questions:** Ensured that GUI input fields are automatically cleared when preparing to add a new sub-question, providing a clean slate for new entries.
-*   **Resolved Unsaved Changes Dialog Loop:** Fixed an issue causing the 'Unsaved Changes' confirmation dialog to reappear in an infinite loop under certain conditions.
-*   **PDF Export Deprecation:** Please note that PDF export is no longer supported; only Word export is available.
-*   **UI Language:** The entire application user interface is in German.
+---
 
-## Technologies Used
+## Core Features
 
-*   **Core:** Java 19, JavaFX 19
-*   **Build:** Maven (with Maven Wrapper)
-*   **CI/CD:** GitHub Actions
-*   **Core Libraries:**
-    *   **Apache POI `5.2.2`** (for `.docx` Word export)
-    *   **Jackson `2.13.3`** (for `.json` serialization)
-    *   **ControlsFX `11.1.2`** (for autocomplete functionality)
-    *   **FontAwesomeFX `4.7.0-9.1.2`** (for icons)
-*   **Testing:** JUnit 5 `5.8.2`
+#### Exam Project Management
+- **Create, Save, Load:** Manage complete exam projects in `JSON` format, with smart prompts to prevent losing unsaved changes.
+- **Robust Import:** Easily import existing `JSON` files, even from older versions of the application.
+
+#### Question Authoring
+- **Rich Text Editor (HTML):** Format question text (bold, italic, underline) and create bulleted or numbered lists with an integrated HTML editor.
+- **Image Support:** Embed images directly into questions. They are previewed in the UI and included in the Word export.
+- **Varied Question Types:** Supports Multiple Choice Questions (MCQ), Open-Ended Questions, and Fill-in-the-Blank (`Lückentext`).
+- **Hierarchical Structure:** Organize exams into exercises and questions, with the ability to add nested sub-questions.
+
+#### Export and Customization
+- **Export to Microsoft Word (`.docx`):** Generate professional and well-formatted exam documents and answer keys.
+- **Selective Content:** Precisely choose which questions to include in the final export using a dedicated selection mode.
+- **Controlled Layout:** Use the "New Page" option to insert page breaks before main questions, ensuring a clean layout.
+- **Automated Answer Key:** Generate a separate answer sheet (`Musterlösung`) that includes both textual and visual solutions.
+- **Question Shuffling:** Shuffle the order of questions within an exercise to create exam variations.
+- **Question Rephrasing:** Alter the wording of questions by replacing words with synonyms (based on a local dictionary, no AI).
+
+#### Modern User Interface
+- **Light & Dark Themes:** Switch between two themes for better visual comfort.
+- **German UI:** The entire user interface is designed in German for local relevance.
+- **Intuitive Design:** Enjoy icons, tooltips, and context menus for a smooth and efficient workflow.
+
+---
+
+## Tech Stack
+
+- **Language:** Java 19
+- **UI Framework:** JavaFX 19
+- **Build Management:** Maven
+- **Continuous Integration:** GitHub Actions
+
+#### Core Libraries
+- **Apache POI `5.2.2`:** For generating `.docx` (Microsoft Word) files.
+- **Jackson `2.13.3`:** For `JSON` data serialization and deserialization.
+- **Jsoup `1.15.3`:** For parsing and cleaning HTML content from the rich text editor.
+- **ControlsFX `11.1.2`:** For advanced UI components like autocomplete fields.
+- **FontAwesomeFX `4.7.0-9.1.2`:** For icon integration.
+
+#### Testing
+- **JUnit 5 `5.8.2`**
+
+---
 
 ## Getting Started
 
 ### Prerequisites
+- JDK (Java Development Kit) - Version 19 or higher.
+- Apache Maven (recommended via the included Maven Wrapper).
 
-*   JDK (Java Development Kit) version 19 or higher.
-*   Apache Maven.
-
-### Build
-
+### Building
 To build the project and install dependencies, run the following command from the root directory:
 
 ```bash
@@ -78,8 +84,7 @@ To build the project and install dependencies, run the following command from th
 ```
 
 ### Running
-
-After building the project, you can run the application using:
+After building, launch the application with the command:
 
 ```bash
 # On Windows
@@ -89,13 +94,16 @@ After building the project, you can run the application using:
 ./mvnw javafx:run
 ```
 
+---
+
 ## Author
 
-*   **Danielou Mounsande**
-*   **Email:** mounsandedaniel@gmail.com
-*   **GitHub:** [github.com/Danielou1](https://github.com/Danielou1)
-*   **LinkedIn:** [linkedin.com/in/danielou-mounsande](https://www.linkedin.com/in/danielou-mounsande)
+- **Danielou Mounsande**
+- **Email:** mounsandedaniel@gmail.com
+- **GitHub:** [github.com/Danielou1](https://github.com/Danielou1)
+- **LinkedIn:** [linkedin.com/in/danielou-mounsande](https://www.linkedin.com/in/danielou-mounsande)
+
+---
 
 ## License
-
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

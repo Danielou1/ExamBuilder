@@ -294,13 +294,19 @@ public class WordExporter {
         for (int i = 0; i < exam.getQuestions().size(); i++) {
             Question q = exam.getQuestions().get(i);
 
-            writeQuestion(document, q, String.valueOf(i + 1), withSolutions, false);
+            // Default behavior: Each main question starts on a new page.
+            // A page break is added BEFORE the question, but not for the very first one (i=0)
+            // as it already follows the cover page's page break.
+            if (i > 0) {
+                document.createParagraph().setPageBreak(true);
+            }
 
-            // A page break is only inserted if the user explicitly checked 'startOnNewPage' for that question.
-            // The break is inserted AFTER the question, separating it from the next one.
+            // "Neue Seite" checkbox logic: If checked, add an EXTRA page break to create a blank page.
             if (q.isStartOnNewPage()) {
                 document.createParagraph().setPageBreak(true);
             }
+
+            writeQuestion(document, q, String.valueOf(i + 1), withSolutions, false);
         }
     }
 

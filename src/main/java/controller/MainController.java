@@ -275,7 +275,7 @@ public class MainController {
 
                         if (result.isPresent()) {
                             if (result.get() == saveButton) {
-                                if (!updateQuestionAndReturnSuccess()) {
+                                if (!updateQuestionAndReturnSuccess(oldValue)) { // Pass oldValue to the save method
                                     // Save failed, revert selection and stay on oldValue
                                     isRevertingSelection = true;
                                     questionsTable.getSelectionModel().select(oldValue);
@@ -352,6 +352,8 @@ public class MainController {
                 }
             });
         }
+
+        updateQuestionMenuItem.setOnAction(e -> updateQuestionAndReturnSuccess(questionsTable.getSelectionModel().getSelectedItem()));
 
         setEditMode(false);
         setTooltips();
@@ -527,7 +529,7 @@ public class MainController {
         MenuItem editItem = new MenuItem("Frage bearbeiten");
         editItem.setOnAction(e -> editQuestion());
         MenuItem saveItem = new MenuItem("Änderungen speichern");
-        saveItem.setOnAction(e -> updateQuestionAndReturnSuccess());
+        saveItem.setOnAction(e -> updateQuestionAndReturnSuccess(questionsTable.getSelectionModel().getSelectedItem()));
         MenuItem deleteItem = new MenuItem("Frage löschen");
         deleteItem.setOnAction(e -> deleteQuestion());
         MenuItem addSubItem = new MenuItem("Sub-Frage hinzufügen");
@@ -665,7 +667,7 @@ public class MainController {
                 return; // User canceled, do not proceed with new question
             }
              if (result.isPresent() && result.get() == saveButton) {
-                if (!updateQuestionAndReturnSuccess()) {
+                if (!updateQuestionAndReturnSuccess(questionsTable.getSelectionModel().getSelectedItem())) {
                     return; 
                 }
             }
@@ -828,7 +830,7 @@ public class MainController {
         }
     }
 
-    public boolean updateQuestionAndReturnSuccess() {
+    public boolean updateQuestionAndReturnSuccess(TreeItem<Question> itemToUpdate) {
         if (questionPointsField.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Punktzahl fehlt");
@@ -852,7 +854,7 @@ public class MainController {
             return false;
         }
 
-        TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
+        TreeItem<Question> selectedItem = itemToUpdate;
         if (selectedItem != null) {
             try {
                 Question questionToUpdate = selectedItem.getValue();
@@ -881,7 +883,8 @@ public class MainController {
                     questionToUpdate.setMusterloesungImageBase64(newQuestionSolutionImageBase64);
                 }
                 isDirty = true;
-                refreshTreeTableView();
+                questionsTable.refresh();
+                updateTotalPoints();
                 this.originalQuestionState = new Question(questionToUpdate);
                 populateQuestionDetails(questionToUpdate); 
                 setEditMode(false);
@@ -896,7 +899,7 @@ public class MainController {
                 return false; 
             }
         } else {
-            System.out.println("Please select a question to update.");
+            System.out.println("No item provided to update.");
             return false;
         }
     }
@@ -1388,10 +1391,15 @@ public class MainController {
 
     private boolean areChangesMade() {
         if (originalQuestionState == null) {
+            // HTMLEditor returns a full HTML document structure even when empty.
+            // We need to check if the body of this HTML contains any actual text.
+            String htmlContent = questionTextField.getHtmlText();
+            boolean hasVisibleTextInEditor = !Jsoup.parse(htmlContent).body().text().trim().isEmpty();
+
             return !questionTitleField.getText().isEmpty() ||
-                   !questionTextField.getHtmlText().isEmpty() ||
-                   !musterloesungField.getText().isEmpty() ||
-                   !questionPointsField.getText().isEmpty();
+                hasVisibleTextInEditor ||
+                !musterloesungField.getText().isEmpty() ||
+                !questionPointsField.getText().isEmpty();
         }
 
         int currentPoints = 0;
