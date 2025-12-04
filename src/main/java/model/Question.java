@@ -10,7 +10,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Datenmodell für eine einzelne Frage in der Klausur.
+ * Represents the data model for a single question within an exam.
+ * Questions can have a title, text (HTML content), points, type,
+ * and can contain sub-questions, allowing for hierarchical structures.
+ * It also includes properties for solutions, images, and various
+ * display/export options like page breaks and justification.
  */
 public class Question {
     private UUID id;

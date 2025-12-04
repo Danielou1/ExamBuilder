@@ -6,6 +6,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main entry point for the ExamBuilder JavaFX application.
+ * This class extends {@link javafx.application.Application} and is
+ * responsible for initializing the primary stage, loading the main
+ * user interface from `MainView.fxml`, and setting up the core controller.
+ */
 public class ExamBuilder extends Application {
 
     @Override

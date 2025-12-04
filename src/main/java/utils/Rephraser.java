@@ -13,6 +13,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+/**
+ * Utility class for rephrasing text without using AI, by replacing
+ * words with synonyms loaded from an external thesaurus file.
+ * This is primarily used for generating varied versions of exam questions.
+ */
 public class Rephraser {
 
     private static final Map<String, List<String>> thesaurus = new HashMap<>();

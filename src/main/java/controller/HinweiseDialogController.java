@@ -14,6 +14,13 @@ import service.WordExporter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controller for the "Hinweise" (Instructions) dialog, which allows the user
+ * to configure general exam instructions, allowed aids (Hilfsmittel) using
+ * checkboxes and custom text, and the exam duration (Bearbeitungszeit).
+ * It updates the corresponding fields in the {@link model.Exam} object and
+ * provides a live preview of the generated instructions.
+ */
 public class HinweiseDialogController {
 
     @FXML

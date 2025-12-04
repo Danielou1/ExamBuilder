@@ -3,6 +3,11 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the data model for an entire exam, including its metadata
+ * such as title, author, module, semester, department, university,
+ * allowed aids, general instructions, exam duration, and a list of questions.
+ */
 public class Exam {
     private String title;
     private String author;

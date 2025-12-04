@@ -67,6 +67,12 @@ import service.WordExporter;
 import utils.LoadingIndicator;
 import utils.Rephraser;
 
+/**
+ * Primary controller for the ExamBuilder application's main view.
+ * Manages all user interactions, data flow between the UI and the {@link model.Exam} model,
+ * and orchestrates core functionalities such as question creation, editing, deletion,
+ * exam loading/saving, and exporting to various formats.
+ */
 public class MainController {
 
     @FXML

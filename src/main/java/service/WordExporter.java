@@ -34,6 +34,13 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc;
 import model.Exam;
 import model.Question;
 
+/**
+ * Service class responsible for exporting an {@link model.Exam} object
+ * to a Microsoft Word (.docx) document using Apache POI library.
+ * It handles the generation of exam papers, answer keys, and various
+ * formatting requirements including HTML content conversion, image embedding,
+ * and specific handling for different question types (MCQ, fill-in-the-blank, true/false).
+ */
 public class WordExporter {
 
     private static final String STANDARD_HINWEISE = "\nHinweise:\n" +
