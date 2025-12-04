@@ -383,18 +383,7 @@ public class WordExporter {
      * @param isSubQuestion {@code true} if the current question is a sub-question, {@code false} otherwise.
      */
     private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions, boolean isSubQuestion) {
-        XWPFParagraph questionTitle = document.createParagraph();
-        if (question.isJustify()) {
-            questionTitle.setAlignment(ParagraphAlignment.BOTH);
-        }
-        // Fix for NullPointerException: Ensure the paragraph properties object exists.
-        if (questionTitle.getCTP().getPPr() == null) {
-            questionTitle.getCTP().addNewPPr();
-        }
-        questionTitle.getCTP().getPPr().addNewKeepLines().setVal(true); // Prevents the title itself from splitting
-        questionTitle.setKeepNext(true);  // Keeps the title with the next paragraph
-        XWPFRun questionTitleRun = questionTitle.createRun();
-        
+        // Prepare title components
         String titlePrefix;
         if (questionNumber.contains(".")) {
             titlePrefix = questionNumber.substring(questionNumber.lastIndexOf('.') + 1) + ". ";
@@ -418,88 +407,149 @@ public class WordExporter {
             }
         }
 
-        questionTitleRun.setText(titlePrefix + titleText + pointsText);
-        questionTitleRun.setBold(true);
+        // Decide if we need a table for Richtig/Falsch questions or a simple paragraph for others
+        if ("Richtig/Falsch".equals(question.getType())) {
+            XWPFTable questionTitleTable = document.createTable(1, 3);
+            questionTitleTable.setWidth("100%");
+            questionTitleTable.getCTTbl().getTblPr().unsetTblBorders(); // No borders for a clean look
 
-        // Reduce space after the question title for MCQ type questions
-        if ("MCQ".equals(question.getType())) {
-            questionTitle.setSpacingAfter(0);
-        }
+            XWPFTableRow row = questionTitleTable.getRow(0);
 
-        // Handle question image
-        if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
-            try {
-                byte[] imageBytes = Base64.decodeBase64(question.getImageBase64());
-                XWPFParagraph imageParagraph = document.createParagraph();
-                addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "question_image.png");
-            } catch (IOException | InvalidFormatException e) {
-                e.printStackTrace();
+            // Cell 1: Statement (Left Aligned)
+            XWPFTableCell statementCell = row.getCell(0);
+            setCellAlignment(statementCell, ParagraphAlignment.LEFT, STVerticalJc.CENTER);
+            XWPFRun statementRun = statementCell.getParagraphs().get(0).createRun();
+            statementRun.setText(titlePrefix + titleText);
+            statementRun.setBold(true);
+
+            // Cell 2: Points (Right Aligned, but in middle column for spacing)
+            XWPFTableCell pointsCell = row.getCell(1);
+            setCellAlignment(pointsCell, ParagraphAlignment.RIGHT, STVerticalJc.CENTER);
+            XWPFRun pointsRun = pointsCell.getParagraphs().get(0).createRun();
+            pointsRun.setText(pointsText);
+            pointsRun.setBold(true);
+
+            // Cell 3: Checkboxes (Right Aligned), only if no sub-questions
+            XWPFTableCell checkboxesCell = row.getCell(2);
+            setCellAlignment(checkboxesCell, ParagraphAlignment.RIGHT, STVerticalJc.CENTER);
+            
+            // Only add checkboxes if the question has no sub-questions
+            if (question.getSubQuestions() == null || question.getSubQuestions().isEmpty()) {
+                String musterloesung = question.getMusterloesung();
+                boolean isRichtigCorrect = withSolutions && "Richtig".equalsIgnoreCase(musterloesung);
+                boolean isFalschCorrect = withSolutions && "Falsch".equalsIgnoreCase(musterloesung);
+
+                XWPFRun richtigRun = checkboxesCell.getParagraphs().get(0).createRun();
+                richtigRun.setText((isRichtigCorrect ? "☑" : "☐") + " Richtig");
+                richtigRun.addTab(); 
+                XWPFRun falschRun = checkboxesCell.getParagraphs().get(0).createRun();
+                falschRun.setText((isFalschCorrect ? "☑" : "☐") + " Falsch");
             }
-        }
+            // For Richtig/Falsch questions, no further HTML content or answer area for the main question.
+            // Sub-questions will be handled recursively.
 
-        List<String> correctOptions = null;
-        if (withSolutions && "MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
-            correctOptions = Arrays.stream(question.getMusterloesung().toUpperCase().split("[,\\s]+"))
-                                 .map(String::trim)
-                                 .filter(s -> !s.isEmpty())
-                                 .collect(Collectors.toList());
-        }
+        } else { // Original logic for all other question types
+            XWPFParagraph questionTitle = document.createParagraph();
+            if (question.isJustify()) {
+                questionTitle.setAlignment(ParagraphAlignment.BOTH);
+            }
+            // Fix for NullPointerException: Ensure the paragraph properties object exists.
+            if (questionTitle.getCTP().getPPr() == null) {
+                questionTitle.getCTP().addNewPPr();
+            }
+            questionTitle.getCTP().getPPr().addNewKeepLines().setVal(true); // Prevents the title itself from splitting
+            questionTitle.setKeepNext(true);  // Keeps the title with the next paragraph
+            XWPFRun questionTitleRun = questionTitle.createRun();
+            
+            questionTitleRun.setText(titlePrefix + titleText + pointsText);
+            questionTitleRun.setBold(true);
 
-        if ("Lückentext".equals(question.getType()) && withSolutions) {
-            handleLueckentextSolution(document, question);
-        } else if ("Richtig/Falsch".equals(question.getType())) {
-            handleRichtigFalsch(document, question, withSolutions);
-        } else if (question.getText() != null && !question.getText().isEmpty()) {
-            appendHtml(document, question, withSolutions, correctOptions, null);
-        }
-
-        if ("MCQ".equals(question.getType())) {
-            XWPFParagraph spacingParagraph = document.createParagraph();
-            spacingParagraph.setSpacingAfter(0); // Standard line space
-        }
-
-        if (withSolutions) {
-            // For non-MCQ and non-Lückentext questions, print the musterloesung text field.
-            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
-                XWPFParagraph solutionParagraph = document.createParagraph();
-                XWPFRun solutionRun = solutionParagraph.createRun();
-                solutionRun.setText("\nLösung: " + question.getMusterloesung());
-                solutionRun.setColor("0000FF"); // Blue color for the solution
-                solutionRun.setItalic(true);
+            // Reduce space after the question title for MCQ type questions
+            if ("MCQ".equals(question.getType())) {
+                questionTitle.setSpacingAfter(0);
             }
 
-            // Handle solution image
-            if (withSolutions && question.getMusterloesungImageBase64() != null && !question.getMusterloesungImageBase64().isEmpty()) {
+            // Handle question image
+            if (question.getImageBase64() != null && !question.getImageBase64().isEmpty()) {
                 try {
-                    byte[] imageBytes = Base64.decodeBase64(question.getMusterloesungImageBase64());
+                    byte[] imageBytes = Base64.decodeBase64(question.getImageBase64());
                     XWPFParagraph imageParagraph = document.createParagraph();
-                    addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "solution_image.png");
+                    addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "question_image.png");
                 } catch (IOException | InvalidFormatException e) {
                     e.printStackTrace();
                 }
             }
-        } else {
-            // Logic for creating the answer area
-            if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getAnswerLines() > 0) {
-                XWPFTable answerTable = document.createTable(question.getAnswerLines(), 1);
-                answerTable.setWidth("100%");
 
-                if (question.isLargeAnswerBox()) {
-                    // For a large answer box, remove the inner horizontal lines
-                    answerTable.setInsideHBorder(XWPFTable.XWPFBorderType.NONE, 0, 0, "FFFFFF");
+            List<String> correctOptions = null;
+            if (withSolutions && "MCQ".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+                correctOptions = Arrays.stream(question.getMusterloesung().toUpperCase().split("[,\\s]+"))
+                                     .map(String::trim)
+                                     .filter(s -> !s.isEmpty())
+                                     .collect(Collectors.toList());
+            }
+
+            if ("Lückentext".equals(question.getType()) && withSolutions) {
+                handleLueckentextSolution(document, question);
+            } else if (question.getText() != null && !question.getText().isEmpty()) {
+                appendHtml(document, question, withSolutions, correctOptions, null);
+            }
+        } // End of else block for non-"Richtig/Falsch" questions
+
+
+        // This is the common spacing after MCQs and Richtig/Falsch questions without sub-questions.
+        // It needs to be placed outside the if/else that defines the question content itself.
+        if ("MCQ".equals(question.getType()) || ("Richtig/Falsch".equals(question.getType()) && (question.getSubQuestions() == null || question.getSubQuestions().isEmpty()))) {
+            XWPFParagraph spacingParagraph = document.createParagraph();
+            spacingParagraph.setSpacingAfter(0); // Standard line space
+        }
+
+        // Common logic for solution display or answer area
+        // This block needs to be outside the if/else for Richtig/Falsch, but ensure it's
+        // only for questions that actually need it.
+        if (!"Richtig/Falsch".equals(question.getType()) || (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty())) {
+            if (withSolutions) {
+                // For non-MCQ and non-Lückentext questions, print the musterloesung text field.
+                if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getMusterloesung() != null && !question.getMusterloesung().isEmpty()) {
+                    XWPFParagraph solutionParagraph = document.createParagraph();
+                    XWPFRun solutionRun = solutionParagraph.createRun();
+                    solutionRun.setText("\nLösung: " + question.getMusterloesung());
+                    solutionRun.setColor("0000FF"); // Blue color for the solution
+                    solutionRun.setItalic(true);
                 }
 
-                // Create the rows and cells as before; the number of lines still determines the height
-                for (int i = 0; i < question.getAnswerLines(); i++) {
-                    XWPFTableRow row = answerTable.getRow(i);
-                    XWPFTableCell cell = row.getCell(0);
-                    setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
-                    // Add a paragraph with a single space to ensure cell height is respected
-                    cell.setText(" ");
+                // Handle solution image
+                if (withSolutions && question.getMusterloesungImageBase64() != null && !question.getMusterloesungImageBase64().isEmpty()) {
+                    try {
+                        byte[] imageBytes = Base64.decodeBase64(question.getMusterloesungImageBase64());
+                        XWPFParagraph imageParagraph = document.createParagraph();
+                        addScaledPicture(imageParagraph, imageBytes, XWPFDocument.PICTURE_TYPE_PNG, "solution_image.png");
+                    } catch (IOException | InvalidFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                // Logic for creating the answer area
+                if (!"MCQ".equals(question.getType()) && !"Lückentext".equals(question.getType()) && question.getAnswerLines() > 0) {
+                    XWPFTable answerTable = document.createTable(question.getAnswerLines(), 1);
+                    answerTable.setWidth("100%");
+
+                    if (question.isLargeAnswerBox()) {
+                        // For a large answer box, remove the inner horizontal lines
+                        answerTable.setInsideHBorder(XWPFTable.XWPFBorderType.NONE, 0, 0, "FFFFFF");
+                    }
+
+                    // Create the rows and cells as before; the number of lines still determines the height
+                    for (int i = 0; i < question.getAnswerLines(); i++) {
+                        XWPFTableRow row = answerTable.getRow(i);
+                        XWPFTableCell cell = row.getCell(0);
+                        setCellAlignment(cell, ParagraphAlignment.CENTER, STVerticalJc.CENTER);
+                        // Add a paragraph with a single space to ensure cell height is respected
+                        cell.setText(" ");
+                    }
                 }
             }
         }
-
+        // Sub-question recursion logic remains unchanged
         if (question.getSubQuestions() != null && !question.getSubQuestions().isEmpty()) {
             for (int i = 0; i < question.getSubQuestions().size(); i++) {
                 Question subQuestion = question.getSubQuestions().get(i);
@@ -769,44 +819,6 @@ public class WordExporter {
             }
         }
         return paragraph;
-    }
-
-    /**
-     * Generates the Word document representation for "Richtig/Falsch" (True/False)
-     * type questions. It creates a two-column table where the first column contains
-     * the question statement and the second column contains checkboxes for "Richtig" and "Falsch".
-     * If solutions are enabled, the correct option is marked.
-     *
-     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the content is added.
-     * @param question The {@link model.Question} object of type "Richtig/Falsch".
-     * @param withSolutions {@code true} to mark the correct solution, {@code false} otherwise.
-     */
-    private static void handleRichtigFalsch(XWPFDocument document, Question question, boolean withSolutions) {
-        XWPFTable table = document.createTable(1, 2);
-        table.setWidth("100%");
-        table.getCTTbl().getTblPr().unsetTblBorders();
-
-        XWPFTableRow row = table.getRow(0);
-        XWPFTableCell cell1 = row.getCell(0);
-        setCellAlignment(cell1, ParagraphAlignment.LEFT, STVerticalJc.CENTER);
-        cell1.setText(question.getTitle());
-
-        XWPFTableCell cell2 = row.getCell(1);
-        setCellAlignment(cell2, ParagraphAlignment.RIGHT, STVerticalJc.CENTER);
-        XWPFParagraph checkboxParagraph = cell2.getParagraphs().get(0);
-        checkboxParagraph.setAlignment(ParagraphAlignment.RIGHT);
-
-        String musterloesung = question.getMusterloesung();
-        boolean isRichtigCorrect = withSolutions && "Richtig".equalsIgnoreCase(musterloesung);
-        boolean isFalschCorrect = withSolutions && "Falsch".equalsIgnoreCase(musterloesung);
-
-        XWPFRun richtigRun = checkboxParagraph.createRun();
-        richtigRun.setText((isRichtigCorrect ? "☑" : "☐") + " Richtig");
-
-        checkboxParagraph.createRun().addTab();
-
-        XWPFRun falschRun = checkboxParagraph.createRun();
-        falschRun.setText((isFalschCorrect ? "☑" : "☐") + " Falsch");
     }
 
     // Helper method to extract the option letter (e.g., "A", "B") from the option text

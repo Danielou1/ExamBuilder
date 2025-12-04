@@ -3,6 +3,8 @@ package service;
 import model.Exam;
 import model.Question;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -138,11 +140,39 @@ class WordExporterTest {
         WordExporter.exportWithSolutions(exam, outputFile.getAbsolutePath());
 
         assertTrue(outputFile.exists());
-        String content = readDocxContent(outputFile);
 
-        assertTrue(content.contains("1. Statement is true (5 Punkte)"));
-        assertTrue(content.contains("☑ Richtig"));
-        assertTrue(content.contains("☐ Falsch"));
+        try (FileInputStream fis = new FileInputStream(outputFile);
+             XWPFDocument document = new XWPFDocument(fis)) {
+
+            XWPFTable questionTable = null;
+            // Iterate through the tables in the document to find the one representing the question
+            for(XWPFTable table : document.getTables()) {
+                // Heuristic: check if table has 3 columns (statement, points, checkboxes)
+                // and if the first cell contains the question title
+                if (table.getRows().size() > 0 && table.getRow(0).getTableCells().size() == 3) {
+                    String cell0Text = table.getRow(0).getCell(0).getText().trim();
+                    if (cell0Text.contains("1. Statement is true")) {
+                        questionTable = table;
+                        break;
+                    }
+                }
+            }
+            assertNotNull(questionTable, "Question table for Richtig/Falsch not found.");
+
+            XWPFTableRow row = questionTable.getRow(0);
+
+            // Verify statement
+            assertEquals("1. Statement is true", row.getCell(0).getText().trim());
+
+            // Verify points
+            assertEquals("(5 Punkte)", row.getCell(1).getText().trim());
+
+            // Verify checkboxes
+            String checkboxCellContent = row.getCell(2).getText().trim();
+            assertTrue(checkboxCellContent.contains("☑ Richtig"), "Checkbox 'Richtig' not found or not checked.");
+            assertTrue(checkboxCellContent.contains("☐ Falsch"), "Checkbox 'Falsch' not found or not unchecked.");
+
+        }
     }
 
     @Test
