@@ -1,12 +1,13 @@
 package service;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.awt.image.BufferedImage;
+
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
@@ -450,6 +451,11 @@ public class WordExporter {
             handleRichtigFalsch(document, question, withSolutions);
         } else if (question.getText() != null && !question.getText().isEmpty()) {
             appendHtml(document, question, withSolutions, correctOptions, null);
+        }
+
+        if ("MCQ".equals(question.getType())) {
+            XWPFParagraph spacingParagraph = document.createParagraph();
+            spacingParagraph.setSpacingAfter(0); // Standard line space
         }
 
         if (withSolutions) {
