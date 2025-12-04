@@ -179,6 +179,11 @@ public class MainController {
     private final ButtonType continueButton = new ButtonType("Ohne Speichern fortfahren");
     private final ButtonType cancelButton = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
 
+    /**
+     * Initializes the controller after its root element has been completely processed.
+     * This method sets up the UI components, binds listeners, configures table columns,
+     * loads universities for autocompletion, and initializes the exam state.
+     */
     @FXML
     public void initialize() {
         questionsTable.setEditable(true);
@@ -380,6 +385,11 @@ public class MainController {
         });
     }
 
+    /**
+     * Sets up ChangeListeners for various input fields in the UI to track modifications.
+     * When a change occurs in any of these fields, the {@code isDirty} flag is set to true,
+     * indicating that there are unsaved changes in the current exam or question.
+     */
     private void setupChangeListeners() {
         ChangeListener<String> dirtyStringListener = (obs, old, nao) -> isDirty = true;
         ChangeListener<Number> dirtyNumberListener = (obs, old, nao) -> isDirty = true;
@@ -396,6 +406,10 @@ public class MainController {
         answerLinesField.valueProperty().addListener(dirtyNumberListener);
     }
 
+    /**
+     * Sets up context menus for the question image and solution image views.
+     * These context menus allow the user to remove an image by right-clicking on it.
+     */
     private void setupImageContextMenu() {
         ContextMenu imageContextMenu = new ContextMenu();
         MenuItem removeItem = new MenuItem("Bild entfernen");
@@ -420,6 +434,10 @@ public class MainController {
         });
     }
 
+    /**
+     * Loads a predefined list of German universities into the {@code germanUniversities} list.
+     * This list is used for autocompletion in the {@code hochschuleField}.
+     */
     private void loadUniversities() {
         germanUniversities = Arrays.asList(
             "RWTH Aachen",
@@ -500,6 +518,13 @@ public class MainController {
         );
     }
 
+    /**
+     * Configures the row factory for the {@code questionsTable}.
+     * This setup includes adding change listeners to the {@code selectedProperty},
+     * {@code startOnNewPageProperty}, and {@code justifyProperty} of each {@link model.Question}
+     * to update the {@code isDirty} flag when these properties are modified.
+     * It also applies a CSS style ("deselected-row") to rows that are not selected for export.
+     */
     private void setupRowFactory() {
         questionsTable.setRowFactory(tv -> {
             TreeTableRow<Question> row = new TreeTableRow<>() {
@@ -530,6 +555,12 @@ public class MainController {
         });
     }
 
+    /**
+     * Configures the context menu for the {@code questionsTable}.
+     * This menu provides quick actions such as editing, saving changes, deleting,
+     * and adding sub-questions. It also dynamically enables or disables
+     * menu items based on whether a question is selected and if the edit pane is active.
+     */
     private void setupContextMenu() {
         tableContextMenu = new ContextMenu();
         MenuItem editItem = new MenuItem("Frage bearbeiten");
@@ -557,11 +588,21 @@ public class MainController {
 
     private Stage primaryStage;
 
+    /**
+     * Sets the primary stage for this controller and initializes the "Hinweise" (Instructions) dialog.
+     * This method is called by the main application class after loading the FXML.
+     * @param primaryStage The primary stage of the JavaFX application.
+     */
     public void setPrimaryStage(Stage primaryStage) {
         this.primaryStage = primaryStage;
         createHinweiseDialog();
     }
 
+    /**
+     * Loads the FXML for the HinweiseDialog (Instructions Dialog),
+     * creates a new modal stage for it, and sets its controller.
+     * This dialog allows users to edit general exam instructions and aids.
+     */
     private void createHinweiseDialog() {
         try {
             FXMLLoader loader = new FXMLLoader();
@@ -582,6 +623,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Opens the HinweiseDialog (Instructions Dialog) to allow the user to edit
+     * general exam instructions, allowed aids, and exam duration.
+     * The current exam data is passed to the dialog, and after the dialog is closed,
+     * the {@code isDirty} flag is set to true to indicate potential changes.
+     */
     @FXML
     private void openHinweiseDialog() {
         if (hinweiseDialogStage != null) {
@@ -594,6 +641,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Toggles the application between normal editing mode and "selection mode" for export.
+     * In selection mode, the {@code selectedColumn} of the questions table becomes editable,
+     * while other editing controls and actions are disabled. This allows the user
+     * to choose which questions to include in the final export.
+     */
     @FXML
     private void toggleSelectionMode() {
         boolean selectionModeActive = selectionModeButton.isSelected();
@@ -616,6 +669,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Sets FontAwesome icons for various buttons and menu items in the UI
+     * to enhance visual appeal and user experience.
+     */
     private void setIcons() {
         newQuestionButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.PLUS));
         addImageButton.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.FILE_IMAGE_ALT));
@@ -626,6 +683,10 @@ public class MainController {
         deleteQuestionMenuItem.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.TRASH));
     }
 
+    /**
+     * Installs tooltips for various UI elements to provide helpful descriptions
+     * and guide the user on the functionality of buttons and menu items.
+     */
     private void setTooltips() {
         Tooltip.install(newQuestionButton, new Tooltip("Neue Frage erstellen"));
         Tooltip.install(hinweiseButton, new Tooltip("Hinweise, Hilfsmittel und Bearbeitungszeit für die Prüfung festlegen"));
@@ -637,11 +698,22 @@ public class MainController {
         Tooltip.install(deleteQuestionMenuItem.getGraphic(), new Tooltip("Frage löschen"));
     }
 
+    /**
+     * Enables or disables the question editing pane based on the {@code isEditing} parameter.
+     * When the edit mode changes, the state of the action buttons is also updated accordingly.
+     * @param isEditing {@code true} to enable edit mode, {@code false} to disable.
+     */
     private void setEditMode(boolean isEditing) {
         editPane.setDisable(!isEditing);
         updateActionsState();
     }
 
+    /**
+     * Updates the enabled/disabled state of various UI action elements
+     * (buttons, menu items) based on the current selection in the questions table
+     * and whether the editing pane is active. This ensures that only relevant actions
+     * are available to the user at any given time.
+     */
     private void updateActionsState() {
         boolean selectionExists = questionsTable.getSelectionModel().getSelectedItem() != null;
         boolean isEditing = !editPane.isDisable();
@@ -665,6 +737,12 @@ public class MainController {
         addSubQuestionMenuItem.setDisable(!selectionExists || isEditing);
     }
 
+    /**
+     * Initiates the creation of a new question.
+     * Before proceeding, it checks for unsaved changes in the currently edited question
+     * and prompts the user to save or discard them. If a new question is to be created,
+     * it clears the editing fields and prepares the UI for new input.
+     */
     @FXML
     private void newQuestion() {
         if (areChangesMade()) { // Check for unsaved changes on the *currently edited* question
@@ -685,6 +763,11 @@ public class MainController {
         originalQuestionState = null; 
     }
 
+    /**
+     * Prepares the UI for editing the currently selected question in the {@code questionsTable}.
+     * It populates the editing fields with the selected question's details and
+     * activates the edit mode.
+     */
     @FXML
     private void editQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
@@ -695,6 +778,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Populates the editing fields (title, text, solution, points, type, etc.)
+     * with the details of the provided {@link model.Question} object.
+     * It also handles decoding and displaying question and solution images from Base64.
+     *
+     * @param question The {@link model.Question} object whose details are to be displayed.
+     */
     private void populateQuestionDetails(Question question) {
         if (questionTypeChangeListener != null) {
             questionTypeField.valueProperty().removeListener(questionTypeChangeListener);
@@ -732,6 +822,11 @@ public class MainController {
         }
     }
 
+    /**
+     * Rebuilds the entire {@code questionsTable} from the current {@link model.Exam} data.
+     * This method is typically called when the structure of the exam (e.g., questions added, deleted, or reordered)
+     * has changed. It attempts to preserve the currently selected question after the refresh.
+     */
     private void refreshTreeTableView() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
         Question selectedQuestion = selectedItem != null ? selectedItem.getValue() : null;
@@ -751,6 +846,14 @@ public class MainController {
         updateTotalPoints();
     }
     
+    /**
+     * Recursively searches for and selects a specific {@link model.Question} within the {@code questionsTable}.
+     * This is used to restore selection after the table has been refreshed or rebuilt.
+     *
+     * @param current The current {@code TreeItem<Question>} to start searching from.
+     * @param target  The {@link model.Question} object to find and select.
+     * @return {@code true} if the target question was found and selected, {@code false} otherwise.
+     */
     private boolean findAndSelectQuestion(TreeItem<Question> current, Question target) {
         if (current.getValue().equals(target)) {
             questionsTable.getSelectionModel().select(current);
@@ -764,6 +867,14 @@ public class MainController {
         return false;
     }
 
+    /**
+     * Recursively populates a {@code TreeItem} with its sub-questions.
+     * This method is used when building or refreshing the {@code questionsTable}
+     * to correctly display the hierarchical structure of questions.
+     *
+     * @param parentItem    The {@code TreeItem<Question>} to which sub-questions will be added.
+     * @param parentQuestion The {@link model.Question} object containing the sub-questions.
+     */
     private void populateSubQuestions(TreeItem<Question> parentItem, Question parentQuestion) {
         if (parentQuestion.getSubQuestions() != null) {
             for (Question subQ : parentQuestion.getSubQuestions()) {
@@ -774,6 +885,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Recursively generates a formatted question number (e.g., "1", "1.a", "1.a.i")
+     * for a given {@code TreeItem<Question>} based on its position in the hierarchy.
+     *
+     * @param item The {@code TreeItem<Question>} for which to generate the number.
+     * @return A string representing the formatted question number.
+     */
     private String getQuestionNumber(TreeItem<Question> item) {
         if (item == null || item.getParent() == null || item.getParent() == questionsTable.getRoot()) {
             return String.valueOf(questionsTable.getRoot().getChildren().indexOf(item) + 1);
@@ -785,6 +903,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Creates a new {@link model.Question} from the current input fields and adds it
+     * to the exam structure. The question can be either a main question or a sub-question
+     * depending on the {@code parentForSubQuestion} context.
+     * Includes validation for points and clears the UI fields upon successful addition.
+     */
     @FXML
     private void addQuestion() {
         if (questionPointsField.getText().isEmpty()) {
@@ -825,6 +949,11 @@ public class MainController {
         setEditMode(false);
     }
 
+    /**
+     * Initiates the process of adding a sub-question to the currently selected question.
+     * It sets the selected question as the parent context for the new sub-question,
+     * clears the editing fields, and enables edit mode for input.
+     */
     @FXML
     private void addSubQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
@@ -836,6 +965,17 @@ public class MainController {
         }
     }
 
+    /**
+     * Updates an existing {@link model.Question} in the exam model with the data
+     * from the UI input fields. This method is called when changes to a question
+     * are to be saved. It performs validation, applies the updates to the
+     * specified {@code TreeItem}, refreshes the table view, and exits edit mode.
+     *
+     * @param itemToUpdate The {@code TreeItem<Question>} representing the question
+     *                     to be updated. Its associated {@link model.Question} object
+     *                     will receive the new data.
+     * @return {@code true} if the question was successfully updated, {@code false} otherwise.
+     */
     public boolean updateQuestionAndReturnSuccess(TreeItem<Question> itemToUpdate) {
         if (questionPointsField.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -910,6 +1050,11 @@ public class MainController {
         }
     }
 
+    /**
+     * Deletes the currently selected {@link model.Question} from the exam structure
+     * after prompting the user for confirmation. It correctly handles the removal
+     * of both main questions and sub-questions from their respective parents.
+     */
     @FXML
     private void deleteQuestion() {
         TreeItem<Question> selectedItem = questionsTable.getSelectionModel().getSelectedItem();
@@ -937,6 +1082,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Allows the user to select an image file from their file system and
+     * attaches it to the currently active question. The image is converted
+     * to a Base64 string for storage and displayed in the UI.
+     * This method is triggered when the "Bild hinzufügen" (Add Image) button is pressed.
+     */
     @FXML
     private void addImage() {
         boolean isEditing = !editPane.isDisable();
@@ -967,6 +1118,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Removes the image currently associated with the question being edited.
+     * Clears the image from display and resets its Base64 representation.
+     */
     @FXML
     private void removeImage() {
         newQuestionImageBase64 = null;
@@ -974,6 +1129,11 @@ public class MainController {
         isDirty = true;
     }
 
+    /**
+     * Allows the user to select an image file from their file system to be used
+     * as a solution image for the currently active question. The image is converted
+     * to a Base64 string for storage and displayed in the UI.
+     */
     @FXML
     private void addSolutionImage() {
         FileChooser fileChooser = new FileChooser();
@@ -996,6 +1156,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Removes the solution image currently associated with the question being edited.
+     * Clears the solution image from display and resets its Base64 representation.
+     */
     @FXML
     private void removeSolutionImage() {
         newQuestionSolutionImageBase64 = null;
@@ -1003,6 +1167,11 @@ public class MainController {
         isDirty = true;
     }
 
+    /**
+     * Checks if the value entered in the {@code questionPointsField} is a valid integer.
+     *
+     * @return {@code true} if the points value is not a valid integer, {@code false} otherwise.
+     */
     private boolean isPointsInvalid() {
         try {
             Integer.parseInt(questionPointsField.getText());
@@ -1013,6 +1182,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Constructs a new {@link model.Question} object using the current values
+     * from the UI input fields for title, text, type, points, answer lines,
+     * solution, and image data.
+     *
+     * @return A newly created {@link model.Question} object.
+     */
     private Question createQuestionFromInput() {
         String title = questionTitleField.getText();
         String text = questionTextField.getHtmlText();
@@ -1044,6 +1220,14 @@ public class MainController {
         return newQuestion;
     }
 
+    /**
+     * Prepares a list of {@link model.Question} objects for export.
+     * It filters the questions based on their {@code selected} property. If no questions
+     * are explicitly selected, it prompts the user whether to export all questions
+     * or cancel the export operation.
+     *
+     * @return A list of {@link model.Question} objects to be exported, or {@code null} if the export is cancelled.
+     */
     private List<Question> getQuestionsForExport() {
         List<Question> selectedQuestions = filterSelected(exam.getQuestions());
 
@@ -1069,6 +1253,14 @@ public class MainController {
         }
     }
 
+    /**
+     * Recursively filters a list of {@link model.Question} objects, returning a new
+     * list containing only the questions (and their sub-questions) that have
+     * their {@code selected} property set to {@code true}.
+     *
+     * @param questions The list of {@link model.Question} objects to filter.
+     * @return A new list containing only the selected questions and their selected sub-questions.
+     */
     private List<Question> filterSelected(List<Question> questions) {
         List<Question> selected = new ArrayList<>();
         for (Question q : questions) {
@@ -1084,6 +1276,12 @@ public class MainController {
         return selected;
     }
 
+    /**
+     * Exports the current exam (or selected questions) to a Microsoft Word (.docx) document.
+     * It first updates the exam metadata, then determines which questions to export
+     * (all or only selected ones), prompts the user for a save location, and
+     * performs the export in a background task while showing a loading indicator.
+     */
     @FXML
     private void exportToWord() {
         updateExamMetadata();
@@ -1117,6 +1315,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Exports the answer key for the current exam (or selected questions) to
+     * a Microsoft Word (.docx) document. Similar to {@link #exportToWord()},
+     * it updates metadata, handles question selection, prompts for a save location,
+     * and executes the export in a background task with a loading indicator.
+     */
     @FXML
     private void exportAnswerKey() {
         updateExamMetadata();
@@ -1150,11 +1354,22 @@ public class MainController {
         }
     }
 
+    /**
+     * Saves the current exam data to a JSON file chosen by the user.
+     * This method calls {@link #saveExamToJsonWithResult()} to perform the actual save operation.
+     */
     @FXML
     private void saveExamToJson() {
         saveExamToJsonWithResult();
     }
 
+    /**
+     * Updates the exam metadata from the UI fields, prompts the user for a file
+     * save location, and then serializes the entire {@link model.Exam} object
+     * to a JSON file. The {@code isDirty} flag is reset upon successful save.
+     *
+     * @return {@code true} if the exam was successfully saved to a JSON file, {@code false} otherwise.
+     */
     private boolean saveExamToJsonWithResult() {
         updateExamMetadata();
         try {
@@ -1180,6 +1395,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Creates and exports a varied version of the exam. This involves
+     * rephrasing question texts using the {@link utils.Rephraser} utility
+     * and shuffling the order of sub-questions (if no page breaks are present).
+     * The user is prompted to save the varied exam as either a Word document or a JSON file.
+     * The operation is performed in a background task with a loading indicator.
+     */
     @FXML
     private void exportVariedVersion() {
         updateExamMetadata();
@@ -1257,6 +1479,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Imports exam data from a JSON file selected by the user.
+     * Before importing, it checks for unsaved changes in the current exam
+     * and prompts the user to save or discard them. It also includes logic
+     * to process questions from older JSON formats to ensure compatibility
+     * with the {@code HTMLEditor}.
+     */
     @FXML
     private void importExamFromJson() {
         if (isDirty) {
@@ -1312,6 +1541,14 @@ public class MainController {
         }
     }
 
+    /**
+     * Recursively processes a {@link model.Question} (and its sub-questions)
+     * to convert plain text MCQ options into an HTML list format.
+     * This ensures compatibility with the {@code HTMLEditor} and proper rendering
+     * in the exported Word document, especially for older JSON imports.
+     *
+     * @param question The {@link model.Question} object to process.
+     */
     private void processQuestionForHtmlConversion(Question question) {
         if ("MCQ".equals(question.getType()) && question.getText() != null && !question.getText().trim().isEmpty() && !question.getText().contains("<li>")) {
             String plainText = question.getText();
@@ -1333,6 +1570,10 @@ public class MainController {
         }
     }
 
+    /**
+     * Updates the main UI fields (exam metadata and the questions table)
+     * with the data from the currently loaded {@link model.Exam} object.
+     */
     private void updateUIFromExam() {
         examTitleField.setText(exam.getTitle());
         moduleField.setText(exam.getModule());
@@ -1342,6 +1583,11 @@ public class MainController {
         refreshTreeTableView();
     }
 
+    /**
+     * Updates the metadata fields of the current {@link model.Exam} object
+     * (title, module, semester, fachbereich, hochschule) with the values
+     * from the corresponding UI input fields.
+     */
     private void updateExamMetadata() {
         exam.setTitle(examTitleField.getText());
         exam.setModule(moduleField.getText());
@@ -1350,10 +1596,18 @@ public class MainController {
         exam.setHochschule(hochschuleField.getText());
     }
 
+    /**
+     * Calculates the total points for the entire exam by summing the points
+     * of all top-level questions and updates the {@code totalPointsLabel} in the UI.
+     */
     private void updateTotalPoints() {
         totalPointsLabel.setText("Gesamtpunkte: " + exam.getTotalPoints());
     }
 
+    /**
+     * Clears all input fields and image displays in the question editing pane.
+     * This prepares the UI for entering details of a new question.
+     */
     private void clearQuestionFields() {
         questionTitleField.clear();
         questionTextField.setHtmlText("");
@@ -1368,6 +1622,15 @@ public class MainController {
         newQuestionSolutionImageBase64 = null;
     }
 
+    /**
+     * Recursively creates a varied version of a given {@link model.Question}.
+     * This involves rephrasing the question's title and text using the
+     * {@link utils.Rephraser} utility and optionally shuffling its sub-questions.
+     * Sub-questions are shuffled only if none of them are marked to start on a new page.
+     *
+     * @param originalQuestion The {@link model.Question} to create a varied copy of.
+     * @return A new {@link model.Question} object representing the varied version.
+     */
     private Question createVariedQuestionRecursive(Question originalQuestion) {
         Question copiedQuestion = new Question(originalQuestion);
 
@@ -1395,6 +1658,15 @@ public class MainController {
         return copiedQuestion;
     }
 
+    /**
+     * Determines if there are unsaved changes in the currently edited question.
+     * For an existing question, it compares the current UI input fields against
+     * the {@code originalQuestionState}. For a new question (when {@code originalQuestionState} is null),
+     * it checks if any content has been entered in the editing fields, including
+     * handling the {@code HTMLEditor}'s empty HTML structure.
+     *
+     * @return {@code true} if changes have been made, {@code false} otherwise.
+     */
     private boolean areChangesMade() {
         if (originalQuestionState == null) {
             // HTMLEditor returns a full HTML document structure even when empty.
@@ -1427,6 +1699,13 @@ public class MainController {
         return titleChanged || textChanged || musterloesungChanged || pointsChanged || typeChanged || answerLinesChanged || imageChanged || solutionImageChanged;
     }
 
+    /**
+     * Displays a confirmation dialog to the user when unsaved changes are detected
+     * in the currently edited question. It prompts the user to either save the changes,
+     * continue without saving (discard changes), or cancel the current action.
+     *
+     * @return An {@code Optional<ButtonType>} representing the user's choice.
+     */
     private Optional<ButtonType> showUnsavedChangesConfirmation() {
         if (!areChangesMade()) {
             return Optional.empty(); 
@@ -1442,6 +1721,13 @@ public class MainController {
         return alert.showAndWait();
     }
 
+    /**
+     * Displays a confirmation dialog to the user when unsaved changes are detected
+     * in the overall exam. It prompts the user to either save the changes,
+     * continue without saving (discard changes), or cancel the current action.
+     *
+     * @return An {@code Optional<ButtonType>} representing the user's choice.
+     */
     private Optional<ButtonType> showUnsavedExamChangesConfirmation() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Ungespeicherte Änderungen an der Prüfung");
@@ -1454,6 +1740,15 @@ public class MainController {
     }
 
 
+    /**
+     * Processes HTML content specifically for Multiple Choice Questions (MCQ).
+     * It attempts to extract list-like items (e.g., "A) Option 1", "B. Option 2", "C Option 3")
+     * from the raw HTML and formats them into a clean ordered HTML list (`<ol><li>...</li></ol>`).
+     * This ensures consistent rendering and processing for MCQ options.
+     *
+     * @param htmlText The raw HTML string from the {@code HTMLEditor}.
+     * @return A normalized HTML string formatted as an ordered list for MCQ options.
+     */
     private String normalizeMcqHtml(String htmlText) {
         if (htmlText == null || htmlText.trim().isEmpty()) {
             return "";
@@ -1485,6 +1780,12 @@ public class MainController {
         return cleanHtml.toString();
     }
 
+    /**
+     * Initiates a new, empty exam.
+     * Before creating a new exam, it checks for any unsaved changes in the
+     * current exam and prompts the user to save, discard, or cancel the action.
+     * If proceeding, the application's state is reset to a fresh exam.
+     */
     @FXML
     private void newExam() {
         if (isDirty) {
@@ -1514,6 +1815,12 @@ public class MainController {
         }
     }
 
+    /**
+     * Resets the application to a fresh, empty exam state.
+     * This involves creating a new {@link model.Exam} object, updating the UI
+     * to reflect the empty state, clearing all question editing fields,
+     * disabling edit mode, and resetting dirty flags.
+     */
     private void resetExam() {
         exam = new Exam("", "", "", "", "", "", "");
         updateUIFromExam();

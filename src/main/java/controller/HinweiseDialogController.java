@@ -50,6 +50,11 @@ public class HinweiseDialogController {
     private Exam exam;
     private boolean okClicked = false;
 
+    /**
+     * Initializes the controller after its root element has been completely processed.
+     * This method sets up listeners for all input fields (text areas, checkboxes, spinner, text field)
+     * to ensure the preview of the instructions is updated in real-time.
+     */
     @FXML
     private void initialize() {
         hinweiseAllgemeinArea.textProperty().addListener((obs, oldVal, newVal) -> updatePreview());
@@ -62,10 +67,20 @@ public class HinweiseDialogController {
         bearbeitungszeitSpinner.valueProperty().addListener((obs, oldVal, newVal) -> updatePreview());
     }
 
+    /**
+     * Sets the stage for this dialog.
+     * @param dialogStage The {@link javafx.stage.Stage} object representing this dialog.
+     */
     public void setDialogStage(Stage dialogStage) {
         this.dialogStage = dialogStage;
     }
 
+    /**
+     * Populates the dialog's UI elements with existing data from an {@link model.Exam} object.
+     * This includes setting general instructions, exam duration, and parsing
+     * the allowed aids string to correctly set the checkboxes and custom text field.
+     * @param exam The {@link model.Exam} object containing the data to be displayed and edited.
+     */
     public void setData(Exam exam) {
         this.exam = exam;
 
@@ -92,6 +107,12 @@ public class HinweiseDialogController {
         updatePreview();
     }
 
+    /**
+     * Dynamically generates and displays a preview of the exam instructions
+     * in the {@code hinweisePreviewLabel}. It updates the exam duration
+     * and lists all selected allowed aids (from checkboxes and the custom text field)
+     * within the instruction text.
+     */
     private void updatePreview() {
         String previewText = hinweiseAllgemeinArea.getText();
 
@@ -121,10 +142,20 @@ public class HinweiseDialogController {
         hinweisePreviewLabel.setText(previewText);
     }
 
+    /**
+     * Returns true if the user clicked the OK button, false otherwise.
+     * @return {@code true} if OK was clicked, {@code false} otherwise.
+     */
     public boolean isOkClicked() {
         return okClicked;
     }
 
+    /**
+     * Handles the action when the OK button is clicked.
+     * It saves the currently displayed instructions, exam duration,
+     * and selected aids back into the {@link model.Exam} object.
+     * Sets {@code okClicked} to true and closes the dialog stage.
+     */
     @FXML
     private void handleOk() {
         exam.setAllgemeineHinweise(hinweisePreviewLabel.getText());
@@ -146,6 +177,10 @@ public class HinweiseDialogController {
         dialogStage.close();
     }
 
+    /**
+     * Handles the action when the Cancel button is clicked.
+     * Closes the dialog stage without saving any changes to the {@link model.Exam} object.
+     */
     @FXML
     private void handleCancel() {
         dialogStage.close();

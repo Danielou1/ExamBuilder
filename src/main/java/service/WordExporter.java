@@ -51,18 +51,43 @@ public class WordExporter {
             "\u2022 Die Bearbeitungszeit betr\u00e4gt 60 Minuten. Sie k\u00f6nnen die Klausur jederzeit abgeben, jedoch bitten wir Sie aus Respekt gegen\u00fcber Ihren Mitstudierenden, den Raum in den letzten 10 Minuten vor dem Ende der Bearbeitungszeit nicht mehr zu verlassen, um \u00fcberm\u00e4\u00dfige St\u00f6rungen zu vermeiden.\n" +
             "\nViel Erfolg!";
 
+    /**
+     * Provides a default block of general instructions ("Hinweise") for the exam cover page.
+     * This text serves as a fallback if no specific instructions are provided in the {@link model.Exam} object.
+     * @return A string containing the standard German exam instructions.
+     */
     public static String getStandardHinweise() {
         return STANDARD_HINWEISE;
     }
 
+    /**
+     * Exports the given {@link model.Exam} object to a Microsoft Word (.docx) document.
+     * This method generates the exam paper without including the solutions.
+     * @param exam The {@link model.Exam} object to export.
+     * @param filePath The full path where the .docx file will be saved.
+     */
     public static void export(Exam exam, String filePath) {
         exportDoc(exam, filePath, false);
     }
 
+    /**
+     * Exports the given {@link model.Exam} object to a Microsoft Word (.docx) document,
+     * including the solutions for each question.
+     * @param exam The {@link model.Exam} object to export.
+     * @param filePath The full path where the .docx file will be saved.
+     */
     public static void exportWithSolutions(Exam exam, String filePath) {
         exportDoc(exam, filePath, true);
     }
 
+    /**
+     * Core method for generating the Word (.docx) document.
+     * It orchestrates the creation of the cover page, default headers,
+     * question pages, and page numbering.
+     * @param exam The {@link model.Exam} object containing all exam data.
+     * @param filePath The destination path for the generated .docx file.
+     * @param withSolutions {@code true} to include solutions in the document, {@code false} otherwise.
+     */
     private static void exportDoc(Exam exam, String filePath, boolean withSolutions) {
         try (XWPFDocument document = new XWPFDocument()) {
             document.getDocument().getBody().addNewSectPr().addNewTitlePg();
@@ -87,6 +112,11 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Creates a default header for all pages in the Word document, except the first page.
+     * The header includes placeholders for student's matriculation number and name.
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the header is added.
+     */
     private static void createDefaultHeader(XWPFDocument document) {
         XWPFHeader header = document.createHeader(HeaderFooterType.DEFAULT);
         XWPFTable table = header.createTable(1, 4);
@@ -120,6 +150,10 @@ public class WordExporter {
         nameRun.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
     }
 
+    /**
+     * Adds page numbering to the footer of the Word document in the format "Page X / Y".
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the footer is added.
+     */
     private static void createPageNumbering(XWPFDocument document) {
         XWPFFooter footer = document.createFooter(HeaderFooterType.DEFAULT);
         XWPFParagraph paragraph = footer.getParagraphArray(0);
@@ -139,6 +173,14 @@ public class WordExporter {
         paragraph.getCTP().addNewR().addNewFldChar().setFldCharType(STFldCharType.END);
     }
 
+    /**
+     * Generates the cover page for the exam document.
+     * This includes displaying exam metadata (university, module, title, etc.),
+     * general instructions, fields for student information (name, matriculation number, signature),
+     * and a grading table for the examiners.
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the cover page is added.
+     * @param exam The {@link model.Exam} object containing the exam's metadata and instructions.
+     */
     private static void createCoverPage(XWPFDocument document, Exam exam) {
         // Create a 1x1 table to frame the meta information
         XWPFTable metaTable = document.createTable(1, 1);
@@ -297,6 +339,15 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Iterates through the main questions of an {@link model.Exam} and writes each to the document.
+     * This method implements the logic for default page breaks: each main question
+     * (except the first) starts on a new page. An additional page break is inserted
+     * if the question's {@code startOnNewPage} property is true, effectively creating a blank page.
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which questions are added.
+     * @param exam The {@link model.Exam} object containing the questions.
+     * @param withSolutions {@code true} to include solutions for questions, {@code false} otherwise.
+     */
     private static void createQuestionsPage(XWPFDocument document, Exam exam, boolean withSolutions) {
         for (int i = 0; i < exam.getQuestions().size(); i++) {
             Question q = exam.getQuestions().get(i);
@@ -317,6 +368,19 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Writes a single {@link model.Question} (and recursively its sub-questions) to the Word document.
+     * This method formats the question title, includes points, embeds images,
+     * converts HTML content to Word formatting, and applies specific logic
+     * for different question types (MCQ, Lückentext, Richtig/Falsch).
+     * It also manages answer areas and page breaks for sub-questions.
+     *
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the question is added.
+     * @param question The {@link model.Question} object to write.
+     * @param questionNumber The formatted number of the question (e.g., "1", "1.a").
+     * @param withSolutions {@code true} to include solutions, {@code false} otherwise.
+     * @param isSubQuestion {@code true} if the current question is a sub-question, {@code false} otherwise.
+     */
     private static void writeQuestion(XWPFDocument document, Question question, String questionNumber, boolean withSolutions, boolean isSubQuestion) {
         XWPFParagraph questionTitle = document.createParagraph();
         if (question.isJustify()) {
@@ -454,6 +518,15 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Handles the display of solutions for "Lückentext" (fill-in-the-blank) questions.
+     * It replaces the blank placeholders (three or more underscores) in the question text
+     * with the corresponding solutions from the {@code musterloesung} field,
+     * formatting them in blue and bold. Includes error handling if no solution is provided.
+     *
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the content is added.
+     * @param question The {@link model.Question} object of type "Lückentext".
+     */
     private static void handleLueckentextSolution(XWPFDocument document, Question question) {
         String htmlText = question.getText();
         String musterloesung = question.getMusterloesung();
@@ -495,6 +568,19 @@ public class WordExporter {
         appendHtml(document, question, true, null, filledText);
 
     }
+    /**
+     * Parses an HTML string (from {@link model.Question#getText()} or {@code htmlContent})
+     * and appends its formatted content to the Word document. This method uses
+     * {@link #processNode(Node, XWPFParagraph, XWPFDocument, Question, boolean, List, boolean, boolean, boolean, boolean, String, String, String)}
+     * to recursively handle HTML elements and their styling, with specific logic
+     * for MCQ options.
+     *
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the HTML content is appended.
+     * @param question The {@link model.Question} object from which HTML content is taken.
+     * @param withSolutions {@code true} if solutions are to be displayed (influences MCQ checkbox appearance).
+     * @param correctOptions A list of correct MCQ option letters, used when {@code withSolutions} is true.
+     * @param htmlContent An optional HTML string to use instead of {@code question.getText()}.
+     */
     private static void appendHtml(XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, String htmlContent) {
         String contentToParse = (htmlContent != null && !htmlContent.isEmpty()) ? htmlContent : question.getText();
         // For Lückentext in student exams, we now preserve the underscores as typed by the teacher.
@@ -517,7 +603,21 @@ public class WordExporter {
         }
     }
 
-    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String fontFamily) {
+    /**
+     * Appends styled text to a given {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}.
+     * It creates a new {@link org.apache.poi.xwpf.usermodel.XWPFRun} and applies
+     * the specified formatting (bold, italic, underline, strikethrough, color, font family).
+     *
+     * @param paragraph The {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} to which text is appended.
+     * @param text The string content to append.
+     * @param bold {@code true} for bold text.
+     * @param italic {@code true} for italic text.
+     * @param underline {@code true} for underlined text.
+     * @param strikethrough {@code true} for strikethrough text.
+     * @param color The hex color string (e.g., "FF0000" for red), or {@code null} for default.
+     * @param fontFamily The font family name (e.g., "Courier New"), or {@code null} for default.
+     */
+    private static void appendStyledText(XWPFParagraph paragraph, String text, boolean bold, boolean italic, boolean strikethrough, boolean underline, String color, String fontFamily) {
         XWPFRun run = paragraph.createRun();
         run.setText(text);
         run.setBold(bold);
@@ -532,6 +632,28 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Recursively traverses an HTML DOM tree (parsed by Jsoup) and converts each
+     * HTML node into corresponding Apache POI Word content. It applies styles
+     * (bold, italic, underline, color, font), handles various HTML tags
+     * (paragraphs, lists, code blocks), and includes specific logic for
+     * formatting MCQ options with checkboxes.
+     *
+     * @param node The current {@link org.jsoup.nodes.Node} being processed.
+     * @param paragraph The current {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} to which content is being added.
+     * @param document The overall {@link org.apache.poi.xwpf.usermodel.XWPFDocument}.
+     * @param question The {@link model.Question} context for type-specific handling.
+     * @param withSolutions {@code true} if solutions are included (influences MCQ checkbox appearance).
+     * @param correctOptions A list of correct MCQ option letters, used when {@code withSolutions} is true.
+     * @param bold Current bold state inherited from parent nodes.
+     * @param italic Current italic state inherited from parent nodes.
+     * @param underline Current underline state inherited from parent nodes.
+     * @param strikethrough Current strikethrough state inherited from parent nodes.
+     * @param color Current color inherited from parent nodes.
+     * @param listStyle Current list style ("bullet" or "number") inherited from parent nodes.
+     * @param fontFamily Current font family inherited from parent nodes.
+     * @return The updated {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} after processing the node.
+     */
     private static XWPFParagraph processNode(Node node, XWPFParagraph paragraph, XWPFDocument document, Question question, boolean withSolutions, List<String> correctOptions, boolean bold, boolean italic, boolean underline, boolean strikethrough, String color, String listStyle, String fontFamily) {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).text();
@@ -643,6 +765,16 @@ public class WordExporter {
         return paragraph;
     }
 
+    /**
+     * Generates the Word document representation for "Richtig/Falsch" (True/False)
+     * type questions. It creates a two-column table where the first column contains
+     * the question statement and the second column contains checkboxes for "Richtig" and "Falsch".
+     * If solutions are enabled, the correct option is marked.
+     *
+     * @param document The {@link org.apache.poi.xwpf.usermodel.XWPFDocument} to which the content is added.
+     * @param question The {@link model.Question} object of type "Richtig/Falsch".
+     * @param withSolutions {@code true} to mark the correct solution, {@code false} otherwise.
+     */
     private static void handleRichtigFalsch(XWPFDocument document, Question question, boolean withSolutions) {
         XWPFTable table = document.createTable(1, 2);
         table.setWidth("100%");
@@ -672,6 +804,13 @@ public class WordExporter {
     }
 
     // Helper method to extract the option letter (e.g., "A", "B") from the option text
+    /**
+     * Helper method to extract the option letter (e.g., "A", "B") from the beginning of an option text string.
+     * This is typically used in MCQ processing to identify the option for solution matching.
+     *
+     * @param optionText The full text of the MCQ option.
+     * @return The extracted option letter (e.g., "A"), or an empty string if no letter is found.
+     */
     private static String extractOptionLetter(String optionText) {
         if (optionText == null || optionText.isEmpty()) {
             return "";
@@ -684,6 +823,12 @@ public class WordExporter {
         return "";
     }
 
+    /**
+     * Applies a background shading color to a given {@link org.apache.poi.xwpf.usermodel.XWPFParagraph}.
+     *
+     * @param paragraph The {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} to shade.
+     * @param rgb The RGB color in hex format (e.g., "F0F0F0").
+     */
     private static void setParagraphShading(XWPFParagraph paragraph, String rgb) {
         if (paragraph.getCTP().getPPr() == null) {
             paragraph.getCTP().addNewPPr();
@@ -697,6 +842,13 @@ public class WordExporter {
         paragraph.getCTP().getPPr().getShd().setFill(rgb); // Set the RGB color
     }
 
+    /**
+     * Sets both the horizontal and vertical alignment for an {@link org.apache.poi.xwpf.usermodel.XWPFTableCell}.
+     *
+     * @param cell The {@link org.apache.poi.xwpf.usermodel.XWPFTableCell} to align.
+     * @param horizontal The horizontal alignment (e.g., {@link org.apache.poi.xwpf.usermodel.ParagraphAlignment#CENTER}).
+     * @param vertical The vertical alignment (e.g., {@link org.openxmlformats.schemas.wordprocessingml.x2006.main.STVerticalJc#CENTER}).
+     */
     private static void setCellAlignment(XWPFTableCell cell, ParagraphAlignment horizontal, STVerticalJc.Enum vertical) {
         cell.getCTTc().addNewTcPr().addNewVAlign().setVal(vertical);
         for (XWPFParagraph p : cell.getParagraphs()) {
@@ -704,6 +856,18 @@ public class WordExporter {
         }
     }
 
+    /**
+     * Adds an image to an {@link org.apache.poi.xwpf.usermodel.XWPFParagraph},
+     * scaling it down if its width exceeds a defined maximum threshold
+     * ({@code MAX_WIDTH_POINTS}).
+     *
+     * @param paragraph The {@link org.apache.poi.xwpf.usermodel.XWPFParagraph} to which the picture is added.
+     * @param imageBytes The byte array of the image.
+     * @param type The picture type (e.g., {@link org.apache.poi.xwpf.usermodel.XWPFDocument#PICTURE_TYPE_PNG}).
+     * @param filename The suggested filename for the image within the document.
+     * @throws InvalidFormatException If the image format is invalid.
+     * @throws IOException If an I/O error occurs during image processing.
+     */
     private static void addScaledPicture(XWPFParagraph paragraph, byte[] imageBytes, int type, String filename) throws InvalidFormatException, IOException {
         final int MAX_WIDTH_POINTS = 400; // Max width in points (1/72 of an inch)
 

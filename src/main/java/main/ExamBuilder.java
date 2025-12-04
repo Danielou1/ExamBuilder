@@ -14,6 +14,14 @@ import javafx.stage.Stage;
  */
 public class ExamBuilder extends Application {
 
+    /**
+     * The main entry point for the JavaFX application.
+     * This method is called after the application has been launched.
+     * It sets up the primary stage, loads the main user interface from `MainView.fxml`,
+     * links it with the {@link controller.MainController}, and displays the stage.
+     * @param primaryStage The primary stage for this application, onto which the application scene can be set.
+     * @throws Exception If an error occurs during FXML loading or stage setup.
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
         System.out.println("start method called");
@@ -33,6 +41,10 @@ public class ExamBuilder extends Application {
         System.out.println("stage shown");
     }
 
+    /**
+     * The main method that launches the JavaFX application.
+     * @param args Command line arguments.
+     */
     public static void main(String[] args) {
         launch(args);
     }

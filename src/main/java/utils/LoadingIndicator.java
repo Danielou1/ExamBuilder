@@ -9,6 +9,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+/**
+ * Utility class for displaying a modal loading indicator to the user.
+ * This indicator consists of a {@link javafx.scene.control.ProgressIndicator}
+ * and a "Loading..." label, shown in an undecorated, application-modal stage.
+ * It is used to provide visual feedback during long-running operations (e.g., export).
+ */
 public class LoadingIndicator {
 
     private static final Stage dialog = new Stage();
@@ -24,10 +30,16 @@ public class LoadingIndicator {
         dialog.setScene(scene);
     }
 
+    /**
+     * Makes the loading indicator dialog visible.
+     */
     public static void show() {
         dialog.show();
     }
 
+    /**
+     * Makes the loading indicator dialog invisible.
+     */
     public static void hide() {
         dialog.hide();
     }
