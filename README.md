@@ -93,6 +93,7 @@ After building, launch the application with the command:
 # On macOS/Linux
 ./mvnw javafx:run
 ```
+You can use the provided `Klausur.json` file (File -> Import from JSON) to test the application with sample data.
 
 ---
 
