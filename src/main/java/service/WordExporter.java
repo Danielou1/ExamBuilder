@@ -67,7 +67,7 @@ public class WordExporter {
      * @param exam The {@link model.Exam} object to export.
      * @param filePath The full path where the .docx file will be saved.
      */
-    public static void export(Exam exam, String filePath) {
+    public static void export(Exam exam, String filePath) throws IOException {
         exportDoc(exam, filePath, false);
     }
 
@@ -76,8 +76,9 @@ public class WordExporter {
      * including the solutions for each question.
      * @param exam The {@link model.Exam} object to export.
      * @param filePath The full path where the .docx file will be saved.
+     * @throws IOException if an I/O error occurs during the file writing process.
      */
-    public static void exportWithSolutions(Exam exam, String filePath) {
+    public static void exportWithSolutions(Exam exam, String filePath) throws IOException {
         exportDoc(exam, filePath, true);
     }
 
@@ -88,8 +89,9 @@ public class WordExporter {
      * @param exam The {@link model.Exam} object containing all exam data.
      * @param filePath The destination path for the generated .docx file.
      * @param withSolutions {@code true} to include solutions in the document, {@code false} otherwise.
+     * @throws IOException if an I/O error occurs during the file writing process.
      */
-    private static void exportDoc(Exam exam, String filePath, boolean withSolutions) {
+    private static void exportDoc(Exam exam, String filePath, boolean withSolutions) throws IOException {
         try (XWPFDocument document = new XWPFDocument()) {
             document.getDocument().getBody().addNewSectPr().addNewTitlePg();
             
@@ -108,8 +110,6 @@ public class WordExporter {
                 document.write(out);
             }
             System.out.println("Export erfolgreich!");
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

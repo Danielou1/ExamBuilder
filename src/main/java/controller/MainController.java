@@ -1305,10 +1305,15 @@ public class MainController {
                     return null;
                 }
             };
-            exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
+            exportTask.setOnSucceeded(e -> {
+                LoadingIndicator.hide();
+                showSuccessAlert("Export erfolgreich", "Die Prüfungsdatei wurde erfolgreich erstellt:\n" + file.getAbsolutePath());
+            });
             exportTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                exportTask.getException().printStackTrace();
+                Throwable ex = exportTask.getException();
+                ex.printStackTrace();
+                showErrorAlert("Export fehlgeschlagen", "Ein Fehler ist aufgetreten:\n" + ex.getMessage());
             });
             new Thread(exportTask).start();
             LoadingIndicator.show();
@@ -1344,10 +1349,15 @@ public class MainController {
                     return null;
                 }
             };
-            exportTask.setOnSucceeded(e -> LoadingIndicator.hide());
+            exportTask.setOnSucceeded(e -> {
+                LoadingIndicator.hide();
+                showSuccessAlert("Export erfolgreich", "Das Lösungsblatt wurde erfolgreich erstellt:\n" + file.getAbsolutePath());
+            });
             exportTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                exportTask.getException().printStackTrace();
+                Throwable ex = exportTask.getException();
+                ex.printStackTrace();
+                showErrorAlert("Export fehlgeschlagen", "Ein Fehler ist aufgetreten:\n" + ex.getMessage());
             });
             new Thread(exportTask).start();
             LoadingIndicator.show();
@@ -1446,25 +1456,25 @@ public class MainController {
                         if (fileName.endsWith(".docx")) {
                             WordExporter.export(variedExam, file.getAbsolutePath());
                         } else if (fileName.endsWith(".json")) {
-                            try {
-                                ObjectMapper mapper = new ObjectMapper();
-                                mapper.enable(SerializationFeature.INDENT_OUTPUT);
-                                mapper.writeValue(file, variedExam);
-                                System.out.println("Varied Exam saved to JSON: " + file.getAbsolutePath());
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            }
+                            ObjectMapper mapper = new ObjectMapper();
+                            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+                            mapper.writeValue(file, variedExam);
                         } else {
-                            System.out.println("Unsupported file type selected.");
+                            throw new IOException("Unsupported file type selected.");
                         }
                         return null;
                     }
                 };
 
-                exportTask.setOnSucceeded(event -> LoadingIndicator.hide());
+                exportTask.setOnSucceeded(event -> {
+                    LoadingIndicator.hide();
+                    showSuccessAlert("Export erfolgreich", "Die variierte Prüfung wurde erfolgreich erstellt:\n" + file.getAbsolutePath());
+                });
                 exportTask.setOnFailed(event -> {
                     LoadingIndicator.hide();
-                    exportTask.getException().printStackTrace();
+                    Throwable ex = exportTask.getException();
+                    ex.printStackTrace();
+                    showErrorAlert("Export fehlgeschlagen", "Ein Fehler ist aufgetreten:\n" + ex.getMessage());
                 });
 
                 new Thread(exportTask).start();
@@ -1472,7 +1482,9 @@ public class MainController {
 
             rephraseAndShuffleTask.setOnFailed(e -> {
                 LoadingIndicator.hide();
-                rephraseAndShuffleTask.getException().printStackTrace();
+                Throwable ex = rephraseAndShuffleTask.getException();
+                ex.printStackTrace();
+                showErrorAlert("Generierung fehlgeschlagen", "Ein Fehler beim Generieren der Variante ist aufgetreten:\n" + ex.getMessage());
             });
 
             new Thread(rephraseAndShuffleTask).start();
@@ -1829,5 +1841,35 @@ public class MainController {
         originalQuestionState = null;
         isDirty = false;
         updateTotalPoints();
+    }
+
+    /**
+     * Displays a standardized success alert dialog on the JavaFX Application Thread.
+     * @param title   The title of the alert dialog.
+     * @param content The main content message of the alert.
+     */
+    private void showSuccessAlert(String title, String content) {
+        javafx.application.Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
+    }
+
+    /**
+     * Displays a standardized error alert dialog on the JavaFX Application Thread.
+     * @param title   The title of the alert dialog.
+     * @param content The main content message of the alert.
+     */
+    private void showErrorAlert(String title, String content) {
+        javafx.application.Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(content);
+            alert.showAndWait();
+        });
     }
 }
