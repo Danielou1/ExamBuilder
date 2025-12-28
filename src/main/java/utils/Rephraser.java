@@ -8,27 +8,54 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Utility class for rephrasing text without using AI, by replacing
- * words with synonyms loaded from an external thesaurus file.
- * This is primarily used for generating varied versions of exam questions.
+ * Utility class for rephrasing text without using AI. It replaces words
+ * with synonyms from a thesaurus, prioritizing longer words and avoiding
+ * common English loanwords to better preserve sentence meaning.
  */
 public class Rephraser {
 
     private static final Map<String, List<String>> thesaurus = new HashMap<>();
+    private static final Set<String> englishBlocklist = new HashSet<>();
     private static boolean isLoaded = false;
     private static final Random random = new Random();
 
-    private static void loadThesaurus() {
+    // A simple record to hold information about a potential word to be replaced.
+    private record WordCandidate(int index, int length) {}
+
+    private static void loadResources() {
         if (isLoaded) {
             return;
         }
+        loadThesaurus();
+        loadEnglishBlocklist();
+        isLoaded = true;
+    }
 
+    private static void loadEnglishBlocklist() {
+        try (InputStream is = Rephraser.class.getResourceAsStream("/english_words.txt");
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("#") && !line.trim().isEmpty()) {
+                    englishBlocklist.add(line.trim().toLowerCase());
+                }
+            }
+            System.out.println("English blocklist loaded with " + englishBlocklist.size() + " words.");
+        } catch (Exception e) {
+            System.err.println("Failed to load English blocklist file.");
+            // Continue without the blocklist
+        }
+    }
+
+    private static void loadThesaurus() {
         try (InputStream is = Rephraser.class.getResourceAsStream("/openthesaurus.txt");
              BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
@@ -39,8 +66,6 @@ public class Rephraser {
                 }
                 
                 List<String> potentialSynonyms = Arrays.asList(line.split(";"));
-
-                // Filter out entries with parentheses AND multi-word entries
                 List<String> cleanSynonyms = potentialSynonyms.stream()
                                                      .filter(s -> !s.contains("(") && !s.contains(")") && !s.trim().contains(" "))
                                                      .collect(Collectors.toList());
@@ -53,8 +78,7 @@ public class Rephraser {
                     }
                 }
             }
-            isLoaded = true;
-            System.out.println("Thesaurus loaded successfully with " + thesaurus.size() + " entries.");
+            System.out.println("Thesaurus loaded with " + thesaurus.size() + " entries.");
         } catch (Exception e) {
             System.err.println("Failed to load thesaurus file.");
             e.printStackTrace();
@@ -62,7 +86,7 @@ public class Rephraser {
     }
 
     public static String rephrase(String originalText) {
-        loadThesaurus();
+        loadResources();
         if (originalText == null || originalText.trim().isEmpty() || !isLoaded || thesaurus.isEmpty()) {
             return originalText;
         }
@@ -81,29 +105,34 @@ public class Rephraser {
     }
 
     private static String rephraseLine(String line) {
-        // Split on word boundaries, but keep delimiters (space, comma, etc.)
         String[] words = line.split("(?<=\\W)|(?=\\W)");
-        List<Integer> replaceableIndices = new ArrayList<>();
+        List<WordCandidate> candidates = new ArrayList<>();
 
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
-            // Only consider words that are purely alphabetic and longer than 3 characters
-            if (word.length() > 3 && word.matches("[\\p{L}]+") && thesaurus.containsKey(word.toLowerCase())) {
-                replaceableIndices.add(i);
+            String lowerCaseWord = word.toLowerCase();
+
+            // A word is a candidate if it's alphabetic, long enough, in the thesaurus, and not on the English blocklist.
+            if (word.length() > 3 && 
+                word.matches("[\\p{L}]+") && 
+                thesaurus.containsKey(lowerCaseWord) && 
+                !englishBlocklist.contains(lowerCaseWord)) {
+                candidates.add(new WordCandidate(i, word.length()));
             }
         }
 
-        if (replaceableIndices.isEmpty()) {
+        if (candidates.isEmpty()) {
             return line;
         }
 
-        Collections.shuffle(replaceableIndices);
-
-        // Replace up to 2 words per line, as requested
-        int replacements = Math.min(2, replaceableIndices.size());
+        // Sort candidates by length, longest first.
+        candidates.sort((c1, c2) -> Integer.compare(c2.length(), c1.length()));
+        
+        int replacements = Math.min(2, candidates.size());
 
         for (int i = 0; i < replacements; i++) {
-            int indexToReplace = replaceableIndices.get(i);
+            WordCandidate candidate = candidates.get(i);
+            int indexToReplace = candidate.index();
             String originalWord = words[indexToReplace];
             List<String> synonyms = thesaurus.get(originalWord.toLowerCase());
 
@@ -111,7 +140,7 @@ public class Rephraser {
                 String synonym = synonyms.get(random.nextInt(synonyms.size()));
                 // Preserve case
                 if (Character.isUpperCase(originalWord.charAt(0))) {
-                    synonym = synonym.substring(0, 1).toUpperCase() + synonym.substring(1);
+                    synonym = Character.toUpperCase(synonym.charAt(0)) + synonym.substring(1);
                 }
                 words[indexToReplace] = synonym;
             }

@@ -35,6 +35,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -51,14 +52,12 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.control.TreeTableCell;
-import javafx.scene.control.CheckBox;
-import javafx.scene.layout.HBox;
 import javafx.scene.control.cell.CheckBoxTreeTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.HTMLEditor;
 import javafx.stage.FileChooser;
@@ -1574,8 +1573,9 @@ public class MainController {
     private Question createVariedQuestionRecursive(Question originalQuestion) {
         Question copiedQuestion = new Question(originalQuestion);
 
+        // Rephrase title and text safely, ignoring code blocks in the text
         String rephrasedTitle = Rephraser.rephrase(originalQuestion.getTitle());
-        String rephrasedText = Rephraser.rephrase(originalQuestion.getText());
+        String rephrasedText = rephraseHtmlSafely(originalQuestion.getText());
         copiedQuestion.setTitle(rephrasedTitle);
         copiedQuestion.setText(rephrasedText);
 
@@ -1596,6 +1596,32 @@ public class MainController {
             copiedQuestion.setSubQuestions(processedSubQuestions);
         }
         return copiedQuestion;
+    }
+
+    private String rephraseHtmlSafely(String html) {
+        if (html == null || html.isEmpty()) {
+            return html;
+        }
+        Document doc = Jsoup.parse(html);
+        // Select all elements to traverse them
+        for (Element element : doc.select("body").select("*")) {
+            // Find text nodes that are direct children of the current element
+            for (org.jsoup.nodes.TextNode tn : element.textNodes()) {
+                 boolean inCode = false;
+                 Element parent = (Element) tn.parent();
+                 while (parent != null && !parent.tagName().equals("body")) {
+                     if (parent.tagName().equals("code") || parent.tagName().equals("pre")) {
+                         inCode = true;
+                         break;
+                     }
+                     parent = parent.parent();
+                 }
+                 if (!inCode) {
+                     tn.text(Rephraser.rephrase(tn.text()));
+                 }
+            }
+        }
+        return doc.body().html();
     }
 
     /**
