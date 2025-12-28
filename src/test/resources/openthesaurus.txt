@@ -1,6 +1,0 @@
-# Test Thesaurus
-word1;synonym1a;synonym1b
-word2;synonym2a;synonym2b
-Word3;Synonym3a;Synonym3b
-test;trial;experiment
-hello;hi;greeting

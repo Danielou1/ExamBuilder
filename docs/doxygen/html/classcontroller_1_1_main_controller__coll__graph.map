@@ -1,0 +1,10 @@
+<map id="controller.MainController" name="controller.MainController">
+<area shape="rect" id="Node000001" title=" " alt="" coords="88,1184,324,1744"/>
+<area shape="rect" id="Node000002" href="$classmodel_1_1_exam.html" title=" " alt="" coords="5,5,145,480"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="47,482,41,623,39,783,47,949,56,1031,69,1111,86,1181,80,1181,63,1113,50,1032,41,949,33,783,36,623,48,477"/>
+<area shape="rect" id="Node000003" href="$classcontroller_1_1_hinweise_dialog_controller.html" title=" " alt="" coords="122,597,290,1067"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="128,477,153,581,148,581,128,482"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="207,1064,209,1167,203,1167,205,1069"/>
+<area shape="rect" id="Node000004" href="$classmodel_1_1_question.html" title=" " alt="" coords="314,552,503,1112"/>
+<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="382,1110,370,1161,334,1252,329,1249,365,1159,379,1114"/>
+</map>

@@ -30,37 +30,27 @@ class RephraserTest {
     }
 
     @Test
-    void testRephraseSingleWord() {
+    void testEnglishWordsAreNotRephrased() {
+        // This test replaces testRephraseSingleWord and is more robust.
+        // It checks that common English words, which are on the blocklist, are NOT changed.
         String original = "This is a test sentence.";
         String rephrased = Rephraser.rephrase(original);
-        // Since rephrasing is random, we can't assert exact equality.
-        // We can assert that if 'test' is rephrased, it's one of its synonyms.
-        // This test is a bit weak due to randomness, but better than nothing.
-        // A more robust test would involve mocking the Random class or checking for any synonym.
-        // For now, let's just ensure it's not the original word if a synonym exists.
-        // Given the small test thesaurus, 'test' has synonyms 'trial', 'experiment'.
-        if (rephrased.contains("trial") || rephrased.contains("experiment")) {
-            assertNotEquals(original, rephrased);
-        } else {
-            assertEquals(original, rephrased); // If no rephrasing happened (due to randomness or no match)
-        }
+        assertEquals(original, rephrased, "English words should not be rephrased.");
     }
 
     @Test
     void testRephraseMultipleWordsInLine() {
-        String original = "Hello, this is a test sentence.";
+        // Use a German sentence with words that are in the thesaurus but not on the blocklist.
+        String original = "Die Bearbeitung dieser Aufgabe ist eine gute Arbeit.";
         String rephrased = Rephraser.rephrase(original);
-        // Check if at least one word was rephrased (hello or test)
-        boolean changed = !original.equals(rephrased);
-        assertTrue(changed, "Expected rephrased text to be different from original.");
-        // Further assertions could check for specific synonyms if Random was mocked.
+        assertNotEquals(original, rephrased, "Expected rephrased text to be different from original for German sentence.");
     }
 
     @Test
     void testRephraseMultipleLines() {
-        String original = "Hello.\nThis is a test.";
+        String original = "Gute Arbeit.\nDas ist ein Beispiel.";
         String rephrased = Rephraser.rephrase(original);
-        assertNotEquals(original, rephrased);
+        assertNotEquals(original, rephrased, "A German sentence with rephrasable words across lines should be changed.");
         assertTrue(rephrased.contains(".\n")); // Ensure newlines are preserved
     }
 
@@ -83,12 +73,11 @@ class RephraserTest {
 
     @Test
     void testHandlePunctuation() {
-        String original = "Hello, world!";
+        String original = "Gute Arbeit!";
         String rephrased = Rephraser.rephrase(original);
         // Ensure punctuation is preserved
-        assertTrue(rephrased.contains(","));
-        assertTrue(rephrased.contains("!"));
-        assertNotEquals(original, rephrased); // Should rephrase 'Hello'
+        assertTrue(rephrased.endsWith("!"));
+        assertNotEquals(original, rephrased, "German word 'Arbeit' should be rephrased.");
     }
 
     @Test
@@ -128,18 +117,18 @@ class RephraserTest {
 
     @Test
     void testThesaurusFiltering() {
-        // The setUp method clears the thesaurus, so we need to trigger loadThesaurus
-        // and then inspect the thesaurus map.
-        Rephraser.rephrase("dummy"); // Triggers thesaurus loading
+        // Trigger thesaurus loading by calling the method under test
+        Rephraser.rephrase("dummy");
 
         try {
             Field thesaurusField = Rephraser.class.getDeclaredField("thesaurus");
             thesaurusField.setAccessible(true);
             Map<String, List<String>> thesaurus = (Map<String, List<String>>) thesaurusField.get(null);
 
+            // Assert conditions that should be true for the real openthesaurus.txt
             assertFalse(thesaurus.containsKey("(ignore)"), "Words with parentheses should be ignored.");
-            assertFalse(thesaurus.containsKey("multi word"), "Multi-word entries should be ignored.");
-            assertTrue(thesaurus.containsKey("word1"), "Single words without parentheses should be included.");
+            assertFalse(thesaurus.containsKey("multi word entry"), "Multi-word entries should be ignored (this is a heuristic).");
+            assertTrue(thesaurus.containsKey("arbeit"), "A common German word like 'arbeit' should be included.");
         } catch (NoSuchFieldException | IllegalAccessException e) {
             fail("Failed to access thesaurus field for testing: " + e.getMessage());
         }

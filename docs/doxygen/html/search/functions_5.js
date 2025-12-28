@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['getallgemeinehinweise_0',['getAllgemeineHinweise',['../classmodel_1_1_exam.html#a016262776b912f5f08c0ad6d0873343e',1,'model::Exam']]],
+  ['getanswerlines_1',['getAnswerLines',['../classmodel_1_1_question.html#a5b1282ddfd9875b92d746cc358a75761',1,'model::Question']]],
+  ['getauthor_2',['getAuthor',['../classmodel_1_1_exam.html#a723bdae9b85d55ddd7d46c2375733919',1,'model::Exam']]],
+  ['getbearbeitungszeit_3',['getBearbeitungszeit',['../classmodel_1_1_exam.html#a3453ab061cd7034ff6728e9257e6ccb5',1,'model::Exam']]],
+  ['getfachbereich_4',['getFachbereich',['../classmodel_1_1_exam.html#a907d3e7104261574f187e2a8c51220d1',1,'model::Exam']]],
+  ['gethilfsmittel_5',['getHilfsmittel',['../classmodel_1_1_exam.html#a64d383679d22c121ad1ebe949983d4fe',1,'model::Exam']]],
+  ['gethochschule_6',['getHochschule',['../classmodel_1_1_exam.html#a22b8ba6451a736c05e40c6b8d6cde4d9',1,'model::Exam']]],
+  ['getid_7',['getId',['../classmodel_1_1_question.html#a75c316675b31efe3ee6e07144476c9c1',1,'model::Question']]],
+  ['getimagebase64_8',['getImageBase64',['../classmodel_1_1_question.html#ab1e3d6d09056d23417eaaf18108f1151',1,'model::Question']]],
+  ['getmodule_9',['getModule',['../classmodel_1_1_exam.html#ac389b77dc6154ad9dc533e92969f4b3f',1,'model::Exam']]],
+  ['getmusterloesung_10',['getMusterloesung',['../classmodel_1_1_question.html#a51ac5cd80039da33069ac2cd9232e081',1,'model::Question']]],
+  ['getmusterloesungimagebase64_11',['getMusterloesungImageBase64',['../classmodel_1_1_question.html#a8d983a138707cec90743ee45ad9d61b2',1,'model::Question']]],
+  ['getpoints_12',['getPoints',['../classmodel_1_1_question.html#a679931c48a2d9778424367bb4300cd64',1,'model::Question']]],
+  ['getquestionnumber_13',['getQuestionNumber',['../classcontroller_1_1_main_controller.html#a7a3fe163d9fcb11135d4fee3502c4059',1,'controller::MainController']]],
+  ['getquestions_14',['getQuestions',['../classmodel_1_1_exam.html#a7a9fad4a56b45c18b130e35c1053a85c',1,'model::Exam']]],
+  ['getquestionsforexport_15',['getQuestionsForExport',['../classcontroller_1_1_main_controller.html#a48d57b261be2bddc90d064cc81f5094b',1,'controller::MainController']]],
+  ['getselected_16',['getSelected',['../classmodel_1_1_question.html#a3aa900951ae290b4ac44e3f93f85ca29',1,'model::Question']]],
+  ['getsemester_17',['getSemester',['../classmodel_1_1_exam.html#ad0a815384105d117ee50af39f8df1252',1,'model::Exam']]],
+  ['getstandardhinweise_18',['getStandardHinweise',['../classservice_1_1_word_exporter.html#abaab061cc83b4ce11f8542f5166468f4',1,'service::WordExporter']]],
+  ['getsubquestions_19',['getSubQuestions',['../classmodel_1_1_question.html#acdff75252c7b45dd64c7a1133aae8419',1,'model::Question']]],
+  ['gettext_20',['getText',['../classmodel_1_1_question.html#aa985cfba5bcb6121d4cc00f9aeb4f8ec',1,'model::Question']]],
+  ['gettitle_21',['getTitle',['../classmodel_1_1_exam.html#a6584125723f906c8d7a8b88a2912c0f3',1,'model.Exam.getTitle()'],['../classmodel_1_1_question.html#ada4f3422a546bace47e2305edd2b8348',1,'model.Question.getTitle()']]],
+  ['gettotalpoints_22',['getTotalPoints',['../classmodel_1_1_exam.html#a8aa668852dc754c311e793d91a3b7f25',1,'model::Exam']]],
+  ['gettype_23',['getType',['../classmodel_1_1_question.html#aefcf8ae12b1fe8666abf1af5a983473c',1,'model::Question']]]
+];
